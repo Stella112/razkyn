@@ -1,0 +1,27 @@
+# systemd unit for the RAZKYN keeper in serve mode (installed as /etc/systemd/system/razkyn-keeper.service).
+# Memory is capped so the keeper can never starve other services on a shared VPS, and the kernel
+# kills it first under memory pressure (OOMScoreAdjust). It listens on 127.0.0.1 behind Caddy.
+[Unit]
+Description=RAZKYN keeper (serve mode)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/opt/razkyn/repo
+Environment=PATH=/opt/razkyn/node/bin:/usr/bin:/bin
+Environment=RAZKYN_KEYS=/opt/razkyn/keys
+Environment=WIRE_HOST=127.0.0.1
+Environment=WIRE_PORT=8787
+Environment=NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=400
+EnvironmentFile=-/opt/razkyn/repo/.env
+ExecStart=/opt/razkyn/node/bin/node /opt/razkyn/repo/node_modules/tsx/dist/cli.mjs keeper/src/serve.ts
+Restart=always
+RestartSec=5
+MemoryHigh=500M
+MemoryMax=600M
+OOMScoreAdjust=800
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

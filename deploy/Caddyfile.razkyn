@@ -1,0 +1,8 @@
+# Caddy site for the RAZKYN keeper API (HTTPS via Let's Encrypt on a free sslip.io name).
+16-61-50-207.sslip.io {
+	encode gzip
+	reverse_proxy 127.0.0.1:8787 {
+		# THE WIRE is Server-Sent Events: stream, do not buffer.
+		flush_interval -1
+	}
+}

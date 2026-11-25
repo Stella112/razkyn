@@ -79,6 +79,7 @@ export class WireServer {
   register(raidId: string, wire: Wire) { this.wires.set(raidId, wire); }
   setLobby(l: Lobby | null) { this.lobby = l; }
   patchLobby(p: Partial<Lobby>) { if (this.lobby) this.lobby = { ...this.lobby, ...p }; }
-  listen() { return new Promise<void>((r) => this.server.listen(this.port, r)); }
+  /** WIRE_HOST=127.0.0.1 on a server behind a reverse proxy (default: all interfaces, for local dev). */
+  listen() { return new Promise<void>((r) => this.server.listen(this.port, process.env.WIRE_HOST ?? "0.0.0.0", r)); }
   close() { return new Promise<void>((r) => { this.server.closeAllConnections(); this.server.close(() => r()); }); }
 }
