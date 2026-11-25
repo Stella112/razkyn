@@ -1,6 +1,6 @@
 # STATUS.md
 
-_Last updated: 2026-11-25 — M3 done (local + devnet). Next: M4 (needs one economics decision)._
+_Last updated: 2026-11-25 — M4 settlement done (local + devnet); spectator pools pending a scope decision. Next: M5._
 
 ## Done
 - §4.1 setup: MagicBlock dev skill v0.5.1 (commit `88f6719`, 2026-11-24) installed; references read. `vendor/` cloned (examples `3376663`, starter-kits, SDK tag `v0.18.0`).
@@ -68,6 +68,20 @@ m3: test6_verify_slice_rejects_wrong_slice_and_wrong_leaf ok · m3_market_steps_
 - Devnet `scripts/m3-devnet.ts` (evidence `spikes/results/m3-devnet.json`): Mystery raid `3kcJcNLb…`, VRF leaf 5/23; start before verify rejected (0x1793), a real but non-chosen day rejected (0x1792); load `33EVd1EW…` → verify `3aGfDr6r…` (TS Merkle and on-chain verifier agree) → start `2RF5Fepn…`; at step 30 all 3 districts = slice exactly, start 1,000,000. Spoiler check: stranger reads 6 public accounts, 0 dates/tickers; secret null for stranger and no token. Trade `31gSNT3j…` → `3z9tJwup…`: 307,538 Tower → 305,088 Factory at current prices; raider B saw A exposed at the terminal. Live raid `7FJcP2eW…` (start `245PcDhN…`): 12 ticks read SOL/BTC/ETH oracle feeds on the TEE, indexes 999,728–1,000,275 around 100.0000.
 - Bug found on devnet and fixed: start price was "first price seen" (the first tick lands seconds after start) → now always 100.0000; regression test added.
 
+## M4 — settlement (done except spectator pools)
+- Program upgraded (`4W1XnG62…`), 919,824 bytes. New: `start_extract` / `finish_extract` (open exit window, ≤ 1 tile, 5 s), `create_settlement`, `end_raid` (Results with Option A payouts, conservation asserted, commit-and-undelegate Raid + Results with a post-commit `finalize_raid` action), `reveal_after_end`, `finalize_raid` (#[action]: escrow signer + source_program checks, hash-checked Results, ops → treasury, backing → reserve, idempotent), `settle_stuck_raid` (≥ 120 s, raid undelegated, not settled), `claim` (dUSD protected + pro-rata share, mints scaled backpack units, ClaimRecord makes a second claim fail), `post_report_hash`, admin `set_test_flags`.
+- MagicSVM (all suites, 15/15):
+```
+m1: test3 ok · test4 ok · m1_tick_fog_privacy_and_faucet ok
+m2: test1_partial ok · test2 ok
+m3: test6 ok · market_steps_wake_and_hazards ok · trade_at_terminal ok · live_mode_holds_price ok · late_first_tick ok
+m4: test1_full_raid_settles_and_claims_sum_to_escrow_test5_guards ok · option_a_no_extraction ok · option_a_rally_scales ok · option_a_fall ok · option_a_randomized_conservation ok
+```
+- Devnet `scripts/m4-devnet.ts` (evidence `spikes/results/m4-devnet.json`): R1 `5nFy4cyw…` end_raid `9YVGSTPj…` → base commit `5EgrhiDX…` → settled via finalize_raid action (~6 s). **§9 test 11**: R2 `8cL2ZkMY…` with fail_finalize set: commit `XfWXRscD…` landed, Raid + Results back to the program, not settled; settle_stuck before 120 s rejected (0x17a0); settle_stuck `2meZ67YL…` → settled via 2. Claims: 4 × 9.5 dUSD = expected, escrow 0 after, second claims rejected; ops treasury +2 dUSD.
+- Devnet `scripts/m4-extract-devnet.ts` (evidence `spikes/results/m4-extract-devnet.json`): loot 485,489 Harbor units → pipelined walk to exit (54 moves, 13.4 s) → extract (`4nUFVTZH…`, `3zkpw9Z3…`) in window 1 → end at 300 s → end_raid `5EGGixnT…` → settled via action → claim `5ycECs2Y…` minted exactly 485,489 dHRB; reserve 487,953 = value at final price 100.5076; payouts 18,512,047 + reserve 487,953 + ops 1,000,000 = 20,000,000.
+- Findings: (1) devnet-tee requires an action's escrow authority to sign the tx (PDA via invoke_signed rejected) → caller is escrow authority (DECISIONS #24). (2) An account that is both committed and escrow authority was not undelegated (MagicSVM). (3) end_raid needs a raised CU limit (~1.4M requested). (4) Clients must pipeline moves at ~10 Hz: one RTT per move (~0.7 s) gave 0.85 tiles/s and missed 30 s exit windows; pipelined ≈ 4.5 tiles/s. (5) The 920 KB program makes each upgrade need ~4.7 SOL of temporary buffer.
+- Not built: spectator pools (`place_bet`, SpecPool, test 7) — scope decision pending.
+
 ## Blocked
 - (nothing)
 
@@ -76,4 +90,4 @@ m3: test6_verify_slice_rejects_wrong_slice_and_wrong_leaf ok · m3_market_steps_
 - `data/mystery/headlines.json` does not exist yet (M6): every leaf currently commits to an empty headline list; the root is rebuilt when headlines are added.
 
 ## Next
-- M4: end_raid, Results + conservation, commit-and-undelegate + finalize_raid action, claim, settle_stuck_raid, spectator pools. Tests 1, 5, 7, 11. Needs a decision from Maris on how price moves are absorbed in payouts.
+- M5: keeper (tick driver, mystery loader, claimer, 7 BOT raiders with pipelined moves, report builder + post_report_hash). Test 12.

@@ -307,22 +307,29 @@ export class RaidSession {
     return r.tee!.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 0 });
   }
 
-  /** Walk at legal speed (≤ 55 units per move; each send is ≥ 1 RTT ≈ 40+ slots apart),
-   *  dead-reckoning between moves and re-reading the true position at the end. */
+  /**
+   * Walk near max speed: moves are pipelined every ~110 ms (≈ 10 ER slots, so each fits the
+   * 60-unit budget) without waiting for round trips. Waiting one RTT per move gave only
+   * ~0.85 tiles/s on devnet and missed 30 s exit windows (M4). Moves are relative, so order
+   * does not matter; any rejected as too early are corrected by re-reading the position.
+   */
   async walkTo(slot: number, x: number, y: number, within: number) {
     let moves = 0;
     let me = await this.rprv(slot);
-    for (let round = 0; round < 5; round++) {
+    for (let round = 0; round < 6; round++) {
       let cx = me.x, cy = me.y;
+      const inflight: Promise<unknown>[] = [];
       for (;;) {
         const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy);
         if (d <= within) break;
-        const step = Math.min(55, d);
+        const step = Math.min(50, d);
         const sx = Math.round((dx * step) / d), sy = Math.round((dy * step) / d);
         const ix = await this.T.methods.moveTo(slot, sx, sy).accountsPartial({ raid: this.raid, rprv: this.slot("rprv", slot), raidKey: this.raiders[slot].raidKey.publicKey }).instruction();
-        await this.sendFast(slot, ix);
+        inflight.push(this.sendFast(slot, ix).catch(() => null));
         cx += sx; cy += sy; moves++;
+        await sleep(110);
       }
+      await Promise.all(inflight);
       me = await this.rprv(slot);
       if (Math.hypot(x - me.x, y - me.y) <= within) return moves;
     }

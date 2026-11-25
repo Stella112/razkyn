@@ -1,0 +1,144 @@
+{
+  "raid": "5hppqXHoeNhuDhGVat7Zp3tQsXbVKrEDr3oSBqWxQN3k",
+  "log": [
+    {
+      "event": "live",
+      "raidT": 7,
+      "wall": "15:00:51"
+    },
+    {
+      "event": "looted",
+      "raidT": 27,
+      "wall": "15:01:10",
+      "crate": 28,
+      "backpack": [
+        "0",
+        "0",
+        "485489"
+      ]
+    },
+    {
+      "event": "at centre",
+      "raidT": 42,
+      "wall": "15:01:25",
+      "moves": 89,
+      "secs": 14.366
+    },
+    {
+      "event": "window seen",
+      "raidT": 122,
+      "wall": "15:02:46",
+      "window": 1,
+      "openExits": [
+        1,
+        2
+      ],
+      "chosen": 2
+    },
+    {
+      "event": "at exit",
+      "raidT": 137,
+      "wall": "15:03:00",
+      "moves": 54,
+      "secs": 13.435,
+      "pos": [
+        3251,
+        3794
+      ],
+      "exitPos": [
+        3250,
+        3850
+      ],
+      "dist": 56.00892785976178
+    },
+    {
+      "event": "raid state before start",
+      "raidT": 138,
+      "wall": "15:03:02",
+      "exitWindow": 1,
+      "openExits": [
+        1,
+        2
+      ]
+    },
+    {
+      "event": "start ok",
+      "raidT": 140,
+      "wall": "15:03:03",
+      "sig": "4nUFVTZH9K9y4yon1esfNCegwTns8yzy4pq6cAbDjC7CkF4jjcMN4jAYczm4Qst6K4X2d5tUteUcQFAJPqhXnbZN"
+    },
+    {
+      "event": "finish ok",
+      "raidT": 147,
+      "wall": "15:03:12",
+      "sig": "3zkpw9Z3zTxx1DjCKjpguDYqnVY4TKAvjnWjbyLtxkrBuuUzdruWVQ5syAaPPmusFtoUXs2ERSbUstjnj85TYD84"
+    },
+    {
+      "event": "result",
+      "raidT": 150,
+      "wall": "15:03:13",
+      "extracted": true,
+      "exposed": true
+    },
+    {
+      "event": "ended",
+      "raidT": 305,
+      "wall": "15:05:48"
+    },
+    {
+      "event": "settled",
+      "raidT": 311,
+      "wall": "15:05:55",
+      "settled": true,
+      "via": 1,
+      "endRaid": "5EGGixnTT3TfDR8mSf59a8kk3SAGLjx4T7eY8ah2PDjXb7cH1HVicLgDEsjyf2XMKbCiPiKxTzQEbqEr1hMR8A46"
+    },
+    {
+      "event": "claimed",
+      "raidT": 321,
+      "wall": "15:06:06",
+      "claims": [
+        {
+          "slot": 0,
+          "sig": "5ycECs2YoqPna8AtsNunwuMgJCSqU4jG794sLQ72NaPPTX8UWkQfFaoxHAGej6VgF8cza7EDQPSekvcLE6ihwFWn",
+          "expectedMintUnits": [
+            "0",
+            "0",
+            "485489"
+          ],
+          "assetsHeld": [
+            "0",
+            "0",
+            "485489"
+          ],
+          "dusdPayout": "9256024",
+          "extracted": true
+        },
+        {
+          "slot": 1,
+          "sig": "2ndWWCBZPScFEBDccBwU4HrTucZVkmNgKYjFMMPDKuN9w9u87yQeHaa3MG88nhvkGAv6bghgsK6h51pHB5AwQUWK",
+          "expectedMintUnits": [
+            "0",
+            "0",
+            "0"
+          ],
+          "assetsHeld": [
+            "0",
+            "0",
+            "0"
+          ],
+          "dusdPayout": "9256023",
+          "extracted": false
+        }
+      ],
+      "reserveTotal": "487953",
+      "dusdTotal": "18512047",
+      "ops": "1000000",
+      "finalPrices": [
+        "1002620",
+        "1002437",
+        "1005076"
+      ]
+    }
+  ]
+}

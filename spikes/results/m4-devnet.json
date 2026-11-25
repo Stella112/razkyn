@@ -1,0 +1,132 @@
+{
+  "when": "2026-11-25T14:50:33.721Z",
+  "R1": {
+    "raid": "5nFy4cyw67U9DJqDppzftVPaKjHoHo7jipAbPTVmrRnT",
+    "escrowBefore": 20000000,
+    "endRaidTee": "9YVGSTPjPuPUKRMtuY4NP4T8EuNsdrRXKyf2mouRtmdTykR4vc8E5WimZ4tkyd9Ke3pQbfoCjmiEBqbStXyxhi7",
+    "baseCommit": "5EgrhiDXDJMZLhtuD15NKcTr51u4D8VpusJv8k5y6eJHrd3R2LCHgU6kLLgK857Qas89EAqXDCvoyLtSRdoUbJg9",
+    "baseCommitExplorer": "https://explorer.solana.com/tx/5EgrhiDXDJMZLhtuD15NKcTr51u4D8VpusJv8k5y6eJHrd3R2LCHgU6kLLgK857Qas89EAqXDCvoyLtSRdoUbJg9?cluster=devnet",
+    "settled": true,
+    "settledVia": 1,
+    "resultsOwner": "CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97",
+    "raidOwnerOnBase": "CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97",
+    "extract": {
+      "extracted": false,
+      "attempts": [
+        "window 1 exit 2: 0x1799",
+        "window 2 exit 2: 0x1799",
+        "window 3 exit 1: 0x1772"
+      ]
+    }
+  },
+  "R2_test11": {
+    "raid": "8cL2ZkMYTPb6dvCfajnWkAUiu5Mk9CeJXN5Ppmfrc4W4",
+    "testFlagOn": "3kQouffr1pGXX8SBfGK1RreeuSDoEh6PQa9ixVonCb4uU1qWUvJsRTMRV5bEmc7yzCPmZqVw7nqEdkB5SkX74fDW",
+    "testFlagOff": "3cR5whJ9QnPBzPUkfHgsyEqEFRNyvi2LjHUS7oVm5wz3ZuACgo1Pp6zNfd167JVUPjq4Tde5kEmCMdtUYQQ8ydAb",
+    "endRaidTee": "4gZkqobgyFxPA62WhJ9A71c3f2zfcZpQxGAQW3poRH56ot3gXsFsYvGrPe7CBmsCA9yvozjCspmD3CvbaszWZYvt",
+    "baseCommit": "XfWXRscDTZxV9V6muMJuDgLqyCcyM1mDSLDjqmnJ8XxhPZy4y61ZgRduoPDVPQQqDYZPmEMLyqDhuwDuoPiUyr4",
+    "afterForcedFailure": {
+      "settled": false,
+      "resultsOwner": "CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97",
+      "raidOwnerOnBase": "CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97"
+    },
+    "settleStuckBefore120s": "0x17a0",
+    "settleStuckSig": "2meZ67YLjBuVgwAaTTcBrdYLgrXSBdX1Di7GZhVf1KzZJJbu6kX2tAKumQTjQ9fYqiugU12mKSi2sQ7W5qcs32of",
+    "settleStuckExplorer": "https://explorer.solana.com/tx/2meZ67YLjBuVgwAaTTcBrdYLgrXSBdX1Di7GZhVf1KzZJJbu6kX2tAKumQTjQ9fYqiugU12mKSi2sQ7W5qcs32of?cluster=devnet",
+    "settled": true,
+    "settledVia": 2,
+    "extract": {
+      "extracted": false,
+      "attempts": [
+        "window 1 exit 3: 0x1799",
+        "window 2 exit 1: 0x1799",
+        "window 3 exit 3: 0x177c"
+      ]
+    }
+  },
+  "claims": {
+    "R1": {
+      "rows": [
+        {
+          "slot": 0,
+          "sig": "2qbCASrU6xUk3BSPuFagfNspzAEZSj9MABvxiaUamtVmVmx4uEjcmVqbcz6jLvtf1hVtJpZsAPS2kVB4DmQxx2iq",
+          "dusd": 9500000,
+          "expected": 9500000,
+          "mintUnits": [
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        {
+          "slot": 1,
+          "sig": "5ZkbSJLRET43erVskRYEgnZE24BCSuAXyWQ46LfBZ7Tx5DLy84Zzchu4NKodNPH72pkAoKnYGwv1FVvbMoYygdee",
+          "dusd": 9500000,
+          "expected": 9500000,
+          "mintUnits": [
+            "0",
+            "0",
+            "0"
+          ]
+        }
+      ],
+      "secondClaim": "rejected: claim record already exists",
+      "escrowAfter": 0,
+      "reserve": 0,
+      "results": {
+        "stakes": "20000000",
+        "ops": "1000000",
+        "reserve": "0",
+        "dusd": "19000000",
+        "scaled": false,
+        "prices": [
+          "1003691",
+          "1000715",
+          "1002618"
+        ]
+      }
+    },
+    "R2": {
+      "rows": [
+        {
+          "slot": 0,
+          "sig": "3avdGhN255A6RmPjupFU9Vg6QjPNMpbUu9eUHWQy63jL7ADEM6Nq7hRS5UQsBuEeRumoefMKkiNThUhSQ9hvtFQJ",
+          "dusd": 9500000,
+          "expected": 9500000,
+          "mintUnits": [
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        {
+          "slot": 1,
+          "sig": "26GGujcpCnfpZwuo1SvBMNjDmcnQYB5WqCx1hUUhSZzzaBVb6hePhurYm3JyKZUncVJEEDbBNP5g7ixVdav9s6WC",
+          "dusd": 9500000,
+          "expected": 9500000,
+          "mintUnits": [
+            "0",
+            "0",
+            "0"
+          ]
+        }
+      ],
+      "secondClaim": "rejected: claim record already exists",
+      "escrowAfter": 0,
+      "reserve": 0,
+      "results": {
+        "stakes": "20000000",
+        "ops": "1000000",
+        "reserve": "0",
+        "dusd": "19000000",
+        "scaled": false,
+        "prices": [
+          "1005423",
+          "1002612",
+          "1004421"
+        ]
+      }
+    }
+  },
+  "opsTreasuryDelta": 2000000
+}
