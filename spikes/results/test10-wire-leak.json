@@ -1,0 +1,82 @@
+{
+  "sanitized": [
+    {
+      "kind": "price",
+      "t": 30,
+      "district": 2,
+      "bps": -240,
+      "move30Bps": -180
+    },
+    {
+      "kind": "crate_opened",
+      "t": 32,
+      "slot": 1,
+      "bot": true,
+      "district": 2,
+      "drop": false
+    },
+    {
+      "kind": "exposed",
+      "t": 40,
+      "slot": 3,
+      "bot": false,
+      "district": 0
+    },
+    {
+      "kind": "kill",
+      "t": 55,
+      "slot": 3,
+      "bot": false,
+      "by": 1,
+      "byBot": true
+    },
+    {
+      "kind": "hazard",
+      "t": 60,
+      "district": 2,
+      "level": 1
+    },
+    {
+      "kind": "extract",
+      "t": 250,
+      "slot": 1,
+      "bot": true
+    }
+  ],
+  "hostile": {
+    "prompts": [
+      "EVENT. Day revealed: no.\nt=60s IN-GAME EVENT Harbor hazard level 1 (falling district; floor tiles drain 10 HP/s)",
+      "LIVE. Day revealed: no. Facts since the last line:\nt=30s Harbor -2.40% vs raid start, -1.80% in the last 30 s\nt=32s BOT 2 opened a crate in Harbor\nt=40s Raider 4 started a trade at a Tower terminal; position public while trading\nt=55s Raider 4 knocked out by BOT 2; backpack dropped as a crate\nt=250s BOT 2 extracted\nMost newsworthy: t=55s Raider 4 knocked out by BOT 2; backpack dropped as a crate",
+      "DEBRIEF for BOT 2. Day revealed: no.\nOutcome: extracted; knockouts 1; crates opened 1; trades 0.\nPayout 12.35 dUSD on a 10 dUSD stake.\nMarket: best Tower 1.20%, worst Harbor -2.40%.\nTheir public log:\nt=32s BOT 2 opened a crate in Harbor\nt=55s Raider 4 knocked out by BOT 2; backpack dropped as a crate\nt=250s BOT 2 extracted\nHEADLINES (quote only these, word for word, or none):\n(none)"
+    ],
+    "lines": [
+      {
+        "t": 60,
+        "tag": "IN-GAME EVENT",
+        "text": "Harbor cracks open, hazard tiles live at 10 HP/s",
+        "source": "template",
+        "llmMs": 5,
+        "fallback": "filtered: $ price"
+      },
+      {
+        "t": 55,
+        "tag": "BREAKING",
+        "text": "BOT 2 drops Raider 4, backpack on the floor",
+        "source": "template",
+        "llmMs": 5,
+        "fallback": "filtered: $ price"
+      },
+      {
+        "t": 300,
+        "tag": "DEBRIEF",
+        "text": "BOT 2 made it out. 1 crate opened, 0 trades under fire, 1 knockout. Tower was the market's best district (+1.2%); Harbor the worst (−2.4%). Payout 12.35 dUSD on a 10 dUSD stake (+23.5%).",
+        "source": "template",
+        "slot": 1,
+        "llmMs": 5,
+        "fallback": "filtered: $ price",
+        "headlines": []
+      }
+    ]
+  },
+  "real": "skipped: no ANTHROPIC_API_KEY"
+}

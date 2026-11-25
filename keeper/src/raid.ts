@@ -14,11 +14,14 @@ import { BotCrew } from "./bots.ts";
 import { Ticker, type TickStats } from "./ticker.ts";
 import { publishReport } from "./report.ts";
 import { claimAll } from "./claimer.ts";
+import { PublicFeed } from "../wire/facts.ts";
+import { Wire, loadHeadlines, type WireLine } from "../wire/wire.ts";
+import type { WireServer } from "../wire/server.ts";
 
 const KEYS = process.env.RAZKYN_KEYS ?? join(homedir(), ".config", "razkyn");
 const DISTRICTS = ["Tower", "Factory", "Harbor"];
 
-export type RaidOptions = { mode: "mystery" | "live"; slots: number; humanSlots: number[]; humanWaitSecs: number; hz: number; log?: (s: string) => void };
+export type RaidOptions = { mode: "mystery" | "live"; slots: number; humanSlots: number[]; humanWaitSecs: number; hz: number; log?: (s: string) => void; wireServer?: WireServer };
 
 /** Persistent BOT wallets (keys outside the repo); payouts return to them after each raid. */
 function botWallet(i: number): Keypair {
@@ -80,6 +83,15 @@ export async function runRaid(o: RaidOptions) {
   const elapsed = () => Date.now() / 1000 + offset - startTs;
   lap(`live (VRF ${vrfMs} ms${mystery ? `, mystery leaf ${(mysteryDay as { leafIndex: number }).leafIndex}` : ""})`);
 
+  // THE WIRE: public facts only, read with a key that is never a permission member.
+  const wire = new Wire(o.mode);
+  const feed = new PublicFeed(S.raidId, (f) => wire.push(f));
+  feed.assertNotMember([S.keeper.publicKey, ...S.raiders.flatMap((r) => (r ? [r.raidKey.publicKey, r.wallet.publicKey] : []))]);
+  o.wireServer?.register(S.raidId.toString(), wire);
+  wire.subscribe((l) => log(`  WIRE [${l.tag}] ${l.text}${l.source === "template" ? " (template)" : ""}`));
+  await feed.start();
+  wire.start();
+
   const ticker = new Ticker(S, o.hz);
   const tickMode = await ticker.start();
   const crew = new BotCrew(S, botSlots, elapsed, Number(S.raidId.toString().slice(-6)));
@@ -108,6 +120,10 @@ export async function runRaid(o: RaidOptions) {
     await sleep(2000);
   }
   const tick: TickStats = await ticker.stop();
+  await feed.poll().catch(() => {}); // final public state (deaths/extractions in the last second)
+  await feed.stop();
+  wire.stop();
+  await wire.flush();
   recording = false;
   await recorder;
   await crewDone;
@@ -131,8 +147,30 @@ export async function runRaid(o: RaidOptions) {
   // Claimer: the keeper claims for every raider (players never need to act).
   const claims = await claimAll(S);
   const res = (await S.readResultsBase())!.data;
-  const rpubs = await Promise.all(Array.from({ length: o.slots }, (_, s) => S.P.account.raiderPublic.fetch(S.slot("rpub", s)).catch(() => null)));
+  const rpubs = await Promise.all(Array.from({ length: o.slots }, (_, s) => S.T.account.raiderPublic.fetch(S.slot("rpub", s)).catch(() => null)));
   lap("claims done");
+
+  // Reveal (Mystery) happens with end_raid; then one WIRE DEBRIEF per raider from public data.
+  wire.revealed = true;
+  const headlines = mysteryDay ? loadHeadlines(String(mysteryDay.day)) : [];
+  const finalBps = res.finalPrices.map((p) => Math.round((Number(p.toString()) - 1_000_000) / 100));
+  const best = finalBps.indexOf(Math.max(...finalBps)), worst = finalBps.indexOf(Math.min(...finalBps));
+  const debriefs: WireLine[] = [];
+  await Promise.all(Array.from({ length: o.slots }, async (_, s) => {
+    if (!res.raiders[s].joined) return;
+    const mine = wire.log.filter((f) => "slot" in f && f.slot === s);
+    debriefs.push(await wire.debrief({
+      slot: s, bot: botSlots.includes(s), extracted: res.raiders[s].extracted, alive: (rpubs[s] as { alive?: boolean } | null)?.alive ?? true,
+      kills: (rpubs[s] as { kills?: number } | null)?.kills ?? 0,
+      cratesOpened: mine.filter((f) => f.kind === "crate_opened").length, trades: mine.filter((f) => f.kind === "exposed").length,
+      payout: Number(res.raiders[s].dusdPayout.toString()) + Number((res.raiders[s] as unknown as { mintValue: anchor.BN }).mintValue.toString()), stake: 10_000_000,
+      bestDistrict: best, bestBps: finalBps[best], worstDistrict: worst, worstBps: finalBps[worst],
+      reveal: mysteryDay ? { day: String(mysteryDay.day), tracks: ["SOLUSDT (Tower)", "BTCUSDT (Factory)", "ETHUSDT (Harbor)"] } : null,
+    }, headlines));
+  }));
+  debriefs.sort((a, b) => (a.slot ?? 0) - (b.slot ?? 0));
+  const wireStats = { lines: wire.lines.length, llm: wire.lines.filter((l) => l.source === "llm").length, template: wire.lines.filter((l) => l.source === "template").length };
+  lap(`WIRE: ${wireStats.lines} lines (${wireStats.llm} model, ${wireStats.template} template)`);
 
   const report = {
     version: 1,
@@ -159,9 +197,9 @@ export async function runRaid(o: RaidOptions) {
     settlement: { endRaid: endSig, baseCommit, settledVia: st.settledVia, settleStuck: stuckSig },
     claims,
     tick: { ...tick, mode: tickMode, hz: o.hz },
-    wire: [],
+    wire: { model: "claude-sonnet-5-5", stats: wireStats, live: wire.lines.filter((l) => l.tag !== "DEBRIEF"), debriefs, headlinesCited: debriefs.flatMap((d) => d.headlines ?? []) },
   };
   const pub = await publishReport(S, report);
   lap(`report ${pub.hash} posted ${pub.sig}`);
-  return { S, report, pub, tick };
+  return { S, report, pub, tick, wire: wireStats };
 }

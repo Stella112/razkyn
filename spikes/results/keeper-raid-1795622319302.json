@@ -1,0 +1,24 @@
+{
+  "reportHash": "4af6def1610d46522e60d5d46aa7069c68be90f6c4794ae3b47c5b9fae910b38",
+  "postReportSig": "586QL5TbNnQXsX9fQHirFXsG9uZVkk6q8YVrTKSjdBTznYYHmxxkQ34htBAepHToqpcXx1s6KA9u72QDCiRYZSZ",
+  "reportFile": "/mnt/c/magicblock/app/public/reports/1795622319302.json",
+  "tick": {
+    "sent": 2854,
+    "landed": 2841,
+    "landedPct": 99.54,
+    "p50": 569,
+    "p95": 23087,
+    "p99": 45604,
+    "maxLatencyMs": 68165,
+    "maxGapMs": 21165,
+    "stallsOver1s": 1,
+    "errors": [
+      "TypeError ×7"
+    ]
+  },
+  "wire": {
+    "lines": 8,
+    "llm": 0,
+    "template": 8
+  }
+}
