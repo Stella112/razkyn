@@ -313,7 +313,7 @@ export class RaidSession {
    * ~0.85 tiles/s on devnet and missed 30 s exit windows (M4). Moves are relative, so order
    * does not matter; any rejected as too early are corrected by re-reading the position.
    */
-  async walkTo(slot: number, x: number, y: number, within: number) {
+  async walkTo(slot: number, x: number, y: number, within: number, intervalMs = 110) {
     let moves = 0;
     let me = await this.rprv(slot);
     for (let round = 0; round < 6; round++) {
@@ -327,7 +327,7 @@ export class RaidSession {
         const ix = await this.T.methods.moveTo(slot, sx, sy).accountsPartial({ raid: this.raid, rprv: this.slot("rprv", slot), raidKey: this.raiders[slot].raidKey.publicKey }).instruction();
         inflight.push(this.sendFast(slot, ix).catch(() => null));
         cx += sx; cy += sy; moves++;
-        await sleep(110);
+        await sleep(intervalMs);
       }
       await Promise.all(inflight);
       me = await this.rprv(slot);

@@ -136,10 +136,25 @@ export async function sendTee(
   const tx = new Transaction().add(...ixs);
   tx.feePayer = signers[0].publicKey;
   tx.recentBlockhash = (await conn.getLatestBlockhash()).blockhash;
-  const sig = await sendAndConfirmTransaction(conn, tx, signers, {
-    commitment: "confirmed",
-  });
-  return { sig, ms: performance.now() - t0 };
+  try {
+    const sig = await sendAndConfirmTransaction(conn, tx, signers, { commitment: "confirmed" });
+    return { sig, ms: performance.now() - t0 };
+  } catch (e) {
+    // ER blocks are ~10 ms, so a blockhash's validity window is short: block-height-based
+    // confirmation can expire although the tx executed (seen for end_raid, M5). Preflight
+    // already ran it; check the signature status before reporting a failure.
+    const sig = (e as { signature?: string }).signature;
+    if (!sig || !String(e).includes("expired")) throw e;
+    for (let i = 0; i < 15; i++) {
+      const st = (await conn.getSignatureStatus(sig, { searchTransactionHistory: true })).value;
+      if (st && (st.confirmationStatus === "confirmed" || st.confirmationStatus === "finalized" || st.confirmationStatus === "processed")) {
+        if (st.err) throw new Error(`tx ${sig} failed: ${JSON.stringify(st.err)}`);
+        return { sig, ms: performance.now() - t0 };
+      }
+      await sleep(700);
+    }
+    throw e;
+  }
 }
 
 export async function routerStatus(pk: PublicKey): Promise<unknown> {

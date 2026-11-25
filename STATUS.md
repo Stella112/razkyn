@@ -1,6 +1,6 @@
 # STATUS.md
 
-_Last updated: 2026-11-25 — M4 settlement done (local + devnet); spectator pools pending a scope decision. Next: M5._
+_Last updated: 2026-11-25 — M5 keeper done (full 8-BOT Mystery raid on devnet, lobby → claims → report). Next: M6 (THE WIRE)._
 
 ## Done
 - §4.1 setup: MagicBlock dev skill v0.5.1 (commit `88f6719`, 2026-11-24) installed; references read. `vendor/` cloned (examples `3376663`, starter-kits, SDK tag `v0.18.0`).
@@ -82,12 +82,21 @@ m4: test1_full_raid_settles_and_claims_sum_to_escrow_test5_guards ok · option_a
 - Findings: (1) devnet-tee requires an action's escrow authority to sign the tx (PDA via invoke_signed rejected) → caller is escrow authority (DECISIONS #24). (2) An account that is both committed and escrow authority was not undelegated (MagicSVM). (3) end_raid needs a raised CU limit (~1.4M requested). (4) Clients must pipeline moves at ~10 Hz: one RTT per move (~0.7 s) gave 0.85 tiles/s and missed 30 s exit windows; pipelined ≈ 4.5 tiles/s. (5) The 920 KB program makes each upgrade need ~4.7 SOL of temporary buffer.
 - Not built: spectator pools (`place_bet`, SpecPool, test 7) — scope decision pending.
 
+## M5 — keeper (done)
+- `keeper/src/`: `ticker.ts` (10 Hz pipelined tick + fog driver with latency/gap stats), `bots.ts` (BOT raiders with their own raid keys: loot the nearest public unopened crate, wander, random trades at terminals, extract in the last window; labelled BOT, `join_raid` co-signed by the keeper sets `is_bot`), `claimer.ts` (claims for every raider; also a CLI for a settled raid), `report.ts` (canonical JSON → sha256 → `post_report_hash`, file in `app/public/reports/<raidId>.json`), `raid.ts` (orchestrator: create → humans/BOTs join → delegate → permissions → VRF → crates → Mystery load + verify → start → ticks + bots → end_raid → action or settle_stuck fallback → claims → report), `index.ts` (CLI: `--mode --slots --humans --human-wait --hz`).
+- Devnet: full Mystery raid, 8 BOTs, no manual steps — raid `2bPPQAKN…` (id 1795620791461, leaf 16/23). end_raid `5BNezeCn…` → base commit `3HVArVcs…` → settled via finalize_raid action; 8/8 claims; report hash `37bd8cad…` posted `4oLSfpbz…` and recomputes to the same value. 7/8 BOTs extracted. Conservation: dUSD 50,137,514 + reserve 25,862,486 + ops 4,000,000 = stakes 80,000,000. Evidence `spikes/results/keeper-raid-1795620791461.json`.
+- **§9 test 12 (load, 8 raiders at 10 Hz for 300 s, no stall > 1 s):** run 2 `2bPPQAKN…`: 2,867/2,867 ticks landed, p50 574 / p95 1,089 ms, max gap 1,103 ms, **1 stall > 1 s → narrow FAIL**. Earlier run `9AbuRy5D…`: 2,862/2,862, max gap 791 ms, 0 stalls → PASS. The gap is this machine's link to the Singapore TEE (S2 baseline RTT ~450 ms); re-run from the Singapore keeper host in M8.
+- Fixed during M5: `sendTee` now checks the signature status when confirmation expires (end_raid landed but confirmation timed out once; that raid was finished with `claimer.ts`).
+- Report change after this run: Mystery reports now carry the full verified slice (300 steps) as `pricePath` (`pricePathSource`); the committed report for 1795620791461 predates this and keeps keeper samples (its hash is unchanged).
+- Open: VRF callback signature still not discoverable (report says so); in-game events (`event_plan_hash`, WIRE EVENTS) not implemented; spectator pools deferred (DECISIONS #25).
+
 ## Blocked
 - (nothing)
 
 ## Stubbed / not real yet
-- `start_raid` does not yet require a verified Mystery slice (`verify_slice` lands in M3). M1 devnet runs use Live mode.
+- In-game events: `create_raid` takes `event_plan_hash` but no event plan exists or fires yet; THE WIRE EVENTS has nothing to narrate until it does.
+- Spectator pools (`place_bet`, SpecPool, test 7): not built (deferred until after the client, DECISIONS #25).
 - `data/mystery/headlines.json` does not exist yet (M6): every leaf currently commits to an empty headline list; the root is rebuilt when headlines are added.
 
 ## Next
-- M5: keeper (tick driver, mystery loader, claimer, 7 BOT raiders with pipelined moves, report builder + post_report_hash). Test 12.
+- M6: THE WIRE (live ticker, debrief, spoiler post-filter, 1.5 s template fallback, `wire/prompt.md`, test 10). Needs `ANTHROPIC_API_KEY` in a gitignored `.env`, and `headlines.json` with real source URLs (Merkle root rebuilt).
