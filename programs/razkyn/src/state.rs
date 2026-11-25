@@ -264,3 +264,71 @@ pub struct Crate {
     pub opened_by: u8,
     pub bump: u8,
 }
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Default, InitSpace, PartialEq, Eq, Debug)]
+pub struct RaiderResult {
+    pub wallet: Pubkey,
+    pub joined: bool,
+    pub extracted: bool,
+    pub alive: bool,
+    /// Backpack at the end (units per asset).
+    pub backpack: [u64; NUM_ASSETS],
+    /// Units minted at claim (backpack, scaled when extracted value > loot pool).
+    pub mint_units: [u64; NUM_ASSETS],
+    /// dUSD value of mint_units at final prices (moved to the reserve as backing).
+    pub mint_value: u64,
+    /// dUSD paid at claim: protected slot + pro-rata leftover (+ dust for the lowest slot).
+    pub dusd_payout: u64,
+}
+
+/// `["results", raid_id]`, TEE → base (committed by end_raid), public. Size: 8 + 896.
+#[account]
+#[derive(InitSpace)]
+pub struct Results {
+    pub raid_id: u64,
+    pub computed: bool,
+    pub ended_ts: i64,
+    pub final_prices: [u64; NUM_ASSETS],
+    pub stakes_total: u64,
+    pub ops: u64,
+    pub loot_pool: u64,
+    /// Σ extracted backpack value at final prices before any scaling.
+    pub extracted_value: u64,
+    /// true when extracted value exceeded the loot pool and backpacks were scaled.
+    pub scaled: bool,
+    /// Loot pool left after extracted payouts; shared pro rata by stake.
+    pub leftover: u64,
+    pub reserve_total: u64,
+    pub dusd_total: u64,
+    pub raiders: [RaiderResult; MAX_RAIDERS],
+    pub results_hash: [u8; 32],
+    pub bump: u8,
+}
+
+/// `["settle", raid_id]`, base only, public. The `settled` flag (finalize_raid or
+/// settle_stuck_raid) and claim accounting. Size: 8 + 92.
+#[account]
+#[derive(InitSpace)]
+pub struct Settlement {
+    pub raid_id: u64,
+    pub settled: bool,
+    /// 1 = finalize_raid (Magic Action), 2 = settle_stuck_raid.
+    pub settled_via: u8,
+    pub results_hash: [u8; 32],
+    pub dusd_paid: u64,
+    pub units_minted_value: u64,
+    pub claims: u8,
+    pub report_hash: [u8; 32],
+    pub report_posted: bool,
+    pub bump: u8,
+}
+
+/// `["claim", raid_id, slot]`, base only. Exists once claimed (idempotency). Size: 8 + 11.
+#[account]
+#[derive(InitSpace)]
+pub struct ClaimRecord {
+    pub raid_id: u64,
+    pub slot: u8,
+    pub claimed: bool,
+    pub bump: u8,
+}

@@ -91,6 +91,52 @@ pub fn create_raid(
     Ok(())
 }
 
+// ---------------- create_settlement (M4) ----------------
+
+#[derive(Accounts)]
+pub struct CreateSettlement<'info> {
+    #[account(seeds = [CONFIG_SEED], bump = config.bump, has_one = keeper @ RazkynError::Unauthorized)]
+    pub config: Box<Account<'info, Config>>,
+    #[account(seeds = [RAID_SEED, &raid.raid_id.to_le_bytes()], bump = raid.bump, constraint = raid.status == status::LOBBY @ RazkynError::BadStatus)]
+    pub raid: Box<Account<'info, Raid>>,
+    /// Delegated with the raid; committed back by end_raid.
+    #[account(init, payer = keeper, space = 8 + Results::INIT_SPACE, seeds = [RESULTS_SEED, &raid.raid_id.to_le_bytes()], bump)]
+    pub results: Box<Account<'info, Results>>,
+    /// Base only: the `settled` flag and claim accounting.
+    #[account(init, payer = keeper, space = 8 + Settlement::INIT_SPACE, seeds = [SETTLE_SEED, &raid.raid_id.to_le_bytes()], bump)]
+    pub settlement: Box<Account<'info, Settlement>>,
+    /// CHECK: reserve authority PDA ["reserve", raid_id] (holds no data).
+    #[account(seeds = [RESERVE_SEED, &raid.raid_id.to_le_bytes()], bump)]
+    pub reserve_auth: UncheckedAccount<'info>,
+    /// dUSD backing for the dTWR/dFAC/dHRB units minted at claim.
+    #[account(init, payer = keeper, associated_token::mint = dusd_mint, associated_token::authority = reserve_auth, associated_token::token_program = token_program)]
+    pub reserve: Box<InterfaceAccount<'info, TokenAccount>>,
+    /// CHECK: ops treasury wallet from Config.
+    #[account(address = config.ops_treasury)]
+    pub treasury_owner: UncheckedAccount<'info>,
+    #[account(init_if_needed, payer = keeper, associated_token::mint = dusd_mint, associated_token::authority = treasury_owner, associated_token::token_program = token_program)]
+    pub treasury: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(address = config.dusd_mint)]
+    pub dusd_mint: Box<InterfaceAccount<'info, Mint>>,
+    #[account(mut)]
+    pub keeper: Signer<'info>,
+    #[account(address = config.token_program)]
+    pub token_program: Interface<'info, TokenInterface>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
+}
+
+pub fn create_settlement(ctx: Context<CreateSettlement>) -> Result<()> {
+    let raid_id = ctx.accounts.raid.raid_id;
+    let r = &mut ctx.accounts.results;
+    r.raid_id = raid_id;
+    r.bump = ctx.bumps.results;
+    let s = &mut ctx.accounts.settlement;
+    s.raid_id = raid_id;
+    s.bump = ctx.bumps.settlement;
+    Ok(())
+}
+
 // ---------------- create_slot ----------------
 
 #[derive(Accounts)]
@@ -266,6 +312,7 @@ pub enum RaidAccount {
     RaiderPrivate { slot: u8 },
     View { slot: u8 },
     Crate { idx: u8 },
+    Results,
 }
 
 impl RaidAccount {
@@ -279,6 +326,7 @@ impl RaidAccount {
             RaidAccount::RaiderPrivate { slot } => vec![RPRV_SEED.to_vec(), id, vec![slot]],
             RaidAccount::View { slot } => vec![VIEW_SEED.to_vec(), id, vec![slot]],
             RaidAccount::Crate { idx } => vec![CRATE_SEED.to_vec(), id, vec![idx]],
+            RaidAccount::Results => vec![RESULTS_SEED.to_vec(), id],
         }
     }
 }

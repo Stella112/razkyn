@@ -3,6 +3,8 @@
 //! Spec: CLAUDE.md. Milestone M1: config, mints, faucet, create/join/delegate, permissions,
 //! VRF seed + derivations, tick, movement, fog View. M2: crates, open, shoot, drops, hazards.
 //! M3: Mystery slice + verify_slice, market steps (slice or oracle), trades with exposure.
+//! M4: extraction, end_raid + Results (Option A) + commit/undelegate with finalize_raid action,
+//!     settle_stuck_raid, claim, post_report_hash.
 #![allow(unexpected_cfgs)]
 
 use anchor_lang::prelude::*;
@@ -44,6 +46,9 @@ pub mod razkyn {
         event_plan_hash: [u8; 32],
     ) -> Result<()> {
         instructions::lobby::create_raid(ctx, raid_id, mode, leaf_count, day_root, event_plan_hash)
+    }
+    pub fn create_settlement(ctx: Context<CreateSettlement>) -> Result<()> {
+        instructions::lobby::create_settlement(ctx)
     }
     pub fn create_slot(ctx: Context<CreateSlot>, slot: u8) -> Result<()> {
         instructions::lobby::create_slot(ctx, slot)
@@ -120,6 +125,35 @@ pub mod razkyn {
     }
     pub fn cancel_trade(ctx: Context<CancelTrade>, slot: u8) -> Result<()> {
         instructions::market::cancel_trade(ctx, slot)
+    }
+
+    // ---- extraction + settlement (M4) ----
+    pub fn start_extract(ctx: Context<StartExtract>, slot: u8, exit: u8) -> Result<()> {
+        instructions::settle::start_extract(ctx, slot, exit)
+    }
+    pub fn finish_extract(ctx: Context<FinishExtract>, slot: u8) -> Result<()> {
+        instructions::settle::finish_extract(ctx, slot)
+    }
+    pub fn end_raid<'info>(ctx: Context<'info, EndRaid<'info>>) -> Result<()> {
+        instructions::settle::end_raid(ctx)
+    }
+    pub fn reveal_after_end<'info>(ctx: Context<'info, RevealAfterEnd<'info>>, items: Vec<u8>) -> Result<()> {
+        instructions::settle::reveal_after_end(ctx, items)
+    }
+    pub fn finalize_raid(ctx: Context<FinalizeRaid>) -> Result<()> {
+        instructions::settle::finalize_raid(ctx)
+    }
+    pub fn settle_stuck_raid(ctx: Context<SettleStuckRaid>) -> Result<()> {
+        instructions::settle::settle_stuck_raid(ctx)
+    }
+    pub fn claim(ctx: Context<Claim>, slot: u8) -> Result<()> {
+        instructions::settle::claim(ctx, slot)
+    }
+    pub fn post_report_hash(ctx: Context<PostReportHash>, hash: [u8; 32]) -> Result<()> {
+        instructions::settle::post_report_hash(ctx, hash)
+    }
+    pub fn set_test_flags(ctx: Context<SetTestFlags>, fail_finalize: bool) -> Result<()> {
+        instructions::settle::set_test_flags(ctx, fail_finalize)
     }
 
     // ---- gameplay (TEE) ----

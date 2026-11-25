@@ -9,7 +9,7 @@ import {
 } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import {
-  EPHEMERAL_VAULT_ID, MAGIC_PROGRAM_ID, PERMISSION_PROGRAM_ID, permissionPdaFromAccount,
+  EPHEMERAL_VAULT_ID, MAGIC_CONTEXT_ID, MAGIC_PROGRAM_ID, PERMISSION_PROGRAM_ID, permissionPdaFromAccount,
 } from "@magicblock-labs/ephemeral-rollups-sdk";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -77,6 +77,7 @@ export class RaidSession {
       config: this.config, raid: this.raid, district0: this.district(0), district1: this.district(1), district2: this.district(2), keeper: k,
     }).instruction();
     await sendBase(this.base, [dist], [this.keeper]);
+    await this.createSettlement();
     const total = NUM_CRATES + nSlots;
     const crateSigs: string[] = [];
     for (let first = 0; first < total; first += 12) {
@@ -124,6 +125,7 @@ export class RaidSession {
       targets.push([this.slot("view", s), { view: { slot: s } }]);
     }
     for (let idx = 0; idx < NUM_CRATES + n; idx++) targets.push([this.crate(idx), { crate: { idx } }]);
+    targets.push([this.results, { results: {} }]);
     targets.push([this.raid, { raid: {} }]);
     const sigs: string[] = [];
     for (let i = 0; i < targets.length; i += 3) {
@@ -357,4 +359,88 @@ export class RaidSession {
       raidKey: this.raiders[slot].raidKey.publicKey,
     }).instruction();
   }
+
+  // ---- M4: extraction + settlement ----
+  get results() { return pda(Buffer.from("results"), this.idb); }
+  get settlement() { return pda(Buffer.from("settle"), this.idb); }
+  get reserveAuth() { return pda(Buffer.from("reserve"), this.idb); }
+  get testFlags() { return pda(Buffer.from("test_flags")); }
+
+  async createSettlement() {
+    const ix = await this.P.methods.createSettlement().accountsPartial({
+      config: this.config, raid: this.raid, results: this.results, settlement: this.settlement, reserveAuth: this.reserveAuth,
+      reserve: getAssociatedTokenAddressSync(DUSD, this.reserveAuth, true, TOKEN), treasuryOwner: this.keeper.publicKey,
+      treasury: getAssociatedTokenAddressSync(DUSD, this.keeper.publicKey, false, TOKEN), dusdMint: DUSD, keeper: this.keeper.publicKey,
+      tokenProgram: TOKEN, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    }).instruction();
+    this.sigs.createSettlement = await sendBase(this.base, [ix], [this.keeper]);
+  }
+
+  /** Extraction uses the fast send (exit windows are only 30 s). Returns { sig }. */
+  async startExtract(slot: number, exit: number) {
+    const ix = await this.T.methods.startExtract(slot, exit).accountsPartial({ raid: this.raid, rprv: this.slot("rprv", slot), raidKey: this.raiders[slot].raidKey.publicKey }).instruction();
+    return { sig: await this.sendFast(slot, ix) };
+  }
+  async finishExtract(slot: number) {
+    const ix = await this.T.methods.finishExtract(slot).accountsPartial({ raid: this.raid, rprv: this.slot("rprv", slot), rpub: this.slot("rpub", slot), raidKey: this.raiders[slot].raidKey.publicKey }).instruction();
+    return { sig: await this.sendFast(slot, ix) };
+  }
+
+  /** end_raid (anyone; here the keeper pays): Results + commit/undelegate + finalize_raid action. */
+  async endRaid() {
+    const ix = await this.T.methods.endRaid().accountsPartial({
+      payer: this.keeper.publicKey, raid: this.raid, results: this.results, config: this.config,
+      district0: this.district(0), district1: this.district(1), district2: this.district(2), programId: PID,
+      magicContext: MAGIC_CONTEXT_ID, magicProgram: MAGIC_PROGRAM_ID,
+    }).remainingAccounts(this.raiders.map((_, s) => ({ pubkey: this.slot("rprv", s), isSigner: false, isWritable: false }))).instruction();
+    const r = await sendTee(this.teeK, [cu(1_400_000), ix], [this.keeper]);
+    this.sigs.endRaid = r.sig;
+    return r.sig;
+  }
+
+  settleAccounts() {
+    return {
+      settlement: this.settlement, raid: this.raid, results: this.results, config: this.config, testFlags: this.testFlags,
+      vaultAuth: this.escrowAuth, stakeVault: this.escrow, treasury: getAssociatedTokenAddressSync(DUSD, this.keeper.publicKey, false, TOKEN),
+      reserve: getAssociatedTokenAddressSync(DUSD, this.reserveAuth, true, TOKEN), dusdMint: DUSD, tokenProgram: TOKEN,
+    };
+  }
+
+  async settleStuck(payer: Keypair) {
+    const ix = await this.P.methods.settleStuckRaid().accountsPartial({ settle: this.settleAccounts(), payer: payer.publicKey } as never).instruction();
+    return sendBase(this.base, [ix], [payer]);
+  }
+
+  async claim(slot: number, payer: Keypair) {
+    const wallet = this.raiders[slot].wallet.publicKey;
+    const m = [cfg.mints.twr, cfg.mints.fac, cfg.mints.hrb].map((k: string) => new PublicKey(k));
+    const ix = await this.P.methods.claim(slot).accountsPartial({
+      settlement: this.settlement, results: this.results, claimRecord: pda(Buffer.from("claim"), this.idb, Buffer.from([slot])), wallet,
+      config: this.config, vaultAuth: this.escrowAuth, stakeVault: this.escrow, walletDusd: getAssociatedTokenAddressSync(DUSD, wallet, false, TOKEN),
+      mintAuth: this.mintAuth, twrMint: m[0], facMint: m[1], hrbMint: m[2],
+      walletTwr: getAssociatedTokenAddressSync(m[0], wallet, false, TOKEN), walletFac: getAssociatedTokenAddressSync(m[1], wallet, false, TOKEN),
+      walletHrb: getAssociatedTokenAddressSync(m[2], wallet, false, TOKEN), dusdMint: DUSD, payer: payer.publicKey,
+      tokenProgram: TOKEN, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    }).instruction();
+    return sendBase(this.base, [cu(600_000), ix], [payer]);
+  }
+
+  async readSettlement() {
+    return (await this.P.account.settlement.fetch(this.settlement)) as unknown as { settled: boolean; settledVia: number; dusdPaid: anchor.BN; claims: number; resultsHash: number[] };
+  }
+  async readResultsBase() {
+    const info = await this.base.getAccountInfo(this.results);
+    return info ? { owner: info.owner.toBase58(), data: this.P.coder.accounts.decode("results", info.data) as { computed: boolean; stakesTotal: anchor.BN; ops: anchor.BN; reserveTotal: anchor.BN; dusdTotal: anchor.BN; scaled: boolean; leftover: anchor.BN; finalPrices: anchor.BN[]; raiders: { dusdPayout: anchor.BN; mintUnits: anchor.BN[]; extracted: boolean; joined: boolean }[] } } : null;
+  }
+}
+
+/** Admin-only test flag for devnet test 11 (finalize_raid forced to fail). */
+export async function setTestFlags(failFinalize: boolean) {
+  const keeper = loadKeypair("keeper"); // admin == keeper on devnet (M1 init_config)
+  const base = baseConn();
+  const P = programFor(base, keeper);
+  const ix = await P.methods.setTestFlags(failFinalize).accountsPartial({
+    testFlags: pda(Buffer.from("test_flags")), config: pda(Buffer.from("config")), admin: keeper.publicKey,
+  }).instruction();
+  return sendBase(base, [ix], [keeper]);
 }

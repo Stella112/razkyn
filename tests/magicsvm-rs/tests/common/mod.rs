@@ -21,7 +21,7 @@ pub use {
     razkyn::{
         accounts, constants::*, instruction,
         instructions::RaidAccount,
-        state::{crate_state, mode, status, Crate, District, Raid, RaiderPrivate, RaiderPublic, View},
+        state::{crate_state, mode, status, ClaimRecord, Crate, District, Raid, RaiderPrivate, RaiderPublic, Results, Settlement, View},
     },
     solana_address::Address,
     solana_clock::Clock,
@@ -59,6 +59,13 @@ pub const E_SLICE_NOT_VERIFIED: u32 = ERR_BASE + 35;
 pub const E_NOT_AT_TERMINAL: u32 = ERR_BASE + 36;
 pub const E_TRADING: u32 = ERR_BASE + 37;
 pub const E_INSUFFICIENT_UNITS: u32 = ERR_BASE + 39;
+pub const E_EXIT_CLOSED: u32 = ERR_BASE + 41;
+pub const E_NOT_ENDED: u32 = ERR_BASE + 42;
+pub const E_NOT_SETTLED: u32 = ERR_BASE + 45;
+pub const E_ALREADY_SETTLED: u32 = ERR_BASE + 46;
+pub const E_UNAUTHORIZED: u32 = ERR_BASE + 1;
+pub const E_TOO_EARLY: u32 = ERR_BASE + 48;
+pub const E_NOT_COMMITTED: u32 = ERR_BASE + 49;
 const MINT_SIZE: usize = 82;
 
 pub fn a(p: Pubkey) -> Address {
@@ -114,6 +121,18 @@ pub fn mint_auth() -> Pubkey {
 pub fn escrow_auth() -> Pubkey {
     pda(&[ESCROW_SEED, &id_bytes()])
 }
+pub fn results_pda() -> Pubkey {
+    pda(&[RESULTS_SEED, &id_bytes()])
+}
+pub fn settle_pda() -> Pubkey {
+    pda(&[SETTLE_SEED, &id_bytes()])
+}
+pub fn reserve_auth() -> Pubkey {
+    pda(&[RESERVE_SEED, &id_bytes()])
+}
+pub fn test_flags_pda() -> Pubkey {
+    pda(&[b"test_flags"])
+}
 
 pub struct Raider {
     pub wallet: Keypair,
@@ -123,6 +142,8 @@ pub struct Raider {
 pub struct World {
     pub svm: MagicSVM,
     pub keeper: Keypair,
+    pub admin: Keypair,
+    pub mints: Vec<Pubkey>,
     pub raiders: Vec<Raider>,
     pub dusd: Pubkey,
     pub n: u8,
@@ -351,7 +372,7 @@ pub fn raid_seeded(n: u8, seed: Option<[u8; 32]>, raid_mode: u8, leaf_count: u32
     svm.airdrop(&admin.pubkey(), 10 * LAMPORTS_PER_SOL).unwrap();
     svm.airdrop(&keeper.pubkey(), 100 * LAMPORTS_PER_SOL).unwrap();
     let mints: Vec<Keypair> = (0..5).map(|_| Keypair::new()).collect();
-    let mut w = World { svm, keeper, raiders: vec![], dusd: kp(&mints[0]), n };
+    let mut w = World { svm, keeper, admin: admin.insecure_clone(), mints: mints.iter().map(kp).collect(), raiders: vec![], dusd: kp(&mints[0]), n };
 
     let mut mint_ixs = vec![];
     for (i, m) in mints.iter().enumerate() {
@@ -395,6 +416,14 @@ pub fn raid_seeded(n: u8, seed: Option<[u8; 32]>, raid_mode: u8, leaf_count: u32
             keeper: k, system_program: system_program::ID,
         },
     )], "create_districts");
+    w.send(Base, &[&keeper], &[ix(
+        instruction::CreateSettlement {},
+        accounts::CreateSettlement {
+            config: config_pda(), raid: raid_pda(), results: results_pda(), settlement: settle_pda(), reserve_auth: reserve_auth(),
+            reserve: ata(reserve_auth(), w.dusd), treasury_owner: kp(&admin), treasury: ata(kp(&admin), w.dusd), dusd_mint: w.dusd,
+            keeper: k, token_program: TOKEN_PROGRAM_ID, associated_token_program: ASSOCIATED_TOKEN_PROGRAM_ID, system_program: system_program::ID,
+        },
+    )], "create_settlement");
     // Crates 0..36 + one drop crate per slot.
     let total = NUM_CRATES as u8 + n;
     let mut first = 0u8;
@@ -440,6 +469,7 @@ pub fn raid_seeded(n: u8, seed: Option<[u8; 32]>, raid_mode: u8, leaf_count: u32
     for idx in 0..total {
         targets.push((crate_pda(idx), RaidAccount::Crate { idx }));
     }
+    targets.push((results_pda(), RaidAccount::Results));
     targets.push((raid_pda(), RaidAccount::Raid));
     for (t, kind) in targets {
         w.send(Base, &[&keeper], &[delegate_ix(k, validator, t, kind)], "delegate_pda");
@@ -511,4 +541,70 @@ pub fn expect_err(r: SendResult, code: u32, what: &str) {
 /// Direction that keeps a move of `d` units inside the map.
 pub fn inward(x: u16, d: i16) -> i16 {
     if x as i32 > MAX_X as i32 / 2 { -d } else { d }
+}
+
+// ---------------- M4 helpers ----------------
+impl World {
+    pub fn token_balance(&self, account: Pubkey) -> u64 {
+        self.svm.get_account_for(TransactionTarget::Base, &a(account)).map(|acc| u64::from_le_bytes(acc.data[64..72].try_into().unwrap())).unwrap_or(0)
+    }
+    pub fn try_start_extract(&mut self, slot: u8, exit: u8) -> SendResult {
+        let k = self.rk(slot);
+        let i = ix(instruction::StartExtract { slot, exit }, accounts::StartExtract { raid: raid_pda(), rprv: slot_pda(RPRV_SEED, slot), raid_key: kp(&k) });
+        self.try_send(TransactionTarget::Ephemeral, &[&k], &[i])
+    }
+    pub fn try_finish_extract(&mut self, slot: u8) -> SendResult {
+        let k = self.rk(slot);
+        let i = ix(instruction::FinishExtract { slot }, accounts::FinishExtract { raid: raid_pda(), rprv: slot_pda(RPRV_SEED, slot), rpub: slot_pda(RPUB_SEED, slot), raid_key: kp(&k) });
+        self.try_send(TransactionTarget::Ephemeral, &[&k], &[i])
+    }
+    pub fn end_raid_ix(&self, payer: Pubkey) -> Instruction {
+        let d = |i: u8| slot_pda(DISTRICT_SEED, i);
+        let mut i = ix(
+            instruction::EndRaid {},
+            accounts::EndRaid {
+                payer, raid: raid_pda(), results: results_pda(), config: config_pda(),
+                district0: d(0), district1: d(1), district2: d(2), program_id: pid(),
+                magic_context: ephemeral_rollups_sdk::consts::MAGIC_CONTEXT_ID, magic_program: MAGIC_PROGRAM_ID,
+            },
+        );
+        for s in 0..self.n {
+            i.accounts.push(AccountMeta::new_readonly(a(slot_pda(RPRV_SEED, s)), false));
+        }
+        i
+    }
+    pub fn settle_accounts(&self) -> accounts::SettleAccounts {
+        accounts::SettleAccounts {
+            settlement: settle_pda(), raid: raid_pda(), results: results_pda(), config: config_pda(), test_flags: test_flags_pda(),
+            vault_auth: escrow_auth(), stake_vault: ata(escrow_auth(), self.dusd), treasury: ata(kp(&self.admin), self.dusd),
+            reserve: ata(reserve_auth(), self.dusd), dusd_mint: self.dusd, token_program: TOKEN_PROGRAM_ID,
+        }
+    }
+    pub fn claim_ix(&self, slot: u8, payer: Pubkey) -> Instruction {
+        let wallet = kp(&self.raiders[slot as usize].wallet);
+        ix(
+            instruction::Claim { slot },
+            accounts::Claim {
+                settlement: settle_pda(), results: results_pda(), claim_record: pda(&[CLAIM_SEED, &id_bytes(), &[slot]]), wallet,
+                config: config_pda(), vault_auth: escrow_auth(), stake_vault: ata(escrow_auth(), self.dusd), wallet_dusd: ata(wallet, self.dusd),
+                mint_auth: mint_auth(), twr_mint: self.mints[1], fac_mint: self.mints[2], hrb_mint: self.mints[3],
+                wallet_twr: ata(wallet, self.mints[1]), wallet_fac: ata(wallet, self.mints[2]), wallet_hrb: ata(wallet, self.mints[3]),
+                dusd_mint: self.dusd, payer, token_program: TOKEN_PROGRAM_ID, associated_token_program: ASSOCIATED_TOKEN_PROGRAM_ID,
+                system_program: system_program::ID,
+            },
+        )
+    }
+    pub fn settlement(&self) -> Settlement {
+        self.read(TransactionTarget::Base, settle_pda()).expect("settlement on base")
+    }
+    pub fn results_base(&self) -> Option<Results> {
+        self.read(TransactionTarget::Base, results_pda())
+    }
+}
+
+/// ComputeBudget SetComputeUnitLimit (program ComputeBudget111…, discriminator 2, u32 LE).
+pub fn cu_ix(units: u32) -> Instruction {
+    let mut data = vec![2u8];
+    data.extend_from_slice(&units.to_le_bytes());
+    Instruction { program_id: solana_sdk_ids::compute_budget::id(), accounts: vec![], data }
 }

@@ -84,4 +84,24 @@ pub enum RazkynError {
     InsufficientUnits,
     #[msg("bad price feed")]
     BadFeed,
+    #[msg("no open exit there")]
+    ExitClosed,
+    #[msg("raid has not ended")]
+    NotEnded,
+    #[msg("results already computed")]
+    AlreadyComputed,
+    #[msg("conservation check failed")]
+    Conservation,
+    #[msg("raid is not settled")]
+    NotSettled,
+    #[msg("raid already settled")]
+    AlreadySettled,
+    #[msg("already claimed")]
+    AlreadyClaimed,
+    #[msg("too early for settle_stuck_raid")]
+    TooEarly,
+    #[msg("results not committed to base yet")]
+    NotCommitted,
+    #[msg("forced finalize failure (test flag)")]
+    ForcedFailure,
 }

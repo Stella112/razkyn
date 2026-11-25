@@ -62,6 +62,460 @@
       ]
     },
     {
+      "name": "claim",
+      "discriminator": [
+        62,
+        198,
+        214,
+        193,
+        213,
+        159,
+        108,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "settlement",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "settlement.raid_id",
+                "account": "Settlement"
+              }
+            ]
+          }
+        },
+        {
+          "name": "results",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  117,
+                  108,
+                  116,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "settlement.raid_id",
+                "account": "Settlement"
+              }
+            ]
+          }
+        },
+        {
+          "name": "claim_record",
+          "writable": true
+        },
+        {
+          "name": "wallet"
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_auth",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "settlement.raid_id",
+                "account": "Settlement"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stake_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault_auth"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "dusd_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "wallet_dusd",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "wallet"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "dusd_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "mint_auth",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "twr_mint",
+          "writable": true
+        },
+        {
+          "name": "fac_mint",
+          "writable": true
+        },
+        {
+          "name": "hrb_mint",
+          "writable": true
+        },
+        {
+          "name": "wallet_twr",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "wallet"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "twr_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "wallet_fac",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "wallet"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "fac_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "wallet_hrb",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "wallet"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "hrb_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "dusd_mint"
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "create_crates",
       "discriminator": [
         255,
@@ -427,6 +881,282 @@
       ]
     },
     {
+      "name": "create_settlement",
+      "discriminator": [
+        109,
+        119,
+        255,
+        55,
+        76,
+        73,
+        106,
+        126
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "results",
+          "docs": [
+            "Delegated with the raid; committed back by end_raid."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  117,
+                  108,
+                  116,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "settlement",
+          "docs": [
+            "Base only: the `settled` flag and claim accounting."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reserve_auth",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reserve",
+          "docs": [
+            "dUSD backing for the dTWR/dFAC/dHRB units minted at claim."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "reserve_auth"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "dusd_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "treasury_owner"
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "treasury_owner"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "dusd_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "dusd_mint"
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "create_slot",
       "discriminator": [
         176,
@@ -771,6 +1501,114 @@
       ]
     },
     {
+      "name": "end_raid",
+      "discriminator": [
+        61,
+        140,
+        182,
+        70,
+        56,
+        39,
+        24,
+        109
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "results",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  117,
+                  108,
+                  116,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "district0"
+        },
+        {
+          "name": "district1"
+        },
+        {
+          "name": "district2"
+        },
+        {
+          "name": "program_id",
+          "address": "CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magic_context",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "faucet_dusd",
       "discriminator": [
         186,
@@ -1087,6 +1925,358 @@
         {
           "name": "amount",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "finalize_raid",
+      "discriminator": [
+        149,
+        188,
+        177,
+        247,
+        200,
+        129,
+        0,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "settle",
+          "accounts": [
+            {
+              "name": "settlement",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      115,
+                      101,
+                      116,
+                      116,
+                      108,
+                      101
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "settlement.raid_id",
+                    "account": "Settlement"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "raid",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      114,
+                      97,
+                      105,
+                      100
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "settlement.raid_id",
+                    "account": "Settlement"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "results",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      114,
+                      101,
+                      115,
+                      117,
+                      108,
+                      116,
+                      115
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "settlement.raid_id",
+                    "account": "Settlement"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "config",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      99,
+                      111,
+                      110,
+                      102,
+                      105,
+                      103
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "test_flags",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      116,
+                      101,
+                      115,
+                      116,
+                      95,
+                      102,
+                      108,
+                      97,
+                      103,
+                      115
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "vault_auth",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      101,
+                      115,
+                      99,
+                      114,
+                      111,
+                      119
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "settlement.raid_id",
+                    "account": "Settlement"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "stake_vault",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "vault_auth"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "token_program"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "dusd_mint"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "treasury",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "config.ops_treasury",
+                    "account": "Config"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "token_program"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "dusd_mint"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "reserve",
+              "writable": true
+            },
+            {
+              "name": "dusd_mint"
+            },
+            {
+              "name": "token_program"
+            }
+          ]
+        },
+        {
+          "name": "source_program",
+          "docs": [
+            "escrow signer below (only the Delegation Program can produce it), this proves the call is",
+            "a post-commit action scheduled by this program, i.e. by end_raid. The outcome does not",
+            "depend on who called end_raid: settlement re-reads the committed, hash-checked Results."
+          ],
+          "address": "CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97"
+        },
+        {
+          "name": "escrow_auth"
+        },
+        {
+          "name": "escrow",
+          "docs": [
+            "through the real post-commit path (skill magic-actions.md)."
+          ],
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "finish_extract",
+      "discriminator": [
+        77,
+        76,
+        73,
+        207,
+        119,
+        225,
+        102,
+        51
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "rpub",
+          "writable": true
+        },
+        {
+          "name": "raid_key",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
         }
       ]
     },
@@ -1787,6 +2977,81 @@
       ]
     },
     {
+      "name": "post_report_hash",
+      "discriminator": [
+        2,
+        66,
+        70,
+        245,
+        230,
+        133,
+        206,
+        234
+      ],
+      "accounts": [
+        {
+          "name": "settlement",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "settlement.raid_id",
+                "account": "Settlement"
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "process_undelegation",
       "discriminator": [
         196,
@@ -1970,6 +3235,417 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "reveal_after_end",
+      "discriminator": [
+        4,
+        29,
+        243,
+        75,
+        57,
+        212,
+        204,
+        226
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "permission_program",
+          "address": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
+        },
+        {
+          "name": "ephemeral_vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "items",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "set_test_flags",
+      "discriminator": [
+        48,
+        80,
+        253,
+        169,
+        34,
+        44,
+        219,
+        90
+      ],
+      "accounts": [
+        {
+          "name": "test_flags",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  101,
+                  115,
+                  116,
+                  95,
+                  102,
+                  108,
+                  97,
+                  103,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "fail_finalize",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "settle_stuck_raid",
+      "discriminator": [
+        89,
+        58,
+        253,
+        79,
+        174,
+        119,
+        254,
+        113
+      ],
+      "accounts": [
+        {
+          "name": "settle",
+          "accounts": [
+            {
+              "name": "settlement",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      115,
+                      101,
+                      116,
+                      116,
+                      108,
+                      101
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "settlement.raid_id",
+                    "account": "Settlement"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "raid",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      114,
+                      97,
+                      105,
+                      100
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "settlement.raid_id",
+                    "account": "Settlement"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "results",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      114,
+                      101,
+                      115,
+                      117,
+                      108,
+                      116,
+                      115
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "settlement.raid_id",
+                    "account": "Settlement"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "config",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      99,
+                      111,
+                      110,
+                      102,
+                      105,
+                      103
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "test_flags",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      116,
+                      101,
+                      115,
+                      116,
+                      95,
+                      102,
+                      108,
+                      97,
+                      103,
+                      115
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "vault_auth",
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "const",
+                    "value": [
+                      101,
+                      115,
+                      99,
+                      114,
+                      111,
+                      119
+                    ]
+                  },
+                  {
+                    "kind": "account",
+                    "path": "settlement.raid_id",
+                    "account": "Settlement"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "stake_vault",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "vault_auth"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "token_program"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "dusd_mint"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "treasury",
+              "writable": true,
+              "pda": {
+                "seeds": [
+                  {
+                    "kind": "account",
+                    "path": "config.ops_treasury",
+                    "account": "Config"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "token_program"
+                  },
+                  {
+                    "kind": "account",
+                    "path": "dusd_mint"
+                  }
+                ],
+                "program": {
+                  "kind": "const",
+                  "value": [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ]
+                }
+              }
+            },
+            {
+              "name": "reserve",
+              "writable": true
+            },
+            {
+              "name": "dusd_mint"
+            },
+            {
+              "name": "token_program"
+            }
+          ]
+        },
+        {
+          "name": "payer",
+          "signer": true
         }
       ],
       "args": []
@@ -2208,6 +3884,60 @@
         },
         {
           "name": "target",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "start_extract",
+      "discriminator": [
+        95,
+        24,
+        108,
+        68,
+        98,
+        159,
+        115,
+        130
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "raid_key",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        },
+        {
+          "name": "exit",
           "type": "u8"
         }
       ]
@@ -2667,6 +4397,19 @@
   ],
   "accounts": [
     {
+      "name": "ClaimRecord",
+      "discriminator": [
+        57,
+        229,
+        0,
+        9,
+        65,
+        62,
+        96,
+        7
+      ]
+    },
+    {
       "name": "Config",
       "discriminator": [
         155,
@@ -2768,6 +4511,45 @@
         114,
         121,
         178
+      ]
+    },
+    {
+      "name": "Results",
+      "discriminator": [
+        158,
+        56,
+        160,
+        177,
+        25,
+        255,
+        13,
+        136
+      ]
+    },
+    {
+      "name": "Settlement",
+      "discriminator": [
+        55,
+        11,
+        219,
+        33,
+        36,
+        136,
+        40,
+        182
+      ]
+    },
+    {
+      "name": "TestFlags",
+      "discriminator": [
+        123,
+        179,
+        129,
+        53,
+        20,
+        202,
+        211,
+        82
       ]
     },
     {
@@ -2989,9 +4771,86 @@
       "code": 6040,
       "name": "BadFeed",
       "msg": "bad price feed"
+    },
+    {
+      "code": 6041,
+      "name": "ExitClosed",
+      "msg": "no open exit there"
+    },
+    {
+      "code": 6042,
+      "name": "NotEnded",
+      "msg": "raid has not ended"
+    },
+    {
+      "code": 6043,
+      "name": "AlreadyComputed",
+      "msg": "results already computed"
+    },
+    {
+      "code": 6044,
+      "name": "Conservation",
+      "msg": "conservation check failed"
+    },
+    {
+      "code": 6045,
+      "name": "NotSettled",
+      "msg": "raid is not settled"
+    },
+    {
+      "code": 6046,
+      "name": "AlreadySettled",
+      "msg": "raid already settled"
+    },
+    {
+      "code": 6047,
+      "name": "AlreadyClaimed",
+      "msg": "already claimed"
+    },
+    {
+      "code": 6048,
+      "name": "TooEarly",
+      "msg": "too early for settle_stuck_raid"
+    },
+    {
+      "code": 6049,
+      "name": "NotCommitted",
+      "msg": "results not committed to base yet"
+    },
+    {
+      "code": 6050,
+      "name": "ForcedFailure",
+      "msg": "forced finalize failure (test flag)"
     }
   ],
   "types": [
+    {
+      "name": "ClaimRecord",
+      "docs": [
+        "`[\"claim\", raid_id, slot]`, base only. Exists once claimed (idempotency). Size: 8 + 11."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raid_id",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u8"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
     {
       "name": "Config",
       "docs": [
@@ -3499,6 +5358,9 @@
                 "type": "u8"
               }
             ]
+          },
+          {
+            "name": "Results"
           }
         ]
       }
@@ -3750,6 +5612,68 @@
       }
     },
     {
+      "name": "RaiderResult",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "joined",
+            "type": "bool"
+          },
+          {
+            "name": "extracted",
+            "type": "bool"
+          },
+          {
+            "name": "alive",
+            "type": "bool"
+          },
+          {
+            "name": "backpack",
+            "docs": [
+              "Backpack at the end (units per asset)."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          },
+          {
+            "name": "mint_units",
+            "docs": [
+              "Units minted at claim (backpack, scaled when extracted value > loot pool)."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          },
+          {
+            "name": "mint_value",
+            "docs": [
+              "dUSD value of mint_units at final prices (moved to the reserve as backing)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "dusd_payout",
+            "docs": [
+              "dUSD paid at claim: protected slot + pro-rata leftover (+ dust for the lowest slot)."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "RaiderSlot",
       "type": {
         "kind": "struct",
@@ -3781,6 +5705,189 @@
           {
             "name": "is_bot",
             "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Results",
+      "docs": [
+        "`[\"results\", raid_id]`, TEE → base (committed by end_raid), public. Size: 8 + 896."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raid_id",
+            "type": "u64"
+          },
+          {
+            "name": "computed",
+            "type": "bool"
+          },
+          {
+            "name": "ended_ts",
+            "type": "i64"
+          },
+          {
+            "name": "final_prices",
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          },
+          {
+            "name": "stakes_total",
+            "type": "u64"
+          },
+          {
+            "name": "ops",
+            "type": "u64"
+          },
+          {
+            "name": "loot_pool",
+            "type": "u64"
+          },
+          {
+            "name": "extracted_value",
+            "docs": [
+              "Σ extracted backpack value at final prices before any scaling."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "scaled",
+            "docs": [
+              "true when extracted value exceeded the loot pool and backpacks were scaled."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "leftover",
+            "docs": [
+              "Loot pool left after extracted payouts; shared pro rata by stake."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "reserve_total",
+            "type": "u64"
+          },
+          {
+            "name": "dusd_total",
+            "type": "u64"
+          },
+          {
+            "name": "raiders",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "RaiderResult"
+                  }
+                },
+                8
+              ]
+            }
+          },
+          {
+            "name": "results_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Settlement",
+      "docs": [
+        "`[\"settle\", raid_id]`, base only, public. The `settled` flag (finalize_raid or",
+        "settle_stuck_raid) and claim accounting. Size: 8 + 92."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raid_id",
+            "type": "u64"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
+            "name": "settled_via",
+            "docs": [
+              "1 = finalize_raid (Magic Action), 2 = settle_stuck_raid."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "results_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "dusd_paid",
+            "type": "u64"
+          },
+          {
+            "name": "units_minted_value",
+            "type": "u64"
+          },
+          {
+            "name": "claims",
+            "type": "u8"
+          },
+          {
+            "name": "report_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "report_posted",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TestFlags",
+      "docs": [
+        "`[\"test_flags\"]`, base, admin-set. Only used by devnet test 11. Size: 8 + 2."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fail_finalize",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }

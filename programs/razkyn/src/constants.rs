@@ -139,3 +139,14 @@ pub const TRADE_CHANNEL_SLOTS: u64 = 300; // 3 s
 /// Two terminals per district (tile coordinates). CLAUDE.md fixes the count, not positions.
 pub const TERMINALS_TILES: [(u16, u16); 6] = [(5, 12), (15, 28), (27, 12), (37, 28), (49, 12), (59, 28)];
 pub const TERMINAL_RANGE_UNITS: u64 = UNITS_PER_TILE as u64; // within 1 tile
+
+// ---------- extraction + settlement (M4) ----------
+pub const CH_EXTRACT: u8 = 3;
+pub const EXTRACT_CHANNEL_SLOTS: u64 = 500; // 5 s
+pub const EXIT_RANGE_UNITS: u64 = UNITS_PER_TILE as u64; // stand within 1 tile
+pub const RESULTS_SEED: &[u8] = b"results";
+pub const SETTLE_SEED: &[u8] = b"settle";
+pub const CLAIM_SEED: &[u8] = b"claim";
+pub const RESERVE_SEED: &[u8] = b"reserve";
+/// settle_stuck_raid may run this long after the raid ended if finalize_raid never landed.
+pub const SETTLE_STUCK_SECS: i64 = 120;
