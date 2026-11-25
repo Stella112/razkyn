@@ -9,8 +9,8 @@ import { useGameWallet } from "../lib/wallet";
 
 const PHASE: Record<LobbyT["phase"], string> = {
   idle: "No raid running",
-  lobby: "Lobby open: join before the deadline",
-  setup: "Setting up: delegating to the TEE, permissions, VRF seed, crates",
+  lobby: "Seats open: join before the countdown ends",
+  setup: "Building the city: private rollup, sealed crates, VRF spawns (2–3 min)",
   live: "Raid live",
   settling: "Settling on the base layer",
   done: "Raid finished",
@@ -90,6 +90,10 @@ export default function Lobby() {
     }
   };
 
+  const PHASES: LobbyT["phase"][] = ["lobby", "setup", "live", "settling", "done"];
+  const phaseIdx = lobby ? PHASES.indexOf(lobby.phase) : -1;
+  const short = (k: { toBase58(): string }) => `${k.toBase58().slice(0, 4)}…${k.toBase58().slice(-4)}`;
+
   return (
     <div className="page">
       <div className="topbar">
@@ -99,86 +103,112 @@ export default function Lobby() {
         {w.kind === "dev" ? <span className="pill warn">{w.label}</span> : <WalletMultiButton />}
       </div>
       <div className="wrap">
-        {lobby === undefined && <p className="dim">Looking for the keeper…</p>}
+        {lobby === undefined && <p className="dim">Finding the game server…</p>}
         {lobby === null && (
           <div className="card">
-            <h3>No raid running</h3>
-            <p className="note">The keeper is not serving a lobby right now. Start one with <span className="mono">tsx keeper/src/index.ts --humans 1</span>, or watch a finished raid's report.</p>
+            <h3>GAME SERVER OFFLINE</h3>
+            <p className="note">The keeper isn&apos;t answering right now. Try again in a minute, or watch a finished raid&apos;s report.</p>
           </div>
         )}
+
         {lobby && lobby.phase === "idle" && (
-          <div className="card" style={{ maxWidth: 640 }}>
-            <h3>No raid running</h3>
-            <p className="note">Open one: you get a seat (another human can take the second), BOT raiders fill the rest, and it drops ~3 minutes after the join window. Mystery Market Day replays a real past day you only learn after the raid; Live tracks SOL, BTC and ETH right now.</p>
-            <div className="row">
-              <button className="btn primary big" disabled={opening || lobby.canOpen?.ok === false} onClick={() => open("mystery")}>Open a Mystery raid</button>
-              <button className="btn big" disabled={opening || lobby.canOpen?.ok === false} onClick={() => open("live")}>Open a Live raid</button>
+          <>
+            <div style={{ textAlign: "center", margin: "6px 0 22px" }}>
+              <div className="wordmark" style={{ fontSize: "clamp(30px, 6vw, 56px)", animation: "none" }}>PICK YOUR RAID</div>
+              <p className="note" style={{ fontSize: 15 }}>You get a seat, a second human can grab the other, BOT raiders fill the rest. It drops about 3 minutes after the join window.</p>
             </div>
-            {opening && <p className="note">Creating the raid on devnet…</p>}
-            {lobby.canOpen?.ok === false && <p className="note amber">{lobby.canOpen.reason}</p>}
-            {err && <p className="err">{err}</p>}
-            {lobby.last?.raidId && (
-              <p className="note">Last raid {lobby.last.raidId}: {lobby.last.error ? <span className="down">failed ({lobby.last.error.slice(0, 80)})</span> : <a href={`/report/${lobby.last.raidId}`} onClick={(e) => { e.preventDefault(); navigate(`/report/${lobby.last!.raidId}`); }}>Market Raid Report</a>}</p>
+            <div className="modes">
+              <button className="mode-card" disabled={opening || lobby.canOpen?.ok === false} onClick={() => open("mystery")}>
+                <span className="glyph">🌀</span>
+                <div className="title neon-m">MYSTERY MARKET</div>
+                <p>The city replays a real past trading day, but you don&apos;t know which one. Read the streets, not the news. The day is revealed (and proven) when the raid ends.</p>
+                <div className="go neon-m">OPEN RAID ▸</div>
+              </button>
+              <button className="mode-card live" disabled={opening || lobby.canOpen?.ok === false} onClick={() => open("live")}>
+                <span className="glyph">📡</span>
+                <div className="title neon-c">LIVE MARKET</div>
+                <p>Tower, Factory and Harbor track SOL, BTC and ETH right now through MagicBlock&apos;s price oracle. The map moves with the real market.</p>
+                <div className="go neon-c">OPEN RAID ▸</div>
+              </button>
+            </div>
+            {opening && <div className="banner">⏳ Creating your raid on devnet…</div>}
+            {lobby.canOpen?.ok === false && (
+              <div className="banner">⚠ Raids are paused: {lobby.canOpen.reason}. The game server pays the devnet fees for each raid.</div>
             )}
-          </div>
+            {err && <div className="banner err-b">✖ {err}</div>}
+            {lobby.last?.raidId && (
+              <p className="note" style={{ marginTop: 14 }}>
+                Last raid {lobby.last.raidId}:{" "}
+                {lobby.last.error ? <span className="down">failed ({lobby.last.error.slice(0, 80)})</span> : <a href={`/report/${lobby.last.raidId}`} onClick={(e) => { e.preventDefault(); navigate(`/report/${lobby.last!.raidId}`); }}>see its Market Raid Report ▸</a>}
+              </p>
+            )}
+          </>
         )}
+
         {lobby && lobby.phase !== "idle" && (
           <div className="grid2">
             <div className="card">
-              <h3>Raid</h3>
-              <div className="kv">
-                <span>Mode</span><span>{lobby.mode === "mystery" ? "Mystery Market Day (the day is revealed after the raid)" : "Live (Pricing Oracle on the TEE)"}</span>
-                <span>Raid</span><span className="mono">{lobby.raidId}</span>
-                <span>Phase</span><span>{PHASE[lobby.phase]}</span>
-                {lobby.phase === "lobby" && <><span>Join closes in</span><span className="mono">{secsLeft}s</span></>}
-                <span>Entry stake</span><span>10 dUSD → 4.0 protected · 5.5 loot pool · 0.5 ops</span>
+              <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <h3>{lobby.mode === "mystery" ? "🌀 MYSTERY MARKET RAID" : "📡 LIVE MARKET RAID"}</h3>
+                  <div className="note mono">raid {lobby.raidId}</div>
+                </div>
+                {lobby.phase === "lobby" ? (
+                  <div style={{ textAlign: "right" }}><div className="label">drops in</div><div className="count">{secsLeft}s</div></div>
+                ) : (
+                  <span className={`pill ${lobby.phase === "live" ? "live" : "warn"}`}>{lobby.phase}</span>
+                )}
               </div>
-              <h3 style={{ marginTop: 18 }}>Raiders</h3>
-              <table className="t">
-                <tbody>
-                  {Array.from({ length: lobby.slots }, (_, s) => {
-                    const r = raid?.raiders[s];
-                    return (
-                      <tr key={s}>
-                        <td className="mono">#{s + 1}</td>
-                        <td className="mono">{r?.joined ? `${r.wallet.toBase58().slice(0, 4)}…${r.wallet.toBase58().slice(-4)}` : <span className="dim">{lobby.humanSlots.includes(s) ? "open (human)" : "BOT fills at start"}</span>}</td>
-                        <td>{r?.joined ? (r.isBot ? <span className="pill bot">BOT</span> : <span className="pill live">{w.publicKey && r.wallet.equals(w.publicKey) ? "YOU" : "HUMAN"}</span>) : null}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="phase-steps">{PHASES.map((p, i) => <div key={p} className={i <= phaseIdx ? "on" : ""} title={PHASE[p]} />)}</div>
+              <div className="note" style={{ marginBottom: 14 }}>{PHASE[lobby.phase]}</div>
+              <div className="roster">
+                {Array.from({ length: lobby.slots }, (_, s) => {
+                  const r = raid?.raiders[s];
+                  const me = !!(r?.joined && w.publicKey && r.wallet.equals(w.publicKey));
+                  const cls = !r?.joined ? (lobby.humanSlots.includes(s) && lobby.phase === "lobby" ? "open" : "") : me ? "filled me" : r.isBot ? "filled bot" : "filled";
+                  return (
+                    <div key={s} className={`slot ${cls}`}>
+                      <div className="num">#{s + 1}</div>
+                      <div className="who">{r?.joined ? (me ? "YOU" : r.isBot ? "🤖 BOT" : short(r.wallet)) : lobby.humanSlots.includes(s) ? "open seat" : "BOT soon"}</div>
+                      {r?.joined && <span className={`pill ${me ? "live" : r.isBot ? "bot" : ""}`} style={{ alignSelf: "flex-start" }}>{me ? "you" : r.isBot ? "bot" : "human"}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="note" style={{ marginTop: 14 }}>Entry 10 dUSD → <b className="neon-a">4.0 always yours</b> · 5.5 into the loot crates · 0.5 fee.</p>
             </div>
+
             <div className="card">
-              <h3>Your wallet (base layer only)</h3>
+              <h3>YOUR WALLET</h3>
               {!w.publicKey && (
                 <>
-                  <p className="note">Connect Phantom or Solflare. The wallet signs once, to join; in the raid a raid-scoped key signs gasless moves on the TEE (it can never move tokens).</p>
+                  <p className="note">Connect Phantom or Solflare (set to devnet). You sign once, to join; in the raid a throwaway raid key signs every move for you, gas-free.</p>
                   <div className="row"><WalletMultiButton /><button className="btn" onClick={w.enableDev}>Use a dev wallet</button></div>
                 </>
               )}
               {w.publicKey && (
                 <div className="kv">
-                  <span>Address</span><span className="mono">{w.publicKey.toBase58()}</span>
+                  <span>Address</span><span className="mono">{short(w.publicKey)}</span>
                   <span>devnet SOL</span><span className="mono">{sol?.toFixed(3) ?? "…"} {sol !== null && sol < 0.01 && <a href="https://faucet.solana.com" target="_blank" rel="noreferrer">get devnet SOL</a>}</span>
-                  <span>dUSD (devnet)</span><span className="mono">{dusd?.toFixed(2) ?? "…"} <span className="dim">· the join tx fauceted 10 if needed</span></span>
+                  <span>dUSD</span><span className="mono">{dusd?.toFixed(2) ?? "…"} <span className="dim">(free 10 added when you join)</span></span>
                 </div>
               )}
-              <div style={{ marginTop: 18 }}>
+              <div style={{ marginTop: 20 }}>
                 {mySlot >= 0 ? (
                   <>
-                    <p>You are raider <b className="mono">#{mySlot + 1}</b>. {lobby.phase === "live" ? "Dropping in…" : "Waiting for the raid to start."}</p>
-                    {lobby.phase === "live" && <button className="btn primary" onClick={() => navigate(`/raid/${lobby.raidId}`)}>Enter the raid</button>}
+                    <div className="result-title win" style={{ fontSize: 30 }}>YOU&apos;RE IN · #{mySlot + 1}</div>
+                    <p className="note">{lobby.phase === "live" ? "Dropping in…" : "Stay on this page: you drop in automatically when the raid goes live."}</p>
+                    {lobby.phase === "live" && <button className="btn primary big" onClick={() => navigate(`/raid/${lobby.raidId}`)}>▶ ENTER THE RAID</button>}
                   </>
                 ) : lobby.phase === "lobby" ? (
-                  <button className="btn primary big" disabled={!w.publicKey || freeHuman === undefined || !!busy || (sol ?? 0) < 0.005} onClick={join}>
-                    {freeHuman === undefined ? "No human slot free" : "Join · stake 10 dUSD"}
+                  <button className="btn primary big" style={{ width: "100%" }} disabled={!w.publicKey || freeHuman === undefined || !!busy || (sol ?? 0) < 0.005} onClick={join}>
+                    {freeHuman === undefined ? "NO SEAT FREE" : "▶ JOIN · STAKE 10 dUSD"}
                   </button>
                 ) : (
-                  <button className="btn" onClick={() => navigate(`/watch/${lobby.raidId}`)}>Watch this raid</button>
+                  <button className="btn cyan big" style={{ width: "100%" }} onClick={() => navigate(`/watch/${lobby.raidId}`)}>◉ WATCH THIS RAID</button>
                 )}
-                {busy && <p className="note">{busy}</p>}
-                {err && <p className="err">{err}</p>}
+                {busy && <div className="banner">⏳ {busy}</div>}
+                {err && <div className="banner err-b">✖ {err}</div>}
                 {joinSig && <p className="note">Joined: <a href={explorerTx(joinSig)} target="_blank" rel="noreferrer">{joinSig.slice(0, 16)}…</a></p>}
               </div>
             </div>

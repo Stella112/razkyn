@@ -4,12 +4,13 @@ import type { Connection, Keypair } from "@solana/web3.js";
 import { navigate } from "../App";
 import {
   DISTRICTS, EXITS, MAP_H, MAP_W, NUM_CRATES, P, PRICE_ONE, RaidPlayer, SHOOT_RANGE_TILES, TERMINALS, UNIT,
-  backpackValue, changeBps, raidKeyFor, readMine, readPublic, readRaidBase, teeAuthed, teePublic,
+  HAZARD_ROWS, backpackValue, changeBps, districtOfX, raidKeyFor, readMine, readPublic, readRaidBase, teeAuthed, teePublic,
   type PublicState, type RprvAcc, type ViewAcc,
 } from "../lib/chain";
 import { programError } from "../lib/errors";
 import { getLobby, getReport, subscribeWire, verifyMystery, hex, type ReportFile, type WireLine } from "../lib/keeper";
 import { startGame, type RaidScene } from "../game/RaidScene";
+import { sfx } from "../lib/sfx";
 
 const RAID_SECS = 300;
 const WINDOWS = [120, 210, 270];
@@ -31,6 +32,22 @@ function Sparkline({ data }: { data: number[] }) {
 
 type Peek = { target: string; result: string; ok: boolean }[];
 
+/** Eases a displayed number toward its target (rolling counter). */
+function useRolling(target: number) {
+  const [v, setV] = useState(target);
+  const ref = useRef(target);
+  useEffect(() => {
+    const i = setInterval(() => {
+      const d = target - ref.current;
+      ref.current = Math.abs(d) < 500 ? target : ref.current + d * 0.25;
+      setV(ref.current);
+      if (ref.current === target) clearInterval(i);
+    }, 40);
+    return () => clearInterval(i);
+  }, [target]);
+  return v;
+}
+
 export default function Raid({ raidId: initialId, watch }: { raidId: string; watch: boolean }) {
   const [raidId, setRaidId] = useState(initialId);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -49,6 +66,12 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const [noKey, setNoKey] = useState(false);
   const pending = useRef({ dx: 0, dy: 0 });
   const values = useRef<number[]>([]);
+  const [hurtAt, setHurtAt] = useState(0);
+  const [pops, setPops] = useState<{ id: number; text: string }[]>([]);
+  const [muted, setMuted] = useState(sfx.muted);
+  const prevHp = useRef<number | null>(null);
+  const prevVal = useRef<number | null>(null);
+  const pop = (text: string) => { const id = Date.now() + Math.random(); setPops((p) => [...p, { id, text }]); setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1500); };
   const pubRef = useRef(pub); pubRef.current = pub;
   const mineRef = useRef(mine); mineRef.current = mine;
   const extractHeld = useRef(false);
@@ -131,6 +154,26 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   }, [player, raidId]);
 
   const rpub = mySlot >= 0 ? pub?.rpubs[mySlot] ?? null : null;
+  useEffect(() => {
+    const hp = rpub?.hp;
+    if (hp == null) return;
+    if (prevHp.current != null && hp < prevHp.current) { sceneRef.current()?.hurt(); setHurtAt(Date.now()); sfx.hit(); }
+    prevHp.current = hp;
+  }, [rpub?.hp]);
+  const curVal = mine?.rprv && pub ? backpackValue(mine.rprv.backpack, pub.districts) : null;
+  useEffect(() => {
+    if (curVal == null) return;
+    const prev = prevVal.current;
+    prevVal.current = curVal;
+    // Loot lands as a jump far bigger than a one-second price move (trades keep the value level).
+    if (prev != null && curVal - prev > Math.max(50_000, prev * 0.03) && mine?.rprv?.channelKind !== 2) {
+      const gain = curVal - prev;
+      pop(`+${(gain / 1e6).toFixed(2)} dUSD`);
+      sfx.loot();
+      const sc = sceneRef.current();
+      if (sc && mine?.rprv) { sc.burst({ x: mine.rprv.x, y: mine.rprv.y }); sc.popText({ x: mine.rprv.x, y: mine.rprv.y }, `+${(gain / 1e6).toFixed(2)}`); }
+    }
+  }, [curVal]); // eslint-disable-line react-hooks/exhaustive-deps
   const live = raid?.status === 2;
   const canAct = !!player && live && !!rpub?.alive && !rpub?.extracted;
   const trading = mine?.rprv?.channelKind === 2;
@@ -173,10 +216,11 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     try {
       await player.send(await startIx);
       setChannel({ label, start: Date.now(), ms });
+      if (label.startsWith("Opening")) sfx.open(); else sfx.trade();
       await new Promise((r) => setTimeout(r, ms + 150));
       await player.send(await finishIx());
       say(done);
-    } catch (e) { say(programError(e)); } finally { setChannel(null); }
+    } catch (e) { say(programError(e)); sfx.deny(); } finally { setChannel(null); }
   };
 
   const onShootAt = (wx: number, wy: number) => {
@@ -191,6 +235,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     if (!hit) return;
     if (dist(hit.x, hit.y, me.x, me.y) > SHOOT_RANGE_TILES * UNIT) { say("Out of range (6 tiles)"); return; }
     sceneRef.current()?.flash(me, hit);
+    sfx.shot();
     player.shootIx(hit.slot).then((ix) => player.send(ix)).catch((e) => say(programError(e)));
   };
 
@@ -223,6 +268,8 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       await new Promise((r) => setTimeout(r, 5150));
       await player.send(await player.finishExtractIx());
       say("EXTRACTED: your backpack settles to your wallet", 3500);
+      sfx.extract();
+      sceneRef.current()?.burst(me, 0xb6ff3b, 60);
     } catch (e) { say(programError(e)); } finally { setChannel(null); }
   };
 
@@ -253,6 +300,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       }
     }
     setPeek(out);
+    sfx.peek();
   };
 
   // Feed the scene.
@@ -302,11 +350,18 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const myDebrief = wire.find((l) => l.tag === "DEBRIEF" && l.slot === mySlot) ?? null;
   const myResult = report && mySlot >= 0 ? report.report.raiders?.[mySlot] : null;
   const ch = channel ? Math.min(1, (now - channel.start) / channel.ms) : 0;
+  const rolling = useRolling(bpValue);
+  const myD = mine?.rprv ? districtOfX(mine.rprv.x) : -1;
+  const myRows = myD >= 0 ? HAZARD_ROWS[pub?.districts[myD]?.hazardLevel ?? 0] : undefined;
+  const inHaz = !!(myRows && mine?.rprv && rpub?.alive && Math.floor(mine.rprv.y / 100) >= myRows[0] && Math.floor(mine.rprv.y / 100) <= myRows[1]);
+  const outcome = watch ? { t: "RAID OVER", c: "meh" } : rpub?.extracted || myResult?.extracted ? { t: "EXTRACTED", c: "win" } : rpub && !rpub.alive ? { t: "KNOCKED OUT", c: "lose" } : { t: "STRANDED", c: "meh" };
 
   return (
     <div className="raid">
       <div className="raid-canvas" ref={hostRef} />
       <div className="portrait-hint">Turn your phone sideways: RAZKYN plays in landscape.</div>
+      <div className={`vignette ${now - hurtAt < 260 ? "on" : inHaz ? "haz" : ""}`} />
+      {pops.map((p) => <div key={p.id} className="popup">{p.text}</div>)}
 
       {/* top-left: me */}
       <div className="hud hud-tl">
@@ -314,6 +369,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
           <a className="brand" href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }} style={{ fontSize: 12 }}>RAZKYN</a>
           <span className="pill">{raid?.mode === 0 ? "MYSTERY" : "LIVE"}</span>
           {watch ? <span className="pill">WATCH · public only</span> : mySlot >= 0 ? <span className="pill live">RAIDER {mySlot + 1}</span> : null}
+          <button className="act mute" title={muted ? "Sound off" : "Sound on"} onClick={() => setMuted(sfx.toggle())}>{muted ? "🔇" : "🔊"}</button>
         </div>
         {!watch && mySlot >= 0 && (
           <>
@@ -324,7 +380,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
             <div className="hud-box">
               <div className="label">Backpack (live value)</div>
               <div className="row" style={{ justifyContent: "space-between" }}>
-                <span className="big-num">{fmt(bpValue)} <span className="dim" style={{ fontSize: 12 }}>dUSD</span></span>
+                <span className="big-num">{fmt(rolling)} <span className="dim" style={{ fontSize: 12 }}>dUSD</span></span>
                 <Sparkline data={values.current} />
               </div>
               <div className="dim" style={{ fontSize: 11 }}>
@@ -340,7 +396,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       <div className="hud hud-tr">
         <div className="hud-box">
           <div className="label" style={{ textAlign: "right" }}>{live ? "Raid ends in" : ended ? "Raid over" : "Waiting for start"}</div>
-          <div className="timer">{live ? mmss(left) : "—"}</div>
+          <div className={`timer ${live && left < 30 ? "hot" : ""}`}>{live ? mmss(left) : "—"}</div>
           <div className="label" style={{ textAlign: "right" }}>
             {winOpen ? <span className="up">EXIT WINDOW {raid!.exitWindow} OPEN</span> : nextWin !== undefined && live ? `next exit window in ${mmss(nextWin - elapsed)}` : ""}
           </div>
@@ -373,8 +429,8 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       {/* action buttons (touch + mouse) */}
       {!watch && canAct && (
         <div className="hud-actions">
-          <button className="act" onClick={onInteract}><kbd>E</kbd>Open / trade</button>
-          <button className="act" onPointerDown={() => void startExtract(true)} onPointerUp={() => (extractHeld.current = false)}><kbd>Space</kbd>Extract (hold)</button>
+          <button className="act loot" onClick={onInteract}><kbd>E</kbd>Open / trade</button>
+          <button className="act exit" onPointerDown={() => void startExtract(true)} onPointerUp={() => (extractHeld.current = false)}><kbd>Space</kbd>Extract (hold)</button>
           <span className="note" style={{ textAlign: "right" }}>WASD move · click a raider to shoot</span>
         </div>
       )}
@@ -417,8 +473,9 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       {ended && (
         <div className="overlay">
           <div className="card">
-            <h3>Raid over</h3>
-            {!report && <p className="dim">Settling on the base layer and paying out… (report after claims, ~1 min)</p>}
+            <div className={`result-title ${outcome.c}`}>{outcome.t}</div>
+            {!watch && myResult && <div className="payout">{fmt(Number(myResult.dusdPayout) + 0)} <span style={{ fontSize: 18 }}>dUSD</span>{myResult.mintUnits.some((u: string) => Number(u) > 0) && <span className="note" style={{ fontSize: 14, marginLeft: 10 }}>+ loot minted as {myResult.mintUnits.map((u: string, i: number) => (Number(u) ? `${(Number(u) / 1e6).toFixed(2)} d${["TWR", "FAC", "HRB"][i]}` : "")).filter(Boolean).join(" · ")}</span>}</div>}
+            {!report && <p className="dim">Settling on-chain and paying everyone out… (about a minute)</p>}
             {report && (
               <>
                 {report.report.mystery && (
