@@ -287,6 +287,8 @@ TEST 10 PASS: no private value reached a prompt or an output
 - Earlier run `2o5oJu26…` (id 1795622319302): the feed decoded with the wrong coder and produced no live lines (fixed; `scripts/debug-wire-feed.ts`); that run also had a degraded link (setup 318 s, a 21 s tick gap, base tx expiry), so it is not used for test 12.
 - Bug fixed: the report read `RaiderPublic` alive/kills from the stale base copy (the accounts stay delegated); it now reads the TEE (`scripts/check-rpub-tee.ts`: TEE alive=false for all 8, base alive=true). The two reports above predate the fix and show alive=true; their on-chain hashes are unchanged, so they stay as they are.
 - Not verified: the model path (no `ANTHROPIC_API_KEY`): latency vs the 1.5 s budget and output quality are unknown. Every line so far is a template.
+- **BOT hazard avoidance** (`keeper/src/bots.ts`): BOTs read each District's public hazard level and price; a district at level ≥ 1 or ≤ −1.5% is avoided on rows 11–28 (program hazard rows 12–27 + margin). They leave a band first, route around it through safe rows 10/29 or the corridors between districts, skip crates and terminals on it, stage off it before the last window, and enter a side exit on hazard rows only with ≥ 85 HP. Late in the raid they take short hops so they reach the last window. Checks: `scripts/check-bot-bands.ts` (band covers every program hazard tile), `scripts/check-bot-hazard-sim.ts` (crossing: 0 hazard samples vs 98 straight; escape ≈ 7 tiles; target on hazard refused; band exit ≈ 1.9 s on hazard tiles).
+- Devnet: before, on a falling day (raid `aKz9Gb2H…`, 2024-03-05) all 8 BOTs died in hazards. After, on a crash day with all three districts at level 2 (raid `8FAvyvxS…`, id 1795625037689, −8.1% to −11%): **8/8 BOTs alive**, 3/8 extracted, 7 escaped a band at least once, 1 skipped a hazard exit at 66 HP; 2,844/2,844 ticks, max gap 792 ms, 0 stalls; report `68205376…` posted `44veCvdt…`. A rising-day run (raid `BoMKfL5Z…`) had 5/8 extracted, 0 deaths; its 3 misses came from long late wanders, now fixed (short hops; extraction starts at 240 s).
 
 ## Blocked
 - (nothing)
@@ -296,7 +298,7 @@ TEST 10 PASS: no private value reached a prompt or an output
 - THE WIRE model path: not run yet (needs `ANTHROPIC_API_KEY` in `.env`); demo lines are templates until then.
 - Spectator pools (`place_bet`, SpecPool, test 7): not built (deferred until after the client, DECISIONS #25).
 - `data/mystery/headlines.json` does not exist: debriefs quote no headlines and cite none. Adding it changes every leaf's `headlines_hash`, so the Merkle root must be rebuilt before the demo raids.
-- BOTs do not avoid hazard tiles: on a falling day all 8 died (raid 1795623238646).
+- BOT extraction on crash days: side exits (tiles 1,20 and 62,20) sit on hazard rows, so BOTs with < 85 HP skip them and some arrive too late; 3/8 extracted on a −10% day (raid 1795625037689).
 
 ## Next
 - M7: client (Vite + React + Phaser: landing, lobby, raid HUD with THE WIRE ticker over SSE, Try to peek, watch mode, reveal + debrief, report page). Tests 8, 9, 13.
