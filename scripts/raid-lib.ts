@@ -18,6 +18,8 @@ import { REPO, TEE_VALIDATOR, baseConn, loadKeypair, teeConn, sendBase, sendTee,
 export const DEFAULT_EPHEMERAL_QUEUE = new PublicKey("5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc");
 export const VRF_PROGRAM_ID = new PublicKey("Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz");
 export const NUM_CRATES = 36;
+/** SOL/USD, BTC/USD, ETH/USD Pricing Oracle feeds (M0/S3, spikes/results/s3-oracle.json). */
+export const LIVE_FEEDS = ["ENYwebBThHzmzwPLAQvCucUTsjyfBSZdD9ViXksS4jPu", "71wtTRDY8Gxgw56bXFt2oc6qeAbTxzStdNiC425Z51sr", "5vaYr1hpv8yrSpu8w3K95x22byYxUJCCNCSYJtqVWPvG"].map((k) => new PublicKey(k));
 export const DROP_BASE = 36;
 export const TOKEN = TOKEN_2022_PROGRAM_ID;
 const STAKE = 10_000_000;
@@ -44,7 +46,7 @@ export class RaidSession {
   readonly sigs: Record<string, string | string[]> = {};
   raiders: Raider[] = [];
 
-  constructor(readonly raidId: anchor.BN, readonly mode: 0 | 1 = 1, readonly leafCount = 0) {
+  constructor(readonly raidId: anchor.BN, readonly mode: 0 | 1 = 1, readonly leafCount = 0, readonly dayRoot: number[] = Array(32).fill(0)) {
     this.idb = raidId.toArrayLike(Buffer, "le", 8);
   }
 
@@ -62,7 +64,7 @@ export class RaidSession {
   // ---- base: lobby ----
   async createRaid(nSlots: number) {
     const P = this.P, k = this.keeper.publicKey;
-    const create = await P.methods.createRaid(this.raidId, this.mode, this.leafCount, Array(32).fill(0), Array(32).fill(0)).accountsPartial({
+    const create = await P.methods.createRaid(this.raidId, this.mode, this.leafCount, this.dayRoot, Array(32).fill(0)).accountsPartial({
       config: this.config, raid: this.raid, secret: this.secret, escrowAuth: this.escrowAuth, escrow: this.escrow,
       dusdMint: DUSD, keeper: k, tokenProgram: TOKEN, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     }).instruction();
@@ -199,15 +201,58 @@ export class RaidSession {
     this.sigs.placeCrates = sigs;
   }
 
+  /** Mystery: the VRF-chosen leaf index, read from RaidSecret as the keeper (a member).
+   *  Raw offset of RaidSecret.leaf_index: 8 disc + 8 raid_id + 32 seed + 32 slice_hash. */
+  async leafIndex(): Promise<number> {
+    const info = await this.teeK.getAccountInfo(this.secret);
+    return info!.data.readUInt32LE(80);
+  }
+
+  /** Mystery: upload the chosen day's slice (5 × 720 B) and verify it against day_root. */
+  async loadAndVerify(day: { day: string; sliceStart: number; headlinesHash: string; proof: string[] }, steps: number[]) {
+    const bytes = Buffer.from(new Uint32Array(steps).buffer);
+    const sigs: string[] = [];
+    for (let c = 0; c < 5; c++) {
+      const ix = await this.T.methods.loadSlice(c, bytes.subarray(c * 720, (c + 1) * 720)).accountsPartial({
+        raid: this.raid, secret: this.secret, keeper: this.keeper.publicKey,
+      }).instruction();
+      sigs.push((await sendTee(this.teeK, [ix], [this.keeper])).sig);
+    }
+    this.sigs.loadSlice = sigs;
+    const ix = await this.T.methods.verifySlice(
+      Array.from(Buffer.from(day.day, "ascii")), day.sliceStart, Array.from(Buffer.from(day.headlinesHash, "hex")),
+      day.proof.map((p) => Array.from(Buffer.from(p, "hex"))),
+    ).accountsPartial({ raid: this.raid, secret: this.secret, keeper: this.keeper.publicKey }).instruction();
+    this.sigs.verifySlice = (await sendTee(this.teeK, [cu(400_000), ix], [this.keeper])).sig;
+  }
+
   async start() {
-    this.sigs.startRaid = (await sendTee(this.teeK, [await this.T.methods.startRaid().accountsPartial({ raid: this.raid, keeper: this.keeper.publicKey }).instruction()], [this.keeper])).sig;
+    this.sigs.startRaid = (await sendTee(this.teeK, [await this.T.methods.startRaid().accountsPartial({ raid: this.raid, secret: this.secret, keeper: this.keeper.publicKey }).instruction()], [this.keeper])).sig;
     for (const r of this.raiders) r.tee = await teeConn(r.raidKey);
   }
+
+  async districtAcc(i: number) {
+    return (await this.T.account.district.fetch(this.district(i))) as unknown as { startPrice: anchor.BN; currentPrice: anchor.BN; startRaw: anchor.BN; hazardLevel: number; awake: boolean; histLen: number };
+  }
+
+  /** Keeper fast send (preflight on, no confirmation poll), used for ticks. */
+  private kbh: { hash: string; at: number } | null = null;
+  async keeperFast(ixs: TransactionInstruction[]): Promise<string> {
+    if (!this.kbh || Date.now() - this.kbh.at > 1500) this.kbh = { hash: (await this.teeK.getLatestBlockhash()).blockhash, at: Date.now() };
+    const tx = new Transaction().add(cu(400_000 + (this.knonce++ % 1000)), ...ixs);
+    tx.feePayer = this.keeper.publicKey;
+    tx.recentBlockhash = this.kbh.hash;
+    tx.sign(this.keeper);
+    return this.teeK.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 0 });
+  }
+  private knonce = 0;
 
   // ---- TEE: gameplay ----
   async tickIxs() {
     const d = { district0: this.district(0), district1: this.district(1), district2: this.district(2) };
-    const tick = await this.T.methods.tick().accountsPartial({ raid: this.raid, secret: this.secret, ...d }).instruction();
+    // Live mode passes the three Pricing Oracle feeds (programs/razkyn/src/constants.rs LIVE_FEEDS).
+    const feeds = this.mode === 1 ? { feed0: LIVE_FEEDS[0], feed1: LIVE_FEEDS[1], feed2: LIVE_FEEDS[2] } : { feed0: null, feed1: null, feed2: null };
+    const tick = await this.T.methods.tick().accountsPartial({ raid: this.raid, secret: this.secret, ...d, ...feeds }).instruction();
     const fog = await this.T.methods.tickRaiders().accountsPartial({ raid: this.raid, ...d }).remainingAccounts(
       this.raiders.flatMap((_, s) => [
         { pubkey: this.slot("rprv", s), isSigner: false, isWritable: false },

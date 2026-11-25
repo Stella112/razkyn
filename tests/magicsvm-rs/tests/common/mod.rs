@@ -52,6 +52,13 @@ pub const E_NO_CHANNEL: u32 = ERR_BASE + 27;
 pub const E_CHANNEL_NOT_DONE: u32 = ERR_BASE + 28;
 pub const E_COOLDOWN: u32 = ERR_BASE + 30;
 pub const E_CRATES_NOT_PLACED: u32 = ERR_BASE + 31;
+pub const E_BAD_CHUNK: u32 = ERR_BASE + 32;
+pub const E_SLICE_NOT_LOADED: u32 = ERR_BASE + 33;
+pub const E_BAD_PROOF: u32 = ERR_BASE + 34;
+pub const E_SLICE_NOT_VERIFIED: u32 = ERR_BASE + 35;
+pub const E_NOT_AT_TERMINAL: u32 = ERR_BASE + 36;
+pub const E_TRADING: u32 = ERR_BASE + 37;
+pub const E_INSUFFICIENT_UNITS: u32 = ERR_BASE + 39;
 const MINT_SIZE: usize = 82;
 
 pub fn a(p: Pubkey) -> Address {
@@ -247,7 +254,7 @@ impl World {
         let d = |i: u8| slot_pda(DISTRICT_SEED, i);
         let tick = ix(
             instruction::Tick {},
-            accounts::Tick { raid: raid_pda(), secret: secret_pda(), district0: d(0), district1: d(1), district2: d(2) },
+            accounts::Tick { raid: raid_pda(), secret: secret_pda(), district0: d(0), district1: d(1), district2: d(2), feed0: None, feed1: None, feed2: None },
         );
         let mut fog = ix(instruction::TickRaiders {}, accounts::TickRaiders { raid: raid_pda(), district0: d(0), district1: d(1), district2: d(2) });
         for s in 0..self.n {
@@ -310,8 +317,30 @@ pub fn live_raid(n: u8) -> World {
     live_raid_seeded(n, None)
 }
 
-/// Full lobby → live flow with `n` raiders (optionally pinning the VRF output).
+/// Full lobby → live flow with `n` raiders (optionally pinning the VRF output), Live mode.
 pub fn live_raid_seeded(n: u8, seed: Option<[u8; 32]>) -> World {
+    let mut w = raid_seeded(n, seed, mode::LIVE, 0, [0; 32]);
+    w.start();
+    w
+}
+
+impl World {
+    pub fn start_ix(&self) -> Instruction {
+        ix(instruction::StartRaid {}, accounts::StartRaid { raid: raid_pda(), secret: secret_pda(), keeper: kp(&self.keeper) })
+    }
+    pub fn try_start(&mut self) -> SendResult {
+        let k = self.keeper.insecure_clone();
+        let i = self.start_ix();
+        self.try_send(TransactionTarget::Ephemeral, &[&k], &[i])
+    }
+    pub fn start(&mut self) {
+        self.try_start().unwrap_or_else(|e| panic!("start_raid: {e:?}"));
+        assert_eq!(self.raid().status, status::LIVE);
+    }
+}
+
+/// Lobby → delegate → permissions → VRF → crates placed (status SEEDED, not started).
+pub fn raid_seeded(n: u8, seed: Option<[u8; 32]>, raid_mode: u8, leaf_count: u32, day_root: [u8; 32]) -> World {
     use TransactionTarget::{Base, Ephemeral};
     let mut svm = MagicSVM::new();
     let so = std::env::var("RAZKYN_SO").expect("set RAZKYN_SO to target/deploy/razkyn.so");
@@ -342,7 +371,7 @@ pub fn live_raid_seeded(n: u8, seed: Option<[u8; 32]>) -> World {
     let k = kp(&w.keeper);
     let keeper = w.keeper.insecure_clone();
     w.send(Base, &[&keeper], &[ix(
-        instruction::CreateRaid { raid_id: RAID_ID, mode: mode::LIVE, leaf_count: 0, day_root: [0; 32], event_plan_hash: [0; 32] },
+        instruction::CreateRaid { raid_id: RAID_ID, mode: raid_mode, leaf_count, day_root, event_plan_hash: [0; 32] },
         accounts::CreateRaid {
             config: config_pda(), raid: raid_pda(), secret: secret_pda(), escrow_auth: escrow_auth(),
             escrow: ata(escrow_auth(), w.dusd), dusd_mint: w.dusd, keeper: k, token_program: TOKEN_PROGRAM_ID,
@@ -451,8 +480,7 @@ pub fn live_raid_seeded(n: u8, seed: Option<[u8; 32]>) -> World {
     assert_eq!(w.raid().status, status::SEEDED, "callback seeded the raid");
 
     // start_raid is refused until every crate is placed.
-    let start = ix(instruction::StartRaid {}, accounts::StartRaid { raid: raid_pda(), keeper: k });
-    expect_err(w.try_send(Ephemeral, &[&keeper], &[start.clone()]), E_CRATES_NOT_PLACED, "start before crates");
+    expect_err(w.try_start(), E_CRATES_NOT_PLACED, "start before crates");
 
     // TEE: place crates (permission first, then contents) in batches of 6.
     for first in (0..NUM_CRATES as u8).step_by(6) {
@@ -470,8 +498,6 @@ pub fn live_raid_seeded(n: u8, seed: Option<[u8; 32]>) -> World {
         }
         w.send(Ephemeral, &[&keeper], &[i], "place_crates");
     }
-    w.send(Ephemeral, &[&keeper], &[start], "start_raid");
-    assert_eq!(w.raid().status, status::LIVE);
     w
 }
 

@@ -264,6 +264,8 @@ pub fn vrf_callback_raid<'info>(
 pub struct StartRaid<'info> {
     #[account(mut, seeds = [RAID_SEED, &raid.raid_id.to_le_bytes()], bump = raid.bump, has_one = keeper @ RazkynError::Unauthorized)]
     pub raid: Box<Account<'info, Raid>>,
+    #[account(seeds = [SECRET_SEED, &raid.raid_id.to_le_bytes()], bump)]
+    pub secret: AccountLoader<'info, RaidSecret>,
     pub keeper: Signer<'info>,
 }
 
@@ -272,6 +274,10 @@ pub fn start_raid(ctx: Context<StartRaid>) -> Result<()> {
     let raid = &mut ctx.accounts.raid;
     require!(raid.status == status::SEEDED, RazkynError::NotSeeded);
     require!(raid.crates_placed == ALL_CRATES_PLACED, RazkynError::CratesNotPlaced);
+    // Mystery: the raid cannot start until the VRF-chosen slice is verified (CLAUDE.md §6.3).
+    if raid.mode == mode::MYSTERY {
+        require!(ctx.accounts.secret.load()?.verified == 1, RazkynError::SliceNotVerified);
+    }
     raid.status = status::LIVE;
     raid.start_ts = clock.unix_timestamp;
     raid.end_ts = clock.unix_timestamp.checked_add(RAID_SECS).ok_or(RazkynError::Overflow)?;

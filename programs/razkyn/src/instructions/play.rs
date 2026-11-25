@@ -40,6 +40,8 @@ pub fn move_to(ctx: Context<MoveTo>, slot: u8, dx: i16, dy: i16) -> Result<()> {
     let raid = &ctx.accounts.raid;
     require_can_act(raid, slot, &ctx.accounts.raid_key.key(), clock.unix_timestamp)?;
     let p = &mut ctx.accounts.rprv;
+    // Trading means standing at the terminal (CLAUDE.md §2: "trade under fire").
+    require!(p.channel_kind != CH_TRADE, RazkynError::Trading);
     let since = p.last_move_slot.max(raid.start_slot);
     let elapsed = clock.slot.saturating_sub(since);
     let budget = elapsed
@@ -76,6 +78,12 @@ pub struct Tick<'info> {
     pub district1: Box<Account<'info, District>>,
     #[account(mut, seeds = [DISTRICT_SEED, &raid.raid_id.to_le_bytes(), &[2]], bump = district2.bump)]
     pub district2: Box<Account<'info, District>>,
+    /// CHECK: Live mode only: Pricing Oracle feed for district 0 (validated in read_feed).
+    pub feed0: Option<UncheckedAccount<'info>>,
+    /// CHECK: Live mode only: feed for district 1.
+    pub feed1: Option<UncheckedAccount<'info>>,
+    /// CHECK: Live mode only: feed for district 2.
+    pub feed2: Option<UncheckedAccount<'info>>,
 }
 
 /// Permissionless. Advances at most once per TICK_SLOTS; an early call is a no-op so the
@@ -95,7 +103,40 @@ pub fn tick(ctx: Context<Tick>) -> Result<()> {
     raid.prev_tick_slot = raid.last_tick_slot;
     raid.last_tick_slot = clock.slot;
     let elapsed = clock.unix_timestamp.saturating_sub(raid.start_ts).max(0);
-    raid.market_step = elapsed.min(SLICE_STEPS as i64 - 1) as u16;
+
+    // Market: one step per second boundary (300 steps). Prices are an index ×10^4,
+    // 100.0000 at raid start. Mystery: the verified slice. Live: validated oracle feeds;
+    // a stale or invalid feed leaves that district's price unchanged this step.
+    let step = elapsed.min(SLICE_STEPS as i64 - 1) as u16;
+    if ctx.accounts.district0.hist_len == 0 || step != raid.market_step {
+        let mode = raid.mode;
+        let feeds = [&ctx.accounts.feed0, &ctx.accounts.feed1, &ctx.accounts.feed2];
+        let ds = [&mut ctx.accounts.district0, &mut ctx.accounts.district1, &mut ctx.accounts.district2];
+        if mode == crate::state::mode::MYSTERY {
+            let s = ctx.accounts.secret.load()?;
+            for (i, d) in ds.into_iter().enumerate() {
+                let index = s.slice[step as usize * NUM_ASSETS + i] as u64;
+                crate::instructions::market::push_price(d, index);
+            }
+        } else {
+            for (i, d) in ds.into_iter().enumerate() {
+                let raw = feeds[i]
+                    .as_ref()
+                    .and_then(|f| crate::instructions::market::read_feed(&f.to_account_info(), &LIVE_FEEDS[i], clock.unix_timestamp));
+                match raw {
+                    Some(raw) => {
+                        if d.start_raw == 0 {
+                            d.start_raw = raw;
+                        }
+                        let index = (PRICE_ONE as u128 * raw as u128 / d.start_raw as u128).min(u64::MAX as u128) as u64;
+                        crate::instructions::market::push_price(d, index);
+                    }
+                    None => msg!("feed {} stale or invalid: price held", i),
+                }
+            }
+        }
+        raid.market_step = step;
+    }
 
     // The market moves the map: ≥ +2% wakes dormant crates; ≤ −2% / ≤ −5% hazard levels.
     for d in [&mut ctx.accounts.district0, &mut ctx.accounts.district1, &mut ctx.accounts.district2] {

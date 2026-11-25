@@ -129,7 +129,7 @@ impl Raid {
     }
 }
 
-/// `["district", raid_id, i]`, TEE, public. Size: 8 + 511.
+/// `["district", raid_id, i]`, TEE, public. Size: 8 + 519.
 #[account]
 #[derive(InitSpace)]
 pub struct District {
@@ -138,8 +138,11 @@ pub struct District {
     pub asset: u8,
     pub hazard_level: u8,
     pub bump: u8,
+    /// Price index ×10^4 (100.0000 = 1_000_000 at raid start) in both modes.
     pub start_price: u64,
     pub current_price: u64,
+    /// Live mode: raw oracle price at the first step (index = PRICE_ONE × raw / start_raw).
+    pub start_raw: u64,
     /// Ring of the last 60 prices (one per market step).
     pub history: [u64; 60],
     pub hist_len: u8,
@@ -209,7 +212,7 @@ pub struct View {
     pub bump: u8,
 }
 
-/// `["secret", raid_id]`, TEE, private (keeper). Zero-copy. Size: 8 + 3,696.
+/// `["secret", raid_id]`, TEE, private (keeper). Zero-copy. Size: 8 + 3,712.
 /// Base-layer data is public, so nothing secret is written here until the account is on the
 /// TEE and its permission exists (CLAUDE.md §4.4).
 #[account(zero_copy)]
@@ -225,7 +228,11 @@ pub struct RaidSecret {
     pub exit_plan: [u8; 8],
     pub seeded: u8,
     pub verified: u8,
-    pub _pad: [u8; 6],
+    pub _pad: [u8; 2],
+    /// Minute of day where the slice starts (set by verify_slice; revealed at the end).
+    pub slice_start: u32,
+    /// "YYYY-MM-DD" of the mystery day (first 10 bytes; set by verify_slice).
+    pub day_id: [u8; 16],
     /// Mystery price slice: 300 steps × 3 assets, rebased ×10^4 (M3).
     pub slice: [u32; SLICE_LEN],
 }

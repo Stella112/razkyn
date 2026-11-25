@@ -110,3 +110,32 @@ pub const HAZARD_MAX_SLOTS_PER_TICK: u64 = 300;
 /// Hazard bands (tile rows, inclusive) inside the falling district.
 pub const HAZARD1_ROWS: (u16, u16) = (16, 23);
 pub const HAZARD2_ROWS: (u16, u16) = (12, 27);
+
+// ---------- market (M3) ----------
+/// Mystery slice upload: 3,600 bytes in 5 chunks of 720 (fits one TEE tx).
+pub const SLICE_BYTES: usize = SLICE_LEN * 4;
+pub const SLICE_CHUNK: usize = 720;
+pub const SLICE_CHUNKS: u32 = (SLICE_BYTES / SLICE_CHUNK) as u32; // 5
+pub const ALL_CHUNKS: u32 = (1 << SLICE_CHUNKS) - 1;
+pub const MAX_PROOF_LEN: usize = 8; // up to 256 leaves
+pub const DAY_ID_LEN: usize = 10; // "YYYY-MM-DD"
+
+/// Live mode: district i tracks this Pricing Oracle feed. Lazer ids and exponents from
+/// vendor/starter-kits/oracle-demo/pyth_lazer_list.json (SOL 6, BTC 1, ETH 2, all −8); the
+/// addresses are the PDA [b"price_feed", b"pyth-lazer", id] under PriCems…, derived and
+/// read on devnet-tee in M0/S3 (spikes/results/s3-oracle.json).
+pub const ORACLE_PROGRAM_ID: anchor_lang::prelude::Pubkey =
+    anchor_lang::prelude::pubkey!("PriCems5tHihc6UDXDjzjeawomAwBduWMGAi8ZUjppd");
+pub const LIVE_FEEDS: [anchor_lang::prelude::Pubkey; NUM_DISTRICTS] = [
+    anchor_lang::prelude::pubkey!("ENYwebBThHzmzwPLAQvCucUTsjyfBSZdD9ViXksS4jPu"), // SOL/USD (Tower)
+    anchor_lang::prelude::pubkey!("71wtTRDY8Gxgw56bXFt2oc6qeAbTxzStdNiC425Z51sr"), // BTC/USD (Factory)
+    anchor_lang::prelude::pubkey!("5vaYr1hpv8yrSpu8w3K95x22byYxUJCCNCSYJtqVWPvG"), // ETH/USD (Harbor)
+];
+pub const FEED_MAX_AGE_SECS: i64 = 10;
+
+// ---------- trades (M3) ----------
+pub const CH_TRADE: u8 = 2;
+pub const TRADE_CHANNEL_SLOTS: u64 = 300; // 3 s
+/// Two terminals per district (tile coordinates). CLAUDE.md fixes the count, not positions.
+pub const TERMINALS_TILES: [(u16, u16); 6] = [(5, 12), (15, 28), (27, 12), (37, 28), (49, 12), (59, 28)];
+pub const TERMINAL_RANGE_UNITS: u64 = UNITS_PER_TILE as u64; // within 1 tile

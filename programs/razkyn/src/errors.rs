@@ -66,4 +66,22 @@ pub enum RazkynError {
     Cooldown,
     #[msg("crates are not all placed")]
     CratesNotPlaced,
+    #[msg("bad slice chunk")]
+    BadChunk,
+    #[msg("slice not fully loaded")]
+    SliceNotLoaded,
+    #[msg("slice or Merkle proof does not match the committed day root")]
+    BadProof,
+    #[msg("mystery slice not verified")]
+    SliceNotVerified,
+    #[msg("not at a trading terminal")]
+    NotAtTerminal,
+    #[msg("action blocked while trading")]
+    Trading,
+    #[msg("bad trade")]
+    BadTrade,
+    #[msg("not enough units")]
+    InsufficientUnits,
+    #[msg("bad price feed")]
+    BadFeed,
 }

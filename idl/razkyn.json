@@ -8,6 +8,60 @@
   },
   "instructions": [
     {
+      "name": "cancel_trade",
+      "discriminator": [
+        124,
+        66,
+        91,
+        59,
+        175,
+        107,
+        208,
+        120
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "rpub",
+          "writable": true
+        },
+        {
+          "name": "raid_key",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "create_crates",
       "discriminator": [
         255,
@@ -1117,6 +1171,69 @@
       ]
     },
     {
+      "name": "finish_trade",
+      "discriminator": [
+        145,
+        239,
+        16,
+        243,
+        140,
+        44,
+        65,
+        42
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "rpub",
+          "writable": true
+        },
+        {
+          "name": "district0"
+        },
+        {
+          "name": "district1"
+        },
+        {
+          "name": "district2"
+        },
+        {
+          "name": "raid_key",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "init_config",
       "discriminator": [
         23,
@@ -1380,6 +1497,83 @@
         {
           "name": "raid_key",
           "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "load_slice",
+      "discriminator": [
+        131,
+        242,
+        193,
+        172,
+        9,
+        136,
+        126,
+        122
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "secret",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "signer": true,
+          "relations": [
+            "raid"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "chunk",
+          "type": "u8"
+        },
+        {
+          "name": "bytes",
+          "type": "bytes"
         }
       ]
     },
@@ -2054,6 +2248,29 @@
           }
         },
         {
+          "name": "secret",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
           "name": "keeper",
           "signer": true,
           "relations": [
@@ -2062,6 +2279,72 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "start_trade",
+      "discriminator": [
+        70,
+        121,
+        62,
+        113,
+        254,
+        13,
+        7,
+        66
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "rpub",
+          "writable": true
+        },
+        {
+          "name": "raid_key",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        },
+        {
+          "name": "from_asset",
+          "type": "u8"
+        },
+        {
+          "name": "to_asset",
+          "type": "u8"
+        },
+        {
+          "name": "units",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "tick",
@@ -2132,6 +2415,18 @@
         {
           "name": "district2",
           "writable": true
+        },
+        {
+          "name": "feed0",
+          "optional": true
+        },
+        {
+          "name": "feed1",
+          "optional": true
+        },
+        {
+          "name": "feed2",
+          "optional": true
         }
       ],
       "args": []
@@ -2182,6 +2477,108 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "verify_slice",
+      "discriminator": [
+        195,
+        35,
+        206,
+        240,
+        137,
+        245,
+        115,
+        112
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "secret",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "signer": true,
+          "relations": [
+            "raid"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "day_id",
+          "type": {
+            "array": [
+              "u8",
+              10
+            ]
+          }
+        },
+        {
+          "name": "slice_start",
+          "type": "u32"
+        },
+        {
+          "name": "headlines_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        }
+      ]
     },
     {
       "name": "vrf_callback_raid",
@@ -2547,6 +2944,51 @@
       "code": 6031,
       "name": "CratesNotPlaced",
       "msg": "crates are not all placed"
+    },
+    {
+      "code": 6032,
+      "name": "BadChunk",
+      "msg": "bad slice chunk"
+    },
+    {
+      "code": 6033,
+      "name": "SliceNotLoaded",
+      "msg": "slice not fully loaded"
+    },
+    {
+      "code": 6034,
+      "name": "BadProof",
+      "msg": "slice or Merkle proof does not match the committed day root"
+    },
+    {
+      "code": 6035,
+      "name": "SliceNotVerified",
+      "msg": "mystery slice not verified"
+    },
+    {
+      "code": 6036,
+      "name": "NotAtTerminal",
+      "msg": "not at a trading terminal"
+    },
+    {
+      "code": 6037,
+      "name": "Trading",
+      "msg": "action blocked while trading"
+    },
+    {
+      "code": 6038,
+      "name": "BadTrade",
+      "msg": "bad trade"
+    },
+    {
+      "code": 6039,
+      "name": "InsufficientUnits",
+      "msg": "not enough units"
+    },
+    {
+      "code": 6040,
+      "name": "BadFeed",
+      "msg": "bad price feed"
     }
   ],
   "types": [
@@ -2704,7 +3146,7 @@
     {
       "name": "District",
       "docs": [
-        "`[\"district\", raid_id, i]`, TEE, public. Size: 8 + 511."
+        "`[\"district\", raid_id, i]`, TEE, public. Size: 8 + 519."
       ],
       "type": {
         "kind": "struct",
@@ -2731,10 +3173,20 @@
           },
           {
             "name": "start_price",
+            "docs": [
+              "Price index ×10^4 (100.0000 = 1_000_000 at raid start) in both modes."
+            ],
             "type": "u64"
           },
           {
             "name": "current_price",
+            "type": "u64"
+          },
+          {
+            "name": "start_raw",
+            "docs": [
+              "Live mode: raw oracle price at the first step (index = PRICE_ONE × raw / start_raw)."
+            ],
             "type": "u64"
           },
           {
@@ -2808,7 +3260,7 @@
     {
       "name": "Raid",
       "docs": [
-        "`[\"raid\", raid_id]`, base → TEE, public. Size: 8 + 1080."
+        "`[\"raid\", raid_id]`, base → TEE, public. Size: 8 + 981 = 989 bytes (measured on devnet)."
       ],
       "type": {
         "kind": "struct",
@@ -3054,7 +3506,7 @@
     {
       "name": "RaidSecret",
       "docs": [
-        "`[\"secret\", raid_id]`, TEE, private (keeper). Zero-copy. Size: 8 + 3,696.",
+        "`[\"secret\", raid_id]`, TEE, private (keeper). Zero-copy. Size: 8 + 3,712.",
         "Base-layer data is public, so nothing secret is written here until the account is on the",
         "TEE and its permission exists (CLAUDE.md §4.4)."
       ],
@@ -3123,7 +3575,26 @@
             "type": {
               "array": [
                 "u8",
-                6
+                2
+              ]
+            }
+          },
+          {
+            "name": "slice_start",
+            "docs": [
+              "Minute of day where the slice starts (set by verify_slice; revealed at the end)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "day_id",
+            "docs": [
+              "\"YYYY-MM-DD\" of the mystery day (first 10 bytes; set by verify_slice)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                16
               ]
             }
           },

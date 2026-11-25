@@ -1,6 +1,6 @@
 # STATUS.md
 
-_Last updated: 2026-11-25 — M2 done (local + devnet). Next: M3._
+_Last updated: 2026-11-25 — M3 done (local + devnet). Next: M4 (needs one economics decision)._
 
 ## Done
 - §4.1 setup: MagicBlock dev skill v0.5.1 (commit `88f6719`, 2026-11-24) installed; references read. `vendor/` cloned (examples `3376663`, starter-kits, SDK tag `v0.18.0`).
@@ -54,12 +54,26 @@ test result: ok. 5 passed; 0 failed
 - Public crate positions (DECISIONS #16): `Raid.crate_pos`, upgrade `36wYbMkJ…`. Devnet check `scripts/m2-public-positions.ts` (raid `JBhwMQjF…`): stranger and no-token reads of Raid succeed, 72/72 positions match the private crates, 72/72 crate reads return null.
 - Not yet exercised: hazard damage and dormant wake need moving prices (M3); tested there.
 
+## M3 — market (done)
+- Program upgraded (`4eZ86xt1…`, fix `iVcNFivo…`), 661,576 bytes. New: `load_slice` (5 × 720 B into RaidSecret on the TEE), `verify_slice` (hash(slice) → leaf → Merkle proof at the VRF index vs `Raid.day_root`; Mystery raids cannot start unverified), market step per second in `tick` (Mystery: slice; Live: Pricing Oracle with full validation, stale → price held), `start_trade` / `finish_trade` / `cancel_trade` (terminal, 3 s, position public while channelling, no spread, moving blocked).
+- Mystery data (`scripts/build-mystery.ts`): 23 days from Binance 1-minute spot klines (SOL/BTC/ETH → Tower/Factory/Harbor), root `1169ada7…` in `data/mystery/merkle.json`; slices + preimages private (DECISIONS #17).
+- MagicSVM (all suites, 10/10):
+```
+m1: test3 ok · test4 ok · m1_tick_fog_privacy_and_faucet ok
+m2: test1_partial ok · test2 ok
+m3: test6_verify_slice_rejects_wrong_slice_and_wrong_leaf ok · m3_market_steps_wake_and_hazards ok · m3_trade_at_terminal_with_exposure ok
+    m3_live_mode_holds_price_without_valid_feed ok · m3_late_first_tick_keeps_start_at_step0 ok
+```
+  Hazards (10 HP/s at level 2 → death → drop_backpack, idempotent) and dormant wake at +2% are tested here with a designed slice; the devnet day did not cross the thresholds in 30 s.
+- Devnet `scripts/m3-devnet.ts` (evidence `spikes/results/m3-devnet.json`): Mystery raid `3kcJcNLb…`, VRF leaf 5/23; start before verify rejected (0x1793), a real but non-chosen day rejected (0x1792); load `33EVd1EW…` → verify `3aGfDr6r…` (TS Merkle and on-chain verifier agree) → start `2RF5Fepn…`; at step 30 all 3 districts = slice exactly, start 1,000,000. Spoiler check: stranger reads 6 public accounts, 0 dates/tickers; secret null for stranger and no token. Trade `31gSNT3j…` → `3z9tJwup…`: 307,538 Tower → 305,088 Factory at current prices; raider B saw A exposed at the terminal. Live raid `7FJcP2eW…` (start `245PcDhN…`): 12 ticks read SOL/BTC/ETH oracle feeds on the TEE, indexes 999,728–1,000,275 around 100.0000.
+- Bug found on devnet and fixed: start price was "first price seen" (the first tick lands seconds after start) → now always 100.0000; regression test added.
+
 ## Blocked
 - (nothing)
 
 ## Stubbed / not real yet
 - `start_raid` does not yet require a verified Mystery slice (`verify_slice` lands in M3). M1 devnet runs use Live mode.
-- `tick` sets `market_step` but applies no prices yet (M3), so hazards and dormant waking never trigger on devnet before M3.
+- `data/mystery/headlines.json` does not exist yet (M6): every leaf currently commits to an empty headline list; the root is rebuilt when headlines are added.
 
 ## Next
-- M3: Mystery slice pipeline + verify_slice + data build + Merkle; Live oracle path; trades with exposure; hazard/wake tests with real price steps. Test 6.
+- M4: end_raid, Results + conservation, commit-and-undelegate + finalize_raid action, claim, settle_stuck_raid, spectator pools. Tests 1, 5, 7, 11. Needs a decision from Maris on how price moves are absorbed in payouts.

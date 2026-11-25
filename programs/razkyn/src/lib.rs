@@ -2,6 +2,7 @@
 //! A market-driven multiplayer extraction game on Solana (MagicBlock Solana Blitz v10).
 //! Spec: CLAUDE.md. Milestone M1: config, mints, faucet, create/join/delegate, permissions,
 //! VRF seed + derivations, tick, movement, fog View. M2: crates, open, shoot, drops, hazards.
+//! M3: Mystery slice + verify_slice, market steps (slice or oracle), trades with exposure.
 #![allow(unexpected_cfgs)]
 
 use anchor_lang::prelude::*;
@@ -96,6 +97,29 @@ pub mod razkyn {
     }
     pub fn drop_backpack(ctx: Context<DropBackpack>, slot: u8) -> Result<()> {
         instructions::crates::drop_backpack(ctx, slot)
+    }
+
+    // ---- market (M3) ----
+    pub fn load_slice(ctx: Context<LoadSlice>, chunk: u8, bytes: Vec<u8>) -> Result<()> {
+        instructions::market::load_slice(ctx, chunk, bytes)
+    }
+    pub fn verify_slice(
+        ctx: Context<VerifySlice>,
+        day_id: [u8; 10],
+        slice_start: u32,
+        headlines_hash: [u8; 32],
+        proof: Vec<[u8; 32]>,
+    ) -> Result<()> {
+        instructions::market::verify_slice(ctx, day_id, slice_start, headlines_hash, proof)
+    }
+    pub fn start_trade(ctx: Context<StartTrade>, slot: u8, from_asset: u8, to_asset: u8, units: u64) -> Result<()> {
+        instructions::market::start_trade(ctx, slot, from_asset, to_asset, units)
+    }
+    pub fn finish_trade(ctx: Context<FinishTrade>, slot: u8) -> Result<()> {
+        instructions::market::finish_trade(ctx, slot)
+    }
+    pub fn cancel_trade(ctx: Context<CancelTrade>, slot: u8) -> Result<()> {
+        instructions::market::cancel_trade(ctx, slot)
     }
 
     // ---- gameplay (TEE) ----

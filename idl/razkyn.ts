@@ -14,6 +14,60 @@ export type Razkyn = {
   },
   "instructions": [
     {
+      "name": "cancelTrade",
+      "discriminator": [
+        124,
+        66,
+        91,
+        59,
+        175,
+        107,
+        208,
+        120
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "rpub",
+          "writable": true
+        },
+        {
+          "name": "raidKey",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "createCrates",
       "discriminator": [
         255,
@@ -1123,6 +1177,69 @@ export type Razkyn = {
       ]
     },
     {
+      "name": "finishTrade",
+      "discriminator": [
+        145,
+        239,
+        16,
+        243,
+        140,
+        44,
+        65,
+        42
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "rpub",
+          "writable": true
+        },
+        {
+          "name": "district0"
+        },
+        {
+          "name": "district1"
+        },
+        {
+          "name": "district2"
+        },
+        {
+          "name": "raidKey",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "initConfig",
       "discriminator": [
         23,
@@ -1386,6 +1503,83 @@ export type Razkyn = {
         {
           "name": "raidKey",
           "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "loadSlice",
+      "discriminator": [
+        131,
+        242,
+        193,
+        172,
+        9,
+        136,
+        126,
+        122
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "secret",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "signer": true,
+          "relations": [
+            "raid"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "chunk",
+          "type": "u8"
+        },
+        {
+          "name": "bytes",
+          "type": "bytes"
         }
       ]
     },
@@ -2060,6 +2254,29 @@ export type Razkyn = {
           }
         },
         {
+          "name": "secret",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
           "name": "keeper",
           "signer": true,
           "relations": [
@@ -2068,6 +2285,72 @@ export type Razkyn = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "startTrade",
+      "discriminator": [
+        70,
+        121,
+        62,
+        113,
+        254,
+        13,
+        7,
+        66
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "rpub",
+          "writable": true
+        },
+        {
+          "name": "raidKey",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        },
+        {
+          "name": "fromAsset",
+          "type": "u8"
+        },
+        {
+          "name": "toAsset",
+          "type": "u8"
+        },
+        {
+          "name": "units",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "tick",
@@ -2138,6 +2421,18 @@ export type Razkyn = {
         {
           "name": "district2",
           "writable": true
+        },
+        {
+          "name": "feed0",
+          "optional": true
+        },
+        {
+          "name": "feed1",
+          "optional": true
+        },
+        {
+          "name": "feed2",
+          "optional": true
         }
       ],
       "args": []
@@ -2188,6 +2483,108 @@ export type Razkyn = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "verifySlice",
+      "discriminator": [
+        195,
+        35,
+        206,
+        240,
+        137,
+        245,
+        115,
+        112
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "secret",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "signer": true,
+          "relations": [
+            "raid"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "dayId",
+          "type": {
+            "array": [
+              "u8",
+              10
+            ]
+          }
+        },
+        {
+          "name": "sliceStart",
+          "type": "u32"
+        },
+        {
+          "name": "headlinesHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        }
+      ]
     },
     {
       "name": "vrfCallbackRaid",
@@ -2553,6 +2950,51 @@ export type Razkyn = {
       "code": 6031,
       "name": "cratesNotPlaced",
       "msg": "crates are not all placed"
+    },
+    {
+      "code": 6032,
+      "name": "badChunk",
+      "msg": "bad slice chunk"
+    },
+    {
+      "code": 6033,
+      "name": "sliceNotLoaded",
+      "msg": "slice not fully loaded"
+    },
+    {
+      "code": 6034,
+      "name": "badProof",
+      "msg": "slice or Merkle proof does not match the committed day root"
+    },
+    {
+      "code": 6035,
+      "name": "sliceNotVerified",
+      "msg": "mystery slice not verified"
+    },
+    {
+      "code": 6036,
+      "name": "notAtTerminal",
+      "msg": "not at a trading terminal"
+    },
+    {
+      "code": 6037,
+      "name": "trading",
+      "msg": "action blocked while trading"
+    },
+    {
+      "code": 6038,
+      "name": "badTrade",
+      "msg": "bad trade"
+    },
+    {
+      "code": 6039,
+      "name": "insufficientUnits",
+      "msg": "not enough units"
+    },
+    {
+      "code": 6040,
+      "name": "badFeed",
+      "msg": "bad price feed"
     }
   ],
   "types": [
@@ -2710,7 +3152,7 @@ export type Razkyn = {
     {
       "name": "district",
       "docs": [
-        "`[\"district\", raid_id, i]`, TEE, public. Size: 8 + 511."
+        "`[\"district\", raid_id, i]`, TEE, public. Size: 8 + 519."
       ],
       "type": {
         "kind": "struct",
@@ -2737,10 +3179,20 @@ export type Razkyn = {
           },
           {
             "name": "startPrice",
+            "docs": [
+              "Price index ×10^4 (100.0000 = 1_000_000 at raid start) in both modes."
+            ],
             "type": "u64"
           },
           {
             "name": "currentPrice",
+            "type": "u64"
+          },
+          {
+            "name": "startRaw",
+            "docs": [
+              "Live mode: raw oracle price at the first step (index = PRICE_ONE × raw / start_raw)."
+            ],
             "type": "u64"
           },
           {
@@ -2814,7 +3266,7 @@ export type Razkyn = {
     {
       "name": "raid",
       "docs": [
-        "`[\"raid\", raid_id]`, base → TEE, public. Size: 8 + 1080."
+        "`[\"raid\", raid_id]`, base → TEE, public. Size: 8 + 981 = 989 bytes (measured on devnet)."
       ],
       "type": {
         "kind": "struct",
@@ -3060,7 +3512,7 @@ export type Razkyn = {
     {
       "name": "raidSecret",
       "docs": [
-        "`[\"secret\", raid_id]`, TEE, private (keeper). Zero-copy. Size: 8 + 3,696.",
+        "`[\"secret\", raid_id]`, TEE, private (keeper). Zero-copy. Size: 8 + 3,712.",
         "Base-layer data is public, so nothing secret is written here until the account is on the",
         "TEE and its permission exists (CLAUDE.md §4.4)."
       ],
@@ -3129,7 +3581,26 @@ export type Razkyn = {
             "type": {
               "array": [
                 "u8",
-                6
+                2
+              ]
+            }
+          },
+          {
+            "name": "sliceStart",
+            "docs": [
+              "Minute of day where the slice starts (set by verify_slice; revealed at the end)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "dayId",
+            "docs": [
+              "\"YYYY-MM-DD\" of the mystery day (first 10 bytes; set by verify_slice)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                16
               ]
             }
           },

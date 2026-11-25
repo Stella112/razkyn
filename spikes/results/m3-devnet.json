@@ -1,0 +1,202 @@
+{
+  "when": "2026-11-25T12:30:39.819Z",
+  "mystery": {
+    "raid": "3kcJcNLbATgnqxMrJLNtrVZKktTCHbjxCfdau8xoBrbL",
+    "leafIndex": 5,
+    "leafCount": 23,
+    "root": "1169ada71386656e7b9914ccefd645e7442f8092e1e50061fc8480caa3cd9793",
+    "startBeforeVerify": "0x1793",
+    "wrongLeafVerify": "0x1792",
+    "step": 30,
+    "tickNo": "26",
+    "ticksSent": 26,
+    "prices": [
+      {
+        "district": 0,
+        "start": "1000000",
+        "current": "986428",
+        "sliceAtStep": 986428,
+        "match": true,
+        "hazard": 0,
+        "awake": false,
+        "histLen": 24
+      },
+      {
+        "district": 1,
+        "start": "1000000",
+        "current": "994349",
+        "sliceAtStep": 994349,
+        "match": true,
+        "hazard": 0,
+        "awake": false,
+        "histLen": 24
+      },
+      {
+        "district": 2,
+        "start": "1000000",
+        "current": "990313",
+        "sliceAtStep": 990313,
+        "match": true,
+        "hazard": 0,
+        "awake": false,
+        "histLen": 24
+      }
+    ],
+    "spoiler": {
+      "publicAccountsReadByStranger": 6,
+      "datesOrTickersFound": 0,
+      "secretByStranger": "null",
+      "secretNoToken": "null"
+    },
+    "trade": {
+      "crate": 5,
+      "from": 0,
+      "to": 1,
+      "units": "307538",
+      "backpackBefore": [
+        "307538",
+        "0",
+        "0"
+      ],
+      "backpackAfter": [
+        "0",
+        "305088",
+        "0"
+      ],
+      "exposedSeenByB": true,
+      "publicPos": [
+        537,
+        1301
+      ],
+      "terminal": [
+        550,
+        1250
+      ]
+    },
+    "sigs": {
+      "createRaid": "4U8WuizrHSSng3PVAaLBW1yHDq9NDwvJvqvTo8s4qpUVA7egKN1f8T5wpMeUo7toTPfUBsXRxprSZttttKomX8Db",
+      "createCrates": [
+        "2o9SBcPpPXBNA2stZHbkE6Hfz4ZMFieVdUxNu9pBwdpWVJTNpjZutwdp5nN7NHwNu8ACGp1XTcDkXsvXNykjYu9Q",
+        "4jL1SxnHYRQuDNA59meFFvDE9Fnm4deKFMxG91Rc1JGhgcX5BfAp1aFPquMTKmvtZCtT9gZ8f5syQiUB4n9oYPRD",
+        "TuKNifsrMqpqYNsWdmoD12a3KyHxFXmxwwjFtB74JhMi1DE3C7RfPVpv9WWeR5VSjh4wX9rURYoGGkGFjKd5vqG",
+        "2rEdkqggNCv2xNjMQEAEa2iD3xeFLhALGqezFczxnbGke8TWYmqKidF8dmcYMm9kTVPbaBoWC6beyp3kVw6i7duG"
+      ],
+      "join_0": "zQmcvpYtoy2U6UkY75ABtXRqwcCBxBCzafjQgaxBqZRWmXTvGLb6JgdPrhQzZXYGQnj2oT5QQLrgqPP9tpcrHkB",
+      "join_1": "4E1UzmmY25zYYG4EMLgfgQBjwnh2HCgG9P93jEKK7deUcctR2BqDp1j9AgpKgpYUfquwiF3wZLtmctQxHafubEMN",
+      "delegate": [
+        "3EWXcDo322DwsHBD2ehf2CdVAcfaezHUhUWF38jdAaNqu4GJabC6n71ZKXft52wD3A6r6D7NitMPm3BCXyPm8pfu",
+        "3LKuqDdHKjBX1zYt2bp1NQDVAT4A5mnX4kLpzZGtJjxmkYhxkJrT4KecksrN7Rq8RgGWa6d5xXKcNgoi3AXcZhKj",
+        "2tsPn5am2Fry4KmU88Tc5j1DNAqo5tjmyz1BExa8m9SCVoVncVzZ339xoQUqhqm5o9sGVyEcwRaRWPHWY9UduokE",
+        "4GPkiXsdgFov1st4NmMCbm9TMv3Hx5vZt1XhTogr74HkVBr2wQhMQwD3W9CeGRMy199gLPrLnXSmyWyNshhD518S",
+        "3WUgtioHkp1jdP9fUvxRFbQa2g5zbPKVjT6KTfJXvm99aD4C95V4QacGLJihAsmDQHAvTuMJYFFxvSBKW2p4ySGE",
+        "2sY2fhKSYesNEJfEEivAzkUS5syBS1Tioi4XBWVu2kuToje8YgX58pgQNV3ay3hjY9nxUrXXWfKw2FvnEi3sgFXE",
+        "4ySsJtK2T5TjUXTb4rMUPzeFxkt4kbJUvKvscowzBztmFmXi2T7xrT9kGgSkqt7SZQT4ftcRdfZkrhunx5EweRSr",
+        "2FB7GjkRPNwM1AzCNc73a91eVwhoqgutWUpzqkq8yVVziPfp5q4m9UcBv94tohRqNLZJCJWPZCBfNnzWwBCjUShy",
+        "2REb5an76C2P6wUwUdj16K67T3CeDFGNHba6j2iAjxX6nDgT9NXgfMKSmFFhBBgGyrDm8GsYLE1XCEccbXzAFvD3",
+        "EBc1P8yvXjKeroADABg46Duu8aK6qGP9EopZaZCRF1gk2sVUxWcmNxSEPgm9UyDrJ1mDP7U3TX4BG3yizmQz7tJ",
+        "3z7DoQhgmfZ14cbjh7UweHQykTbxH5nXgJK8jLZEtpwYXGU8yVkazaRTdhdhVFixbMaDoQyJ23ePyjWfnh6a3c1M",
+        "4oKoXXymmADjLjw3GXLAG6TB2YfoLdhgTQ1Ck3SiCwi1eTSvc8fomtFh1m3mdg4ShbC5DgsJB9dZQWEonw1EDR5J",
+        "WUhX6YB6YKP5ZdNKJSijZnwKRVy89ZdvBdbz51jXvzg7jkn8AzK8tpXUk6TVvYXiRcv8u3cT42CmwL4y3NsLbM4",
+        "2w69qBwf8WgbyVCJ5vKfabPfJeS2UMEzNUkQAvoAKBzVXLnNqDHVLpCs1pREYkYTV2H6TW7pKadHjcafoUGo1chD",
+        "5dBBUSPyifPoEFGV34Je8qweKdoVdpTvD4CckZRTpkBxSpwzftsd5jwvyz57X8QtKu5oFWFaBfdpReMhfJFRQzuZ",
+        "z1TVKijZhe9t7GtUvpvs9YGcd5hzgDkEuNwbbTQHrUx7sTYaTb7JqjX3i6vG6a1rsAzdLBA2FknvX4SHssk3Vnh",
+        "3W7zSqcEpBregbwjuaBW4C2xwXuUyuqB3zvtHgUecV9vULjT2hakSMqDUxcbXqp4UhWifFZeXZ8zB2f169pire4E"
+      ],
+      "permissions_0": "219WWQVXiPAfb5gRhggJEeVmnWXigfPjUM8eX1ba2p7pi7dfvZHbSCUz3tNAhWTRq4t75r45fmVDNPFKsppE3xza",
+      "permissions_1": "2jdQECvaxMgCYaw1qg9ZnHxT6BprN6ZUsNq1rjnqk3MTRHWsnp4qvGvH2aqUdqS9mzBtKDjr2WU6MUzDb7B15a5N",
+      "secretPermission": "HxVCcUr16DzCTwV5vvnfXd2H1K1gGzSLZxCZGYe8iSSXrLUc3FDoxGRANCeB6bUNiQyVSCCTit5XLmD3p6Zx1Gb",
+      "vrfRequests": [
+        "2XcpHqUf9bGbTjzykmA26XxXT6TDpGjtUXsFaw7issw3gyR5rD1ZMM4Ws5AzGDRf9GoDBSbi2LeJnBo7Js5MbwLL"
+      ],
+      "placeCrates": [
+        "XNT5kjg4J418mHRCnKgWnDjWNhmgRxmCZ7RBLZxhxRHzMi6fyDcvDEziv1oD3T8DJygXvQHoDkuR9pDFMZjTqon",
+        "239TFZSBvCAKVEpn1XajtLK8wVoGDERQR4RW4XYLQhvFyRyM3EbnqvyGyu13ZtgaStcDQ6ikvNX42Ud4YE29XfYa",
+        "4XrfHcLZsL2J9wJ8xgBJZbJ19rhkdRbFze1R7DCUD49NuwH8MKCKVufpbBx2MtTipegdneLiwC1zPpXSiKLKJxxs",
+        "1vUQZu88qsPZshByDKNmBrcV2nYnV9eiE6mg4AuMXaDprgpoHao5N7mLic6UggguYbh4DLmZkQK1yMbtrCDkRxL",
+        "34bMubpxzY2j6mSXiqn9mKRs6hPSSSJPRWv3gSjQexjKXFxMy3wviejptyN8PFWEZvXVSEGLGJD2w8eYAah1nhWE",
+        "3ohoyoHXY9XdXG6aWXJEnFg9VuoLazqqR8E9gSxPiVitpvPNgoBxFVbGeFfeUn739wBTpSQxF4Hp95uCgKEVAnQx"
+      ],
+      "loadSlice": [
+        "33EVd1EWLG9AR4xewYEMixgX3VbStuDnCqnVxgcFmyYjEE8stmuDCoHVMiNeHa7ZoDQTCGqAKBEu5qxUo6CJjgNJ",
+        "9PqozDcwo8XwSVYbjxpmZQTYPHDbUK5UCrU2yNDsDJgy3zd9tHpRCTDxKWDfC4rr7GQ6qRoS6oWXiZ57DGP8Jpj",
+        "4WGBuktQkeqr1ohaQvu1UTDCWvJPXiTwSFr62uSHvV5dxNfJgdjMf23dSrPc9Shr21F9urHQLLqeRNnJ88RgPcqQ",
+        "3HB8JT4vUa9d3aky6t5DPfjGadwHWXVpej577LbHmiorG1EvxkYUbXk6SScdnPUhYn9shLZvMsJ65dcEDyWYjBmE",
+        "2aSzRSqZAY7zHts8wukhFfP8XC1S7xGkpDx7s6gXA3eB8Dg5pX9rGuE1Y9RgPSZLgR38BuJN22gU9mpzfufGJHsP"
+      ],
+      "verifySlice": "3aGfDr6rjatWQsXcB3iNv4NJQaniraGLpTQYgBwTgpuZN5m1PwVY5v7cF8ddUXUKRHzNVMSaJFkttqgD98veYVzY",
+      "startRaid": "2RF5Fepnjpaw5q4TTUswBnYsxeZdf31pEhx19HtvWXKVUXM2Ss1kpFArFcBKfNULg5g4ebUhj3knFbYh4FDsij5h",
+      "openCrate": "481vyRuRNvBMXMz9YV3PR3DSqChR2Pg8wRCvVW4zqSGLuSBg4f8JBqSCBKWJUSy9MGHckVGVpqd41Qxidadan2Tn",
+      "finishOpen": "YegTwdEYPK9nL4NrmvYVuLPW2C1WgVQwHHEMgzpWUU5p9YPoNJQ28ZgHRx8hdxbnvZb5ptuN1DyXRBviDBNpUuG",
+      "startTrade": "31gSNT3j53sBkum9WhanVkqT7isSjYgUfGN8egLp2tzgD2P3gdqssnKVfWUzGmHYTwLX97kxgokECDC1n1wJgJFH",
+      "finishTrade": "3z9tJwupccxN9yt2SkkXQKQzhHwi9hRoTpD5c7t8WocJg1KqXCNwepjZhc8W3BR4n7LqMXbR1cCZdSrUY8gLVTrW"
+    }
+  },
+  "live": {
+    "raid": "7FJcP2eWkHrrX7xMuB58FSK341gm3ndLUS7HmGebmCZS",
+    "samples": [
+      [
+        "1000000 (raw0 6773483735)",
+        "1000000 (raw0 5867712504275)",
+        "1000000 (raw0 164588504732)"
+      ],
+      [
+        "999781 (raw0 6773483735)",
+        "1000014 (raw0 5867712504275)",
+        "999967 (raw0 164588504732)"
+      ],
+      [
+        "999817 (raw0 6773483735)",
+        "1000029 (raw0 5867712504275)",
+        "999946 (raw0 164588504732)"
+      ],
+      [
+        "999822 (raw0 6773483735)",
+        "1000083 (raw0 5867712504275)",
+        "999968 (raw0 164588504732)"
+      ],
+      [
+        "999709 (raw0 6773483735)",
+        "1000104 (raw0 5867712504275)",
+        "999958 (raw0 164588504732)"
+      ],
+      [
+        "999736 (raw0 6773483735)",
+        "1000069 (raw0 5867712504275)",
+        "999917 (raw0 164588504732)"
+      ],
+      [
+        "999728 (raw0 6773483735)",
+        "1000084 (raw0 5867712504275)",
+        "999892 (raw0 164588504732)"
+      ],
+      [
+        "999781 (raw0 6773483735)",
+        "1000092 (raw0 5867712504275)",
+        "999904 (raw0 164588504732)"
+      ],
+      [
+        "999739 (raw0 6773483735)",
+        "1000279 (raw0 5867712504275)",
+        "1000016 (raw0 164588504732)"
+      ],
+      [
+        "999856 (raw0 6773483735)",
+        "1000270 (raw0 5867712504275)",
+        "1000024 (raw0 164588504732)"
+      ],
+      [
+        "999594 (raw0 6773483735)",
+        "1000108 (raw0 5867712504275)",
+        "999773 (raw0 164588504732)"
+      ],
+      [
+        "999813 (raw0 6773483735)",
+        "1000275 (raw0 5867712504275)",
+        "999728 (raw0 164588504732)"
+      ]
+    ],
+    "sigs": {
+      "startRaid": "245PcDhNd3apKCRyzRa1cZzKyWqVdQWsiGNzGfNaSGfLzvmqmngf73cqHpLXaULtyS1zTY5ZEcBifFHc1VLi5FTb"
+    }
+  }
+}
