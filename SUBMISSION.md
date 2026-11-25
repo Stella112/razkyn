@@ -7,7 +7,7 @@ Submit at https://build.magicblock.app/?stage=blitz#submit before **Fri 27 Nov 2
 | Project name | RAZKYN |
 | One-line description | A market-driven multiplayer extraction game on Solana. |
 | Categories | Games, DeFi, Privacy |
-| Playable site | _TODO (M8: Vercel deploy)_ |
+| Playable site | https://razkyn.vercel.app |
 | GitHub repo | _TODO_ |
 | Demo video | _TODO (2 min, see docs/demo-script.md)_ |
 
