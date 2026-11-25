@@ -1,0 +1,46 @@
+{
+  "msPerSlot": 10.466879853814527,
+  "rows": [
+    {
+      "round": 0,
+      "requestSlot": 879967084,
+      "callbackSlot": 879967086,
+      "slots": 2,
+      "onchainMs": 21,
+      "blockTimeDeltaS": 0
+    },
+    {
+      "round": 1,
+      "requestSlot": 879967817,
+      "callbackSlot": 879967819,
+      "slots": 2,
+      "onchainMs": 21,
+      "blockTimeDeltaS": 0
+    },
+    {
+      "round": 2,
+      "requestSlot": 879968529,
+      "callbackSlot": 879968531,
+      "slots": 2,
+      "onchainMs": 21,
+      "blockTimeDeltaS": 0
+    },
+    {
+      "round": 3,
+      "requestSlot": 879969263,
+      "callbackSlot": 879969264,
+      "slots": 1,
+      "onchainMs": 10,
+      "blockTimeDeltaS": 0
+    },
+    {
+      "round": 4,
+      "requestSlot": 879969999,
+      "callbackSlot": 879970001,
+      "slots": 2,
+      "onchainMs": 21,
+      "blockTimeDeltaS": 0
+    }
+  ],
+  "pass": true
+}

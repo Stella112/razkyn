@@ -1,0 +1,65 @@
+{
+  "when": "2026-11-24T21:55:26.877Z",
+  "pass": true,
+  "taskId": "1795557301585002",
+  "intervalMs": 100,
+  "iterations": 100,
+  "teeScheduleSig": "4zDbA4ZKhSfoWYBo2UBRUWU95BMzMwYYMBLoHorhoRkRUbyrjPMv2LrnKipeio98Eg4mkENofYAibfKLQGtmRqCd",
+  "firedInWindow": 100,
+  "watchMs": 20000,
+  "observedRatePerSec": 5,
+  "samples": [
+    {
+      "tMs": 1935,
+      "crankTicks": "47"
+    },
+    {
+      "tMs": 3385,
+      "crankTicks": "64"
+    },
+    {
+      "tMs": 4846,
+      "crankTicks": "79"
+    },
+    {
+      "tMs": 6308,
+      "crankTicks": "94"
+    },
+    {
+      "tMs": 7772,
+      "crankTicks": "100"
+    },
+    {
+      "tMs": 9244,
+      "crankTicks": "100"
+    },
+    {
+      "tMs": 10695,
+      "crankTicks": "100"
+    },
+    {
+      "tMs": 12161,
+      "crankTicks": "100"
+    },
+    {
+      "tMs": 13606,
+      "crankTicks": "100"
+    },
+    {
+      "tMs": 15047,
+      "crankTicks": "100"
+    },
+    {
+      "tMs": 16499,
+      "crankTicks": "100"
+    },
+    {
+      "tMs": 17940,
+      "crankTicks": "100"
+    },
+    {
+      "tMs": 19392,
+      "crankTicks": "100"
+    }
+  ]
+}

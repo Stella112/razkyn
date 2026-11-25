@@ -1,0 +1,18 @@
+{
+  "when": "2026-11-25T11:52:02.524Z",
+  "raid": "JBhwMQjFdMAuXQ5Fn9kCtcifneuN6rSQ8k2yXNFUZe1R",
+  "placeCratesSig": "3iviEJNntXxM8ZGUjzfqCC2s7ir9oXhh71WB65wfNc17rFKxczbj1t9DyKFQPadB96SUrjxJQpZLiRB9Aj6M7D12",
+  "readers": [
+    {
+      "reader": "stranger token",
+      "raid": "data (989 B)"
+    },
+    {
+      "reader": "no token",
+      "raid": "data (989 B)"
+    }
+  ],
+  "positionsMatchingPrivateCrates": "72/72",
+  "crateContentsHidden": "72/72",
+  "pass": true
+}

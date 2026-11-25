@@ -1,0 +1,30 @@
+# --- secrets: never commit ---
+.env
+.env.*
+!.env.example
+*.keypair.json
+*-keypair.json
+keys/
+id.json
+# keeper / bot / burner keys
+**/wallets/
+# mystery-day preimages stay private until after the demo (CLAUDE.md §6.4)
+data/mystery/private/
+
+# --- read-only references ---
+vendor/
+
+# --- build output ---
+target/
+**/target/
+.anchor/
+test-ledger/
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+
+# --- misc ---
+.DS_Store
+Thumbs.db
+*.log

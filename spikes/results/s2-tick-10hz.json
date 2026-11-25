@@ -1,0 +1,40 @@
+{
+  "pass": false,
+  "when": "2026-11-24T21:53:42.737Z",
+  "hz": 10,
+  "seconds": 60,
+  "wallSecs": 60.3,
+  "ticksSent": 600,
+  "ticksLanded": 600,
+  "landedPct": 100,
+  "latencyMs": {
+    "p50": 453,
+    "p95": 476,
+    "p99": 2433,
+    "max": 2654
+  },
+  "maxGapBetweenLandedTicksMs": 416,
+  "onchainTickCallsDelta": "600",
+  "moves": {
+    "sent": 120,
+    "landed": 120,
+    "p95Ms": 2175,
+    "onchainDelta": "120"
+  },
+  "erSlots": {
+    "delta": 6316,
+    "msPerSlot": 9.79
+  },
+  "sampleTickSigs": [
+    "mDvSK1Sx22dyfGGedkbycey5kmDY7guAMhy7JpNWU5SJXkGcLNfpLQLNn5cLHKjARzpEVreJKx8vUvHjGp6UHU2",
+    "3DfkcRrXUiQwPnh4bF7Ya4ajx7pWKpA5tPC5CSL3gt3ScDkw6RVZS2w9zNYJ11jqG9hJTdT6L82yX7z1kJcy3Ai4",
+    "3znS9TiXr7a6ctHT396D9JPqmRDinzKnEagk5Sc69zEdgkyvBZR5vXfuDycX1sVrdVeE2DydjEai2mwUuz8Kicun"
+  ],
+  "sampleMoveSigs": [
+    "5YkNa1pqcXFLzPW9xSrWQFPEavtexSwcGr45AnkvzTfD6ycd26qdPVX8bdx6H39uMZSxqds5sBmAthKvbvQtyei1",
+    "4kwRyN5VbbUNoAUd7GnRPFcjGHUN1EVFoH6G8UY7B1GyDMdd7tCeSuffczsivq7Ynmros1UrL71PihsvmJpgf115",
+    "5J4byZykEGpP5Wk5roGTfjeTz2du4jfim8cEujdfcK1FreHFUaToAmmjPeajdiWuwLh5Hq7mu9roWQQCRhQWswZk"
+  ],
+  "tickErrors": [],
+  "moveErrors": []
+}

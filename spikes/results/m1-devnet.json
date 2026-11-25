@@ -1,0 +1,179 @@
+{
+  "when": "2026-11-25T10:50:47.906Z",
+  "programId": "CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97",
+  "raiders": [
+    {
+      "wallet": "Ay39cTTozPWm7KNhvP1GDwfi2X3MRZY77xpNWSuw6X2i",
+      "raidKey": "8nME9DqhwEkKYwFcqSi4e74QBpp7wu2r6DvRfUmBFkP1"
+    },
+    {
+      "wallet": "3xPEtPzPWJ8ocMyFPNtMfrqeefg2FevCizCwgYrz4t1h",
+      "raidKey": "9H5T8bmEjEhePvWFHxuA6YiU9k3tDgh52gukoqyY44uU"
+    }
+  ],
+  "escrowAfterJoins": "20000000",
+  "delegateSigs": [
+    "4F6sbveq5KNuZSPvzTrgNk58tYSqtLhKN5k9734QgcZczdNgdkCV7pxpRN5MqarDjmTiGgH5PDxi1Yb17PXd7Ejz",
+    "3oseq5bVDVQuVkMovpehmis6zrRdBBNKDLEMeYf4XmFXwbgfvuLRhmtiP6iwuRNL9WLrMXTmuK1G75CiihwsUKNf",
+    "2nfbxCC15gC7QyXtAb2iz6Sm7S4EWWPLVY3m2ZRc9JgtV7reskmVs3WAPmtGzGZrVNJnF5XkQtxySHZNgiZssk6b",
+    "22DKmWen3CdUzrhnNRmFcCdHQW6jRrFitUuLxBFprP8JJxHqJRCzSFyoDwzSR3hCtyb2DEk9rYnVWDygTe6vWyz4"
+  ],
+  "raidRouterStatus": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isDelegated": true,
+      "fqdn": "https://devnet-tee.magicblock.app/",
+      "delegationRecord": {
+        "authority": "MTEWGuqxUpYZGFJQcp8tLN7x5v9BSeoFHYWQQ3n3xzo",
+        "owner": "CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97",
+        "delegationSlot": 526125212,
+        "lamports": 4861560
+      }
+    }
+  },
+  "vrfSeededAfterMs": 1740,
+  "tickNoAfter10": "10",
+  "cheats": [
+    {
+      "label": "200-unit jump",
+      "rejected": true,
+      "expectedCode": "0x177d",
+      "matched": true,
+      "error": "Error: Simulation failed. \nMessage: transaction verification error: Error processing Instruction 0: custom program error: 0x177d. \n\nCatch the `SendTransactionError` and call `getLogs()` on it for full details."
+    },
+    {
+      "label": "raider B's key moves slot 0",
+      "rejected": true,
+      "expectedCode": "0x1779",
+      "matched": true,
+      "error": "Error: Simulation failed. \nMessage: transaction verification error: Error processing Instruction 0: custom program error: 0x1779. \n\nCatch the `SendTransactionError` and call `getLogs()` on it for full details."
+    }
+  ],
+  "positions": {
+    "spawn": {
+      "raidId": "01a212545c33",
+      "slot": 0,
+      "raidKey": "8nME9DqhwEkKYwFcqSi4e74QBpp7wu2r6DvRfUmBFkP1",
+      "x": 4426,
+      "y": 3949,
+      "lastMoveSlot": "00",
+      "backpack": [
+        "00",
+        "00",
+        "00"
+      ],
+      "channelKind": 0,
+      "channelArg": 0,
+      "channelStartSlot": "00",
+      "channelUnits": "00",
+      "lastShotSlot": "00",
+      "bump": 255
+    },
+    "afterLegalMove": {
+      "raidId": "01a212545c33",
+      "slot": 0,
+      "raidKey": "8nME9DqhwEkKYwFcqSi4e74QBpp7wu2r6DvRfUmBFkP1",
+      "x": 4366,
+      "y": 3949,
+      "lastMoveSlot": "34bad1eb",
+      "backpack": [
+        "00",
+        "00",
+        "00"
+      ],
+      "channelKind": 0,
+      "channelArg": 0,
+      "channelStartSlot": "00",
+      "channelUnits": "00",
+      "lastShotSlot": "00",
+      "bump": 255
+    }
+  },
+  "privacy": [
+    {
+      "label": "rprv0 by A raid key (member)",
+      "account": "6n9EXpJ6ri7H7EkBW5Kxk5YJ3ZdivgapqnRTwbJ7khX7",
+      "result": "data (112 B)"
+    },
+    {
+      "label": "rprv0 by keeper (member)",
+      "account": "6n9EXpJ6ri7H7EkBW5Kxk5YJ3ZdivgapqnRTwbJ7khX7",
+      "result": "data (112 B)"
+    },
+    {
+      "label": "rprv0 by B raid key (non-member)",
+      "account": "6n9EXpJ6ri7H7EkBW5Kxk5YJ3ZdivgapqnRTwbJ7khX7",
+      "result": "null"
+    },
+    {
+      "label": "rprv0 without token",
+      "account": "6n9EXpJ6ri7H7EkBW5Kxk5YJ3ZdivgapqnRTwbJ7khX7",
+      "result": "null"
+    },
+    {
+      "label": "view0 by A raid key (member)",
+      "account": "E8rQgX1JNxagrNReSmShNjcK8Bjv4v7dt6W8bx7iWpQo",
+      "result": "data (62 B)"
+    },
+    {
+      "label": "view0 by B raid key (non-member)",
+      "account": "E8rQgX1JNxagrNReSmShNjcK8Bjv4v7dt6W8bx7iWpQo",
+      "result": "null"
+    },
+    {
+      "label": "view0 by keeper (non-member)",
+      "account": "E8rQgX1JNxagrNReSmShNjcK8Bjv4v7dt6W8bx7iWpQo",
+      "result": "null"
+    },
+    {
+      "label": "secret by keeper (member)",
+      "account": "D2Vnjv41hrCmpaChxvpEYqUu88PpiyS74dHDP45WLpWE",
+      "result": "data (3704 B)"
+    },
+    {
+      "label": "secret by A raid key (non-member)",
+      "account": "D2Vnjv41hrCmpaChxvpEYqUu88PpiyS74dHDP45WLpWE",
+      "result": "null"
+    },
+    {
+      "label": "rpub0 by B raid key (public)",
+      "account": "EWvnk5Wc159Ku17UfDhyKYPcvwAB4MumJ7DVMFiQ4b9k",
+      "result": "data (28 B)"
+    }
+  ],
+  "sigs": {
+    "initConfig": "2MAyD9CH5yD5mjWhFYAD4rhk74WrDSt37xvtBqyASqXhaWoiFmUgLvpa5R3ucrFSM9XnzshnGyfegM7FVPUZZUDb",
+    "faucet_Ay39": "53618saqEpGNqeX93cRBiiTtwGVuWX8YGiX5ZRnnAZViKeQTuoVM3VCmd7mGtnBxEqQcPx756CSPxAJ74LL1rG64",
+    "faucet_3xPE": "2j1gQB4cNRLs3oeNaiifQUMvCKnRdd7ePzE7njqfE6rWJFYRYX5yJZpiwjnb8eNwZ1KsnU4FmLCjEBySjTeUzkWm",
+    "createRaid": "3fU7d512jgZcSZzZfDiH22RNytjrRyQv9PMd1tnKRWhLJZR6dfrfkumMh5ndCRaogwW6dJmxDN9wo5yk7yU2ms1s",
+    "createSlots": "5LypBzZ5KZEACwPKQTT3ruEfmVskfxxeDVue3qkxmRPP8zwX3Mi8BbVwXeftULaGajxpPbEHkoKoezto7EsRMFT5",
+    "createDistricts": "4PPhWz1y1pZGTXt2sbJ5dKifdGbE2Go8saAdubvKa31sGj29qR1JJdjyvbTFp1VbussUKdd5SwmeT7Jfpqzq6qdr",
+    "join_0": "3K4cS9G6857ixu43sTp866qi8UG78DjYc4m6EWAyWpLErkTamwnM6GNbWeETCwy9Qjt58CFaedshqGCNGmcNiNcN",
+    "join_1": "5ETARxjrc64cSRgmnr7C9d9ZkYC5Lg9e9jMSPTpzgGNsbqWdSTzMpdHPFUowRZUc77EyBFq2ob9UMoo3U9ELZbBq",
+    "delegate": "4F6sbveq5KNuZSPvzTrgNk58tYSqtLhKN5k9734QgcZczdNgdkCV7pxpRN5MqarDjmTiGgH5PDxi1Yb17PXd7Ejz",
+    "permissions_0": "3PrK9MJwUchvuXyjmwdgUkUxe9AGPNcgGhDBpwzeu4EfKQUfBAiRxFWFvK9338mVkdwA2zTnxU5mZQPsiAtna4m5",
+    "permissions_1": "5aUvMH7qjBpCFrcNKuAyWRTd1Yeqf52nQW5AnDQryYaEh4WzidqiHGifeQ8TaEjLJa1MoueoC6eQ6g84LK1iU8FN",
+    "secretPermission": "4wMeSpuAqZYCckXfznd5D8rEASprkG7bBYFinxtkuLdXR3EHW7jfGaHZy3qp4WTPwQ3J324BDneuUFJks4PmK5ns",
+    "vrfRequest": "2pE3oFjqWuPghJtgWabXhQe5zhwqP9DPEHcFNfurFLuw8AV5NwgKNGuSy5uKFgym64rgsLB1V67NBWC4e9rbemDY",
+    "startRaid": "47LrTvwdhrbx6nCd7dGKciF1rWwY47sJmq5y8Zbmod292vgDMsLxBzgRxbWhpTPd7gfQ78LgX328LKLbC4WA5f8",
+    "tick": "22rJrkYMUS6XDdiRXeEU1aVf3r7jTKFc8dV9aj2Rae8ERjc5DT9GWzCPbCMy7K2njTxg1FvK6QnLVuDvfpTaGVS2",
+    "moveLegal": "pd85LW751aAg73DxtqMmjXWhtdxUeEcQZgdEDVufdmgPn1zTdiFY3T7gwphbGd4sMAtaznFrPqodBELBX546ZW4"
+  },
+  "baseExplorer": {
+    "initConfig": "https://explorer.solana.com/tx/2MAyD9CH5yD5mjWhFYAD4rhk74WrDSt37xvtBqyASqXhaWoiFmUgLvpa5R3ucrFSM9XnzshnGyfegM7FVPUZZUDb?cluster=devnet",
+    "faucet_Ay39": "https://explorer.solana.com/tx/53618saqEpGNqeX93cRBiiTtwGVuWX8YGiX5ZRnnAZViKeQTuoVM3VCmd7mGtnBxEqQcPx756CSPxAJ74LL1rG64?cluster=devnet",
+    "faucet_3xPE": "https://explorer.solana.com/tx/2j1gQB4cNRLs3oeNaiifQUMvCKnRdd7ePzE7njqfE6rWJFYRYX5yJZpiwjnb8eNwZ1KsnU4FmLCjEBySjTeUzkWm?cluster=devnet",
+    "createRaid": "https://explorer.solana.com/tx/3fU7d512jgZcSZzZfDiH22RNytjrRyQv9PMd1tnKRWhLJZR6dfrfkumMh5ndCRaogwW6dJmxDN9wo5yk7yU2ms1s?cluster=devnet",
+    "createSlots": "https://explorer.solana.com/tx/5LypBzZ5KZEACwPKQTT3ruEfmVskfxxeDVue3qkxmRPP8zwX3Mi8BbVwXeftULaGajxpPbEHkoKoezto7EsRMFT5?cluster=devnet",
+    "createDistricts": "https://explorer.solana.com/tx/4PPhWz1y1pZGTXt2sbJ5dKifdGbE2Go8saAdubvKa31sGj29qR1JJdjyvbTFp1VbussUKdd5SwmeT7Jfpqzq6qdr?cluster=devnet",
+    "join_0": "https://explorer.solana.com/tx/3K4cS9G6857ixu43sTp866qi8UG78DjYc4m6EWAyWpLErkTamwnM6GNbWeETCwy9Qjt58CFaedshqGCNGmcNiNcN?cluster=devnet",
+    "join_1": "https://explorer.solana.com/tx/5ETARxjrc64cSRgmnr7C9d9ZkYC5Lg9e9jMSPTpzgGNsbqWdSTzMpdHPFUowRZUc77EyBFq2ob9UMoo3U9ELZbBq?cluster=devnet",
+    "delegate": "https://explorer.solana.com/tx/4F6sbveq5KNuZSPvzTrgNk58tYSqtLhKN5k9734QgcZczdNgdkCV7pxpRN5MqarDjmTiGgH5PDxi1Yb17PXd7Ejz?cluster=devnet"
+  },
+  "raid": {
+    "id": "1795603848243",
+    "pda": "Gq1AdFRd6Ka7jsXrkNCw9AZbBWDpbv1x9HSNKnPEPW24",
+    "escrow": "e9i3xWvUbh3RoUX3UmLchipouSnmWpPQ4cUUw3UTqFN"
+  }
+}

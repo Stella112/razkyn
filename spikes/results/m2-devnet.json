@@ -1,0 +1,148 @@
+{
+  "when": "2026-11-25T11:41:12.548Z",
+  "vrfMs": 342,
+  "lootTotal": 11000000,
+  "lootExpected": 11000000,
+  "raid": {
+    "id": "1795606872550",
+    "pda": "CXSon4RbWAqxXmBvNW9GoWvs7a5BNqvcrNHGaYQgAbyB"
+  },
+  "crate": {
+    "idx": 0,
+    "units": [
+      "313523",
+      "0",
+      "0"
+    ],
+    "aBackpackAfterOpen": [
+      "313523",
+      "0",
+      "0"
+    ]
+  },
+  "finishBefore2s": "rejected 0x178c ChannelNotDone (whole tx reverted)",
+  "secondShotInsideCooldown": "rejected 0x178e Cooldown (whole tx reverted)",
+  "killed": {
+    "alive": false,
+    "hp": 0,
+    "exposed": true,
+    "publishedPos": [
+      1996,
+      323
+    ]
+  },
+  "dropCrate": {
+    "units": [
+      "313523",
+      "0",
+      "0"
+    ]
+  },
+  "bBackpackAfterLoot": [
+    "313523",
+    "0",
+    "0"
+  ],
+  "bKills": 1,
+  "conservation": {
+    "before": 11000000,
+    "after": 11000000,
+    "ok": true
+  },
+  "privacy": [
+    {
+      "label": "sealed crate 0 by raider B",
+      "result": "null"
+    },
+    {
+      "label": "sealed crate 0 by raider A",
+      "result": "null"
+    },
+    {
+      "label": "sealed crate 0 without token",
+      "result": "null"
+    },
+    {
+      "label": "raider A RaiderPrivate by raider B",
+      "result": "null"
+    },
+    {
+      "label": "opened crate 0 by raider B",
+      "result": "data (75 B)"
+    },
+    {
+      "label": "drop crate of A by raider B (public)",
+      "result": "data (75 B)"
+    }
+  ],
+  "walks": {
+    "a": 10,
+    "b": 40
+  },
+  "tickNo": "5",
+  "sigs": {
+    "createRaid": "4CRdEDyUPY3tCCmTkkArQRdEymXaxUWcmHWYE7i6RkSCZForgn5jMWVf9X8ziH5KAfKWDUebXtsAx9FfHM6CaHbW",
+    "createCrates": [
+      "5RiSkXUz3cYdf9gzt7XnAq68HyA5vDh69yjyQXn5NujPiuqopsLKmWZL5VDWmMGo98VfwfMxfmYKDNBV4xvd2drL",
+      "xdLyTxsiWhS8ny6Wz6PM6d8fwiz85zC1xA2XUJ7b1oSZ17yt15aVq8iUEdqNydR7Wr9Jex6KTv44rzkVY41hY8y",
+      "2vRXj244nqhXKMH88Kn1MQqngGWHiBGdgtwUxgd39NFeXeidi8kSs9VHL2w2p45nAAayQ9WeFMTRqzYhxCK4dsap",
+      "3VeJTcVpTN3Y41aDzi3ioG3skABHrVs2462dseQ9UhGYRCErkTd1ESp6Xiu66zpmUV2g33iTPDyxK1VFyKB4KS4L"
+    ],
+    "join_0": "4MzCvDT8Yj5rzuEyxCY3yvWR6o3984NjS5tmam3FvA8RH4XE8KGS5wafWVJT6yYifzGA3GeNAyPA8XMeks9EbxrH",
+    "join_1": "4v1U6934eGQpyRxQpkADKyE6gVVYTZjKMxQrtCLpPZMvFSRnPdcFYJryyvAepoowJbbzzgTAvi2zi5zHDoEt9RRo",
+    "delegate": [
+      "2PwwZgtKPqoeFHuEZwJBPgmk2v34mtmwiuTUMmjdcKbcFtJ61kxY2EvNmo5qXRbvYkVxDf99Wd9YGM3J1kDkLLsa",
+      "5XPbUrKGimRUCHiiyn1giP1nKLnkphFg1EKWQCWhCjgqQn32nU2JcAYgCmV4AKvKWJP4iD5FqRNnwDYEzddK17qx",
+      "QFg8wdNAbuGFCZpDVPyM8MmLA6RBq3YzgCvbyb8y1k74qtnt637BGWpF8FsDDbEpKmXTnTHqHDE1twg5kr6sGZg",
+      "2eqgXAGTMWcjhT7GSPb5DZF6gnyk6Ug1VJppQwDqcqMbQRu3HkwrjULuBJZw97bZxr1SMgcEFLhKgH9gSryw7kqL",
+      "2UHTV43DJR84oAfwuMkpkv4jUiy39aVrVMRppqk1jeUYRZ7onrHFgdPiFBDS36gGxhCjtN3PkQ3gACTn8S4FpL3F",
+      "3ZnXqhvo6RU9ywhoMZAZoJCZUdsyvLMxRJCdhEPAkopW5LqqsaaA3RjppZugqr3uQMFyztaFykrK5z8fJBqPTNH8",
+      "3xupgDRJPLwdB1CPHqHr3cxVinJbNk9PAanqGkrLgdPFYysprUyxMSh1acJ2mzJq5njLXvTU5N9fWDeU2B2BsDQD",
+      "Pxs6kGfUtNJq3gPdVn9h31Jgb9A56xvrdZQ3cG4cckYDYTxD5RTsuq6PhXfp22qahzTgfPz9LYmawgQH234whZ1",
+      "2g4n2L5AyKg7rbbgWiL6QYdKPZEZeHqkoeKDhsnnUJaiEzqHZDxA4S3GzSWEFWUKzPtq8ZrF7oeDAWx45pGCkzoK",
+      "3YX94P6NMVsww2drvftb3hM3jaDiz4dfTtUuZYoyjfiUuymKQUFBpjLRwmwZsD659xqWZGEU4oKJ6WWDBeYHS2Uw",
+      "5KJbHabeLdfKVeNrqzyDKQ2SuVd3TNBsQtysNwZmMXcb2GYErt4x8cwer3TwutqxtkMJZVBpMcrxpQpJAUGPciNF",
+      "ocpD29uLVYrw7nSossNC7Eo4SsneDGiCY6JMrLwCgx4bMphLGNMARw6Sq9wZ94HHFuAWHxaBqTa6qn5TBXzMW5V",
+      "5U3LyZAyHamvAnH3LP6dwiUcjwPMgyBJHZcTGU3d56xw4wuMuXgxxR8woaoDT7hxcU8AYJd4vJhHjosBuuPp3mXH",
+      "5FpoGSWJwrNXJruXtnuvFXAs9P788KqoJiFdsgxxuRP2p3frat8xxudHKCTpcNUYF29PJ2NLS6TR1NfhdbRXxm9C",
+      "5aj5BRyFQYq3bKTnQ7nLfvN3CDoVCLJ5pR6sttRw4HRwgJX5oWSnKwm4ha3uRvdCcUZ346dBgyndhzKuczpASwfu",
+      "2U4Wcz9mM9m8VP5tQgTEZ3TvdEDUCtn9Hj6oeynTbrRNSi6bpQMSe2reTbTe6kdJRFZ7R3hxVKkFe6kirXmYeiqq",
+      "MBhbJ9VTXcqWMr5uq172bjFzwxiScrHuL74pb3AmvDHu3bFERYgZWfAgAvDZjano1HVJHZ8NaB6BHjXuFTnF8nP"
+    ],
+    "permissions_0": "4xaA687NMVNjd9dfYQ57Qyqh5zjoUMwUaneafN18KRxGcjSNTKhYNB4chKhU57Xm9Cq2SXWfy1LUvKpAfjjnbhRH",
+    "permissions_1": "5Np3EitoxwawuGUg7kZvjCqPWS3L558gZqfAMZ1Sq2Q8xy1ef35MyfRAkXgzd41v5wWasitchH36jgbKoR2Tdt5E",
+    "secretPermission": "3CdjxYJ5AcviYi8V5PRGUEAZPLtEQSAyKBL44t975pKwr6ektrRMK17dzRaKvf1hbz9AZZFKEa1SRF6YMWZZyEhZ",
+    "vrfRequests": [
+      "jsMfraJixyeHmZgBVq1N7FA2KhAy2ePdXSxMS19KpPQxRuR41uNiPfDhayQHPYePn166Uo5bcLRaXbteUWazNfZ"
+    ],
+    "placeCrates": [
+      "4vBPLypgkxLfnxYuyDmg5BFFmNjnf9tGneQTfbkPgr4PVjSy244od3oPJwFxKe5sMxSEjcQxjJSfecbewEZ58Y1U",
+      "4D7A6SWjPbnFKYWoy7GhzLHVVWrN757y76LofRdMTZSrFTcGxZaMfsyyZSnwcRTzMxDQpB1RoWh8PhSSV86uRyQM",
+      "e6gxS9zjNwuDhSaXdGRbZbb2qaTu1wftyNaELQ5RZVjQVJkPZ6niG5NkPQyfGmPSUt16NkxTjp7oCGytac8LTry",
+      "4QUZsy36YHDDrVXK7AjUBxNxLchanJbH76XZ5cWT7sqakAkkX4uKNRsfNhamZuEnsu9Wcf24nSpPFS4fVdw93VGY",
+      "4mGyzkSjH9RQFobVF6e1Dr4L1itz98uWgtGnf5Ve1JpYBUSNTrxcgDcy8u7XCgSY6cJWxSUZaR2CnJAPybnzMqTN",
+      "59DS6wyGdYiexjdZhGZniLqdsQyit9ywpkKfaRwLdHr5fr8A1p8PDaoVDQqCiTc3e53DnRouNB8SKQ5e4BNyCkxs"
+    ],
+    "startRaid": "47P5LswcQ4d1rnzSXpkTfRDP96qPkSPhsvBQciVQUSYMHq4ohAZQNv7ZahXzJKQbCFcvXajUAk7FTKyKqpcJkWj3",
+    "openCrate": "3uAh9w4NLSFvGeUtpe54coAv9Lb5yAkmQ5LafGhtqbQYXoUetKZRyC8Xv9SimnpaxUyXhjALEb7p2Un55MPKHxJH",
+    "finishOpen": "2vDcXQH4T8aKbLM8uuPY4qWL8haa1jTX5ubK25Hi4mDtrko1j31PtQyXBt7fqZQkaV4x3SqcWWX6LHSwD5qz34Hc",
+    "shots": [
+      "5XgSox1So7m7dV35Szk5fhgRkK2tWN59cXZYnSMX8h4fVSnq7yAx7rrrJALvTmnxwDTmbPSvhPs8eTx41NqFbQiL",
+      "3zT3TabBJ2HPU79ZXBMU3ymrHsPktS5iLKxqmTHyLJuFyNAkfbaz2ukRRzjpee9AfqwkpV7q3nDGSvD1YJLaFDGF",
+      "47jQxyfDXjC35fzMFBHsbqUNNf2B6UMBk6dG2CyyekhHCR27iPBrjA7h8GhQHWMvZMnbcV3mqyVQhfPEVpK4YrEg"
+    ],
+    "openDrop": "5XGBgpQq7NopR2woUghbDRWZV6NAtgx1VZEdxiGRmZCy6vpqA5bGWoVEYYSAShMJCTXEbFuEgy4XqwkevnSKYj4N",
+    "finishDrop": "fFvvukCFh8E28sy19BsdoHHd6nfP4a6M81YLgd9USzGRiN9R6DH44qXQD59vci9ghAVx8Kvwxpq1Va8EHuub4vF",
+    "ticks": [
+      "35szRdfQKKjvh1GWAqQdW7hEvCwiYKopRfiPSSWo4XYYEFTFu2gV1ZdEByh7GszzkuFv8W8RB32TrJHZgMhHf88A",
+      "3PNNs4qTqh2bzGudbvF2Ai6wfjTUQHhtZF9SrR8QBBK6j3PiXU88nccszuRf2jfCsLbxwjCZXfqMXuY7e7K56JBN",
+      "5NNsqJWY2ndfELbZekaAJ47JWq8iGrwmzutv4w3CxzwgaA85oKJPv528kMsSTXGy5LGwTpWceYy7TSdBXvtGJ5bH",
+      "49wYZycmPzuyYvRYUwE45wd9eqZZN1NnGwm5oWZqRQ6NaZefjKPJDGrFo2CWLr4Wo1wS4Vm8PCMYcw3rDptRyzYX",
+      "EjvZXdcn6ujn3kTyfEyA5V1231URXG22Xgn2R8DEvFSghtHa3SK2LCDTZK7WgxyYQAqmLRMPfuuxyBN3MYh8nMs"
+    ]
+  },
+  "baseExplorer": {
+    "createRaid": "https://explorer.solana.com/tx/4CRdEDyUPY3tCCmTkkArQRdEymXaxUWcmHWYE7i6RkSCZForgn5jMWVf9X8ziH5KAfKWDUebXtsAx9FfHM6CaHbW?cluster=devnet",
+    "join0": "https://explorer.solana.com/tx/4MzCvDT8Yj5rzuEyxCY3yvWR6o3984NjS5tmam3FvA8RH4XE8KGS5wafWVJT6yYifzGA3GeNAyPA8XMeks9EbxrH?cluster=devnet"
+  }
+}

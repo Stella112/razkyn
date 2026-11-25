@@ -1,0 +1,3382 @@
+{
+  "address": "CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97",
+  "metadata": {
+    "name": "razkyn",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "RAZKYN — a market-driven multiplayer extraction game on Solana."
+  },
+  "instructions": [
+    {
+      "name": "create_crates",
+      "discriminator": [
+        255,
+        109,
+        66,
+        105,
+        187,
+        210,
+        1,
+        27
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "first",
+          "type": "u8"
+        },
+        {
+          "name": "count",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "create_districts",
+      "discriminator": [
+        16,
+        158,
+        171,
+        147,
+        175,
+        190,
+        111,
+        230
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "district0",
+          "writable": true
+        },
+        {
+          "name": "district1",
+          "writable": true
+        },
+        {
+          "name": "district2",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_raid",
+      "discriminator": [
+        5,
+        110,
+        56,
+        100,
+        4,
+        141,
+        251,
+        190
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "raid_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "secret",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "raid_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_auth",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "raid_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "escrow_auth"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "dusd_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "dusd_mint"
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "raid_id",
+          "type": "u64"
+        },
+        {
+          "name": "mode",
+          "type": "u8"
+        },
+        {
+          "name": "leaf_count",
+          "type": "u32"
+        },
+        {
+          "name": "day_root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "event_plan_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_slot",
+      "discriminator": [
+        176,
+        223,
+        119,
+        65,
+        9,
+        168,
+        136,
+        59
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rpub",
+          "writable": true
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "view",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "delegate_pda",
+      "discriminator": [
+        248,
+        217,
+        193,
+        46,
+        124,
+        191,
+        64,
+        135
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "buffer_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pda"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                170,
+                45,
+                46,
+                2,
+                55,
+                192,
+                18,
+                65,
+                230,
+                10,
+                227,
+                56,
+                23,
+                239,
+                30,
+                114,
+                69,
+                170,
+                181,
+                168,
+                189,
+                155,
+                59,
+                197,
+                125,
+                187,
+                204,
+                196,
+                198,
+                219,
+                251,
+                114
+              ]
+            }
+          }
+        },
+        {
+          "name": "delegation_record_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pda"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "delegation_metadata_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pda"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "pda",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "validator",
+          "optional": true
+        },
+        {
+          "name": "owner_program",
+          "address": "CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97"
+        },
+        {
+          "name": "delegation_program",
+          "address": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "raid_id",
+          "type": "u64"
+        },
+        {
+          "name": "account",
+          "type": {
+            "defined": {
+              "name": "RaidAccount"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "drop_backpack",
+      "discriminator": [
+        174,
+        116,
+        108,
+        199,
+        241,
+        234,
+        124,
+        150
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rpub",
+          "writable": true
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "drop_crate",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "faucet_dusd",
+      "discriminator": [
+        186,
+        16,
+        215,
+        215,
+        230,
+        208,
+        135,
+        160
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "ledger",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  117,
+                  99,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint_auth",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "user_ata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "faucet_play",
+      "discriminator": [
+        138,
+        253,
+        167,
+        43,
+        53,
+        187,
+        111,
+        77
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "ledger",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  117,
+                  99,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint_auth",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "user_ata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "finish_open",
+      "discriminator": [
+        218,
+        195,
+        118,
+        58,
+        217,
+        243,
+        55,
+        64
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "crate_acc",
+          "writable": true
+        },
+        {
+          "name": "crate_permission",
+          "docs": [
+            "public drop crates (they have no permission, and the TEE rejects a tx that lists a",
+            "non-delegated account as writable)."
+          ],
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "raid_key",
+          "signer": true
+        },
+        {
+          "name": "permission_program",
+          "address": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
+        },
+        {
+          "name": "ephemeral_vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        },
+        {
+          "name": "idx",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "init_config",
+      "discriminator": [
+        23,
+        235,
+        115,
+        232,
+        168,
+        96,
+        1,
+        231
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint_auth",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "dusd_mint"
+        },
+        {
+          "name": "twr_mint"
+        },
+        {
+          "name": "fac_mint"
+        },
+        {
+          "name": "hrb_mint"
+        },
+        {
+          "name": "play_mint"
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "keeper",
+          "type": "pubkey"
+        },
+        {
+          "name": "ops_treasury",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "join_raid",
+      "discriminator": [
+        254,
+        133,
+        239,
+        75,
+        116,
+        28,
+        122,
+        208
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rpub",
+          "writable": true
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "wallet_ata",
+          "writable": true
+        },
+        {
+          "name": "escrow_auth",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "escrow_auth"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "dusd_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "dusd_mint"
+        },
+        {
+          "name": "wallet",
+          "signer": true
+        },
+        {
+          "name": "keeper",
+          "docs": [
+            "Present (and signing) only when the keeper registers a labelled BOT."
+          ],
+          "signer": true,
+          "optional": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        },
+        {
+          "name": "raid_key",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "move_to",
+      "discriminator": [
+        203,
+        97,
+        69,
+        158,
+        17,
+        230,
+        3,
+        142
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "raid_key",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        },
+        {
+          "name": "dx",
+          "type": "i16"
+        },
+        {
+          "name": "dy",
+          "type": "i16"
+        }
+      ]
+    },
+    {
+      "name": "open_crate",
+      "discriminator": [
+        37,
+        90,
+        248,
+        78,
+        84,
+        234,
+        171,
+        121
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "crate_acc"
+        },
+        {
+          "name": "district"
+        },
+        {
+          "name": "raid_key",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        },
+        {
+          "name": "idx",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "place_crates",
+      "discriminator": [
+        89,
+        150,
+        162,
+        58,
+        184,
+        41,
+        147,
+        188
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "secret",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "raid"
+          ]
+        },
+        {
+          "name": "permission_program",
+          "address": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
+        },
+        {
+          "name": "ephemeral_vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "first",
+          "type": "u8"
+        },
+        {
+          "name": "count",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "process_undelegation",
+      "discriminator": [
+        196,
+        28,
+        41,
+        206,
+        48,
+        37,
+        51,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "base_account",
+          "writable": true
+        },
+        {
+          "name": "buffer",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  110,
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  101,
+                  45,
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                181,
+                183,
+                0,
+                225,
+                242,
+                87,
+                58,
+                192,
+                204,
+                6,
+                34,
+                1,
+                52,
+                74,
+                207,
+                151,
+                184,
+                53,
+                6,
+                235,
+                140,
+                229,
+                25,
+                152,
+                204,
+                98,
+                126,
+                24,
+                147,
+                128,
+                167,
+                62
+              ]
+            }
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "account_seeds",
+          "type": {
+            "vec": "bytes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request_raid_vrf",
+      "discriminator": [
+        188,
+        133,
+        84,
+        191,
+        213,
+        165,
+        104,
+        105
+      ],
+      "accounts": [
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "raid"
+          ]
+        },
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "oracle_queue",
+          "writable": true,
+          "address": "5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc"
+        },
+        {
+          "name": "program_identity",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  100,
+                  101,
+                  110,
+                  116,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vrf_program",
+          "address": "Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz"
+        },
+        {
+          "name": "slot_hashes",
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "setup_secret_permission",
+      "discriminator": [
+        35,
+        129,
+        243,
+        44,
+        146,
+        154,
+        26,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "secret",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "secret_permission",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "raid"
+          ]
+        },
+        {
+          "name": "permission_program",
+          "address": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
+        },
+        {
+          "name": "ephemeral_vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "setup_slot_permissions",
+      "discriminator": [
+        225,
+        217,
+        131,
+        47,
+        5,
+        53,
+        72,
+        235
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rprv",
+          "writable": true
+        },
+        {
+          "name": "view",
+          "writable": true
+        },
+        {
+          "name": "rprv_permission",
+          "writable": true
+        },
+        {
+          "name": "view_permission",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "raid"
+          ]
+        },
+        {
+          "name": "permission_program",
+          "address": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
+        },
+        {
+          "name": "ephemeral_vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "shoot",
+      "discriminator": [
+        41,
+        43,
+        22,
+        19,
+        8,
+        30,
+        7,
+        103
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "shooter_prv",
+          "writable": true
+        },
+        {
+          "name": "shooter_pub",
+          "writable": true
+        },
+        {
+          "name": "target_prv",
+          "writable": true
+        },
+        {
+          "name": "target_pub",
+          "writable": true
+        },
+        {
+          "name": "drop_crate",
+          "writable": true
+        },
+        {
+          "name": "raid_key",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slot",
+          "type": "u8"
+        },
+        {
+          "name": "target",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "start_raid",
+      "discriminator": [
+        75,
+        15,
+        167,
+        23,
+        186,
+        132,
+        225,
+        50
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "signer": true,
+          "relations": [
+            "raid"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "tick",
+      "discriminator": [
+        92,
+        79,
+        44,
+        8,
+        101,
+        80,
+        63,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "secret",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "district0",
+          "writable": true
+        },
+        {
+          "name": "district1",
+          "writable": true
+        },
+        {
+          "name": "district2",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "tick_raiders",
+      "discriminator": [
+        84,
+        179,
+        199,
+        119,
+        93,
+        142,
+        99,
+        231
+      ],
+      "accounts": [
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "district0"
+        },
+        {
+          "name": "district1"
+        },
+        {
+          "name": "district2"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "vrf_callback_raid",
+      "discriminator": [
+        203,
+        195,
+        160,
+        52,
+        207,
+        233,
+        142,
+        137
+      ],
+      "accounts": [
+        {
+          "name": "vrf_program_identity",
+          "docs": [
+            "Scoped VRF identity signer: proves the VRF program issued this callback for us."
+          ],
+          "signer": true,
+          "address": "8Ja5F74mAAFivdgxuVfKRzDDjdxgzT6G2okWdfXcsq5k"
+        },
+        {
+          "name": "raid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "secret",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "Raid"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "randomness",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u32"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    },
+    {
+      "name": "Crate",
+      "discriminator": [
+        241,
+        175,
+        117,
+        138,
+        154,
+        62,
+        170,
+        24
+      ]
+    },
+    {
+      "name": "District",
+      "discriminator": [
+        169,
+        182,
+        200,
+        137,
+        136,
+        181,
+        119,
+        198
+      ]
+    },
+    {
+      "name": "FaucetLedger",
+      "discriminator": [
+        43,
+        139,
+        192,
+        104,
+        3,
+        186,
+        103,
+        195
+      ]
+    },
+    {
+      "name": "Raid",
+      "discriminator": [
+        247,
+        50,
+        237,
+        152,
+        225,
+        69,
+        138,
+        211
+      ]
+    },
+    {
+      "name": "RaidSecret",
+      "discriminator": [
+        180,
+        51,
+        79,
+        98,
+        64,
+        160,
+        82,
+        36
+      ]
+    },
+    {
+      "name": "RaiderPrivate",
+      "discriminator": [
+        168,
+        194,
+        224,
+        212,
+        69,
+        11,
+        106,
+        63
+      ]
+    },
+    {
+      "name": "RaiderPublic",
+      "discriminator": [
+        170,
+        97,
+        117,
+        163,
+        122,
+        114,
+        121,
+        178
+      ]
+    },
+    {
+      "name": "View",
+      "discriminator": [
+        192,
+        146,
+        8,
+        125,
+        102,
+        221,
+        182,
+        219
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Overflow",
+      "msg": "arithmetic overflow"
+    },
+    {
+      "code": 6001,
+      "name": "Unauthorized",
+      "msg": "signer is not authorized for this action"
+    },
+    {
+      "code": 6002,
+      "name": "BadStatus",
+      "msg": "raid is not in the required status"
+    },
+    {
+      "code": 6003,
+      "name": "BadSlot",
+      "msg": "slot index out of range"
+    },
+    {
+      "code": 6004,
+      "name": "SlotTaken",
+      "msg": "slot already taken"
+    },
+    {
+      "code": 6005,
+      "name": "AlreadyJoined",
+      "msg": "wallet already joined this raid"
+    },
+    {
+      "code": 6006,
+      "name": "BadRaidKey",
+      "msg": "raid key is invalid or reused"
+    },
+    {
+      "code": 6007,
+      "name": "SlotNotJoined",
+      "msg": "slot is not joined"
+    },
+    {
+      "code": 6008,
+      "name": "NotEnoughRaiders",
+      "msg": "not enough raiders"
+    },
+    {
+      "code": 6009,
+      "name": "WrongRaidKey",
+      "msg": "signer is not the registered raid key for this slot"
+    },
+    {
+      "code": 6010,
+      "name": "RaiderDead",
+      "msg": "raider is dead"
+    },
+    {
+      "code": 6011,
+      "name": "RaiderExtracted",
+      "msg": "raider has extracted"
+    },
+    {
+      "code": 6012,
+      "name": "RaidOver",
+      "msg": "raid time is over"
+    },
+    {
+      "code": 6013,
+      "name": "TooFast",
+      "msg": "move exceeds the speed limit"
+    },
+    {
+      "code": 6014,
+      "name": "OutOfBounds",
+      "msg": "move leaves the map"
+    },
+    {
+      "code": 6015,
+      "name": "FaucetCap",
+      "msg": "faucet daily cap reached"
+    },
+    {
+      "code": 6016,
+      "name": "PermissionsMissing",
+      "msg": "permissions are not set up"
+    },
+    {
+      "code": 6017,
+      "name": "VrfPending",
+      "msg": "a VRF request is already pending"
+    },
+    {
+      "code": 6018,
+      "name": "VrfMismatch",
+      "msg": "VRF callback does not match the pending request"
+    },
+    {
+      "code": 6019,
+      "name": "NotSeeded",
+      "msg": "raid is not seeded yet"
+    },
+    {
+      "code": 6020,
+      "name": "BadAccount",
+      "msg": "account does not match the expected PDA"
+    },
+    {
+      "code": 6021,
+      "name": "TooManyMembers",
+      "msg": "too many permission members"
+    },
+    {
+      "code": 6022,
+      "name": "BadMint",
+      "msg": "bad mint"
+    },
+    {
+      "code": 6023,
+      "name": "BadMode",
+      "msg": "bad mode"
+    },
+    {
+      "code": 6024,
+      "name": "CrateNotOpenable",
+      "msg": "crate is not placed or already opened"
+    },
+    {
+      "code": 6025,
+      "name": "CrateDormant",
+      "msg": "crate is dormant until its district wakes"
+    },
+    {
+      "code": 6026,
+      "name": "OutOfRange",
+      "msg": "out of range"
+    },
+    {
+      "code": 6027,
+      "name": "NoChannel",
+      "msg": "no matching channel in progress"
+    },
+    {
+      "code": 6028,
+      "name": "ChannelNotDone",
+      "msg": "channel not finished yet"
+    },
+    {
+      "code": 6029,
+      "name": "BadTarget",
+      "msg": "bad target"
+    },
+    {
+      "code": 6030,
+      "name": "Cooldown",
+      "msg": "weapon cooling down"
+    },
+    {
+      "code": 6031,
+      "name": "CratesNotPlaced",
+      "msg": "crates are not all placed"
+    }
+  ],
+  "types": [
+    {
+      "name": "Config",
+      "docs": [
+        "`[\"config\"]`, base, public. Size: 8 + 260."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "keeper",
+            "type": "pubkey"
+          },
+          {
+            "name": "dusd_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "asset_mints",
+            "docs": [
+              "dTWR, dFAC, dHRB (one per district)."
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                3
+              ]
+            }
+          },
+          {
+            "name": "play_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "ops_treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mint_auth_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Crate",
+      "docs": [
+        "`[\"crate\", raid_id, idx]`, TEE. idx 0..36: private (keeper) until opened, then public.",
+        "idx 36+slot: that raider's drop crate, public. Size: 8 + 71."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raid_id",
+            "type": "u64"
+          },
+          {
+            "name": "idx",
+            "type": "u8"
+          },
+          {
+            "name": "district",
+            "type": "u8"
+          },
+          {
+            "name": "dormant",
+            "type": "bool"
+          },
+          {
+            "name": "placed",
+            "type": "bool"
+          },
+          {
+            "name": "state",
+            "type": "u8"
+          },
+          {
+            "name": "x",
+            "type": "u16"
+          },
+          {
+            "name": "y",
+            "type": "u16"
+          },
+          {
+            "name": "units",
+            "docs": [
+              "Units per asset (dTWR, dFAC, dHRB). Regular crates hold one asset; drop crates hold a",
+              "whole backpack."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          },
+          {
+            "name": "opened_units",
+            "docs": [
+              "What the crate held when opened (public afterwards, for the report and THE WIRE)."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          },
+          {
+            "name": "opened_by",
+            "docs": [
+              "Slot that opened it (255 = nobody)."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CratePos",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "x",
+            "type": "u16"
+          },
+          {
+            "name": "y",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "District",
+      "docs": [
+        "`[\"district\", raid_id, i]`, TEE, public. Size: 8 + 511."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raid_id",
+            "type": "u64"
+          },
+          {
+            "name": "index",
+            "type": "u8"
+          },
+          {
+            "name": "asset",
+            "type": "u8"
+          },
+          {
+            "name": "hazard_level",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "start_price",
+            "type": "u64"
+          },
+          {
+            "name": "current_price",
+            "type": "u64"
+          },
+          {
+            "name": "history",
+            "docs": [
+              "Ring of the last 60 prices (one per market step)."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                60
+              ]
+            }
+          },
+          {
+            "name": "hist_len",
+            "type": "u8"
+          },
+          {
+            "name": "hist_pos",
+            "type": "u8"
+          },
+          {
+            "name": "awake_mask",
+            "docs": [
+              "Bit per dormant crate woken in this district."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "awake",
+            "docs": [
+              "District reached +2% vs start at least once: its dormant crates can be opened."
+            ],
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FaucetLedger",
+      "docs": [
+        "`[\"faucet\", wallet]`, base. Enforces the 100 dUSD / wallet / day cap. Size: 8 + 57."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "day",
+            "type": "i64"
+          },
+          {
+            "name": "dusd_today",
+            "type": "u64"
+          },
+          {
+            "name": "dusd_total",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Raid",
+      "docs": [
+        "`[\"raid\", raid_id]`, base → TEE, public. Size: 8 + 1080."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raid_id",
+            "type": "u64"
+          },
+          {
+            "name": "keeper",
+            "type": "pubkey"
+          },
+          {
+            "name": "mode",
+            "type": "u8"
+          },
+          {
+            "name": "status",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "joined_count",
+            "type": "u8"
+          },
+          {
+            "name": "perm_mask",
+            "docs": [
+              "bit i = slot i permissions created; SECRET_PERM_BIT = RaidSecret permission created."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "vrf_state",
+            "type": "u8"
+          },
+          {
+            "name": "vrf_nonce",
+            "type": "u32"
+          },
+          {
+            "name": "vrf_requested_ts",
+            "type": "i64"
+          },
+          {
+            "name": "leaf_count",
+            "docs": [
+              "Number of Merkle leaves (Mystery mode); 0 in Live mode."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "created_ts",
+            "type": "i64"
+          },
+          {
+            "name": "start_ts",
+            "type": "i64"
+          },
+          {
+            "name": "start_slot",
+            "type": "u64"
+          },
+          {
+            "name": "end_ts",
+            "type": "i64"
+          },
+          {
+            "name": "tick_no",
+            "type": "u64"
+          },
+          {
+            "name": "last_tick_slot",
+            "type": "u64"
+          },
+          {
+            "name": "market_step",
+            "type": "u16"
+          },
+          {
+            "name": "prev_tick_slot",
+            "docs": [
+              "Slot of the tick before last_tick_slot (hazard damage uses the gap)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "crates_placed",
+            "docs": [
+              "Bit i = crate i placed by place_crates (all 36 required to start)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "crate_pos",
+            "docs": [
+              "Public crate positions (units), written by place_crates. Contents stay private until a",
+              "crate is opened; district = idx / 12, dormant = idx % 12 >= 8. DECISIONS.md #16."
+            ],
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "CratePos"
+                  }
+                },
+                36
+              ]
+            }
+          },
+          {
+            "name": "exit_window",
+            "docs": [
+              "0 = no window open, 1..=3 = that window is open."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "open_exits",
+            "docs": [
+              "Exit indices open right now (NO_EXIT when closed). Copied from RaidSecret when a",
+              "window opens, so the plan stays private until then."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                2
+              ]
+            }
+          },
+          {
+            "name": "raiders",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "RaiderSlot"
+                  }
+                },
+                8
+              ]
+            }
+          },
+          {
+            "name": "day_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "event_plan_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
+            "name": "report_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RaidAccount",
+      "docs": [
+        "Which raid account to delegate. The escrow is not here: it never leaves the base layer."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Raid"
+          },
+          {
+            "name": "Secret"
+          },
+          {
+            "name": "District",
+            "fields": [
+              {
+                "name": "index",
+                "type": "u8"
+              }
+            ]
+          },
+          {
+            "name": "RaiderPublic",
+            "fields": [
+              {
+                "name": "slot",
+                "type": "u8"
+              }
+            ]
+          },
+          {
+            "name": "RaiderPrivate",
+            "fields": [
+              {
+                "name": "slot",
+                "type": "u8"
+              }
+            ]
+          },
+          {
+            "name": "View",
+            "fields": [
+              {
+                "name": "slot",
+                "type": "u8"
+              }
+            ]
+          },
+          {
+            "name": "Crate",
+            "fields": [
+              {
+                "name": "idx",
+                "type": "u8"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "RaidSecret",
+      "docs": [
+        "`[\"secret\", raid_id]`, TEE, private (keeper). Zero-copy. Size: 8 + 3,696.",
+        "Base-layer data is public, so nothing secret is written here until the account is on the",
+        "TEE and its permission exists (CLAUDE.md §4.4)."
+      ],
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raid_id",
+            "type": "u64"
+          },
+          {
+            "name": "seed",
+            "docs": [
+              "VRF seed (32 bytes) from the authenticated callback."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "slice_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "leaf_index",
+            "type": "u32"
+          },
+          {
+            "name": "loaded_chunks",
+            "type": "u32"
+          },
+          {
+            "name": "exit_plan",
+            "docs": [
+              "Exit plan: window w uses exits [2w], [2w+1]; NO_EXIT when unused."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "seeded",
+            "type": "u8"
+          },
+          {
+            "name": "verified",
+            "type": "u8"
+          },
+          {
+            "name": "_pad",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          },
+          {
+            "name": "slice",
+            "docs": [
+              "Mystery price slice: 300 steps × 3 assets, rebased ×10^4 (M3)."
+            ],
+            "type": {
+              "array": [
+                "u32",
+                900
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RaiderPrivate",
+      "docs": [
+        "`[\"rprv\", raid_id, slot]`, TEE, private (raid key + keeper). Size: 8 + 109."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raid_id",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u8"
+          },
+          {
+            "name": "raid_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "x",
+            "type": "u16"
+          },
+          {
+            "name": "y",
+            "type": "u16"
+          },
+          {
+            "name": "last_move_slot",
+            "type": "u64"
+          },
+          {
+            "name": "backpack",
+            "docs": [
+              "Units per asset (dTWR, dFAC, dHRB), 6 decimals."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          },
+          {
+            "name": "channel_kind",
+            "type": "u8"
+          },
+          {
+            "name": "channel_arg",
+            "type": "u8"
+          },
+          {
+            "name": "channel_start_slot",
+            "type": "u64"
+          },
+          {
+            "name": "channel_units",
+            "type": "u64"
+          },
+          {
+            "name": "last_shot_slot",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RaiderPublic",
+      "docs": [
+        "`[\"rpub\", raid_id, slot]`, TEE, public. Size: 8 + 21."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raid_id",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u8"
+          },
+          {
+            "name": "hp",
+            "type": "u8"
+          },
+          {
+            "name": "alive",
+            "type": "bool"
+          },
+          {
+            "name": "extracted",
+            "type": "bool"
+          },
+          {
+            "name": "exposed",
+            "docs": [
+              "Position is public only while trading, after death or after extraction."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "is_bot",
+            "type": "bool"
+          },
+          {
+            "name": "kills",
+            "type": "u8"
+          },
+          {
+            "name": "pub_x",
+            "type": "u16"
+          },
+          {
+            "name": "pub_y",
+            "type": "u16"
+          },
+          {
+            "name": "pending_drop",
+            "docs": [
+              "Died to a hazard; `drop_backpack` still has to move the backpack into the drop crate."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RaiderSlot",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "raid_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "stake",
+            "type": "u64"
+          },
+          {
+            "name": "joined",
+            "type": "bool"
+          },
+          {
+            "name": "alive",
+            "type": "bool"
+          },
+          {
+            "name": "extracted",
+            "type": "bool"
+          },
+          {
+            "name": "is_bot",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "View",
+      "docs": [
+        "`[\"view\", raid_id, slot]`, TEE, private (raid key). Size: 8 + 54."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raid_id",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u8"
+          },
+          {
+            "name": "tick_no",
+            "type": "u64"
+          },
+          {
+            "name": "count",
+            "type": "u8"
+          },
+          {
+            "name": "entries",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "ViewEntry"
+                  }
+                },
+                7
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ViewEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "slot",
+            "type": "u8"
+          },
+          {
+            "name": "x",
+            "type": "u16"
+          },
+          {
+            "name": "y",
+            "type": "u16"
+          }
+        ]
+      }
+    }
+  ]
+}

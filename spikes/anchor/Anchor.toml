@@ -1,0 +1,13 @@
+[toolchain]
+anchor_version = "1.0.2"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.devnet]
+razkyn_spike = "AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6"
+
+[provider]
+cluster = "https://rpc.magicblock.app/devnet"
+wallet = "/root/.config/razkyn/keeper.json"

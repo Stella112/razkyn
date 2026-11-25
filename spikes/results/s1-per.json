@@ -1,0 +1,63 @@
+{
+  "when": "2026-11-24T21:46:24.498Z",
+  "pass": true,
+  "secret": "5uKbN3NKma4Pd16pztNyZMcapR74vjQB9voqyosrj9UL",
+  "permission": "AQpWL3nQaaqjPzugW8D92w75e8KnpwRL5xdbiCHp47Nd",
+  "memberA": "Ay39cTTozPWm7KNhvP1GDwfi2X3MRZY77xpNWSuw6X2i",
+  "nonMemberB": "3xPEtPzPWJ8ocMyFPNtMfrqeefg2FevCizCwgYrz4t1h",
+  "teeSigs": {
+    "createPermission": "5hvxozeJ1trZfz67SbHjW81FB5iEcFZBAoUp5ZvtNHidQA8F7rR4nyiuT53NGCmTFEdnis5kmE7p2YJSHkz3Gv8k",
+    "writeSecret": "4x2m5Zv8LjbTA6xio6EoKqgVvwDYzKWMeYhNTnfrZTNUiABi8EVJmFTCYPeMJsFVxTCrVjygzNYAoa7UXt4zL6Pr"
+  },
+  "routerStatus": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isDelegated": true,
+      "fqdn": "https://devnet-tee.magicblock.app/",
+      "delegationRecord": {
+        "authority": "MTEWGuqxUpYZGFJQcp8tLN7x5v9BSeoFHYWQQ3n3xzo",
+        "owner": "AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6",
+        "delegationSlot": 525929146,
+        "lamports": 940928
+      }
+    }
+  },
+  "reads": [
+    {
+      "reader": "A (member)",
+      "account": "5uKbN3NKma4Pd16pztNyZMcapR74vjQB9voqyosrj9UL",
+      "result": "data",
+      "owner": "AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6",
+      "len": 56,
+      "value": "424242"
+    },
+    {
+      "reader": "B (non-member)",
+      "account": "5uKbN3NKma4Pd16pztNyZMcapR74vjQB9voqyosrj9UL",
+      "result": "null (no data returned)"
+    },
+    {
+      "reader": "keeper (non-member here)",
+      "account": "5uKbN3NKma4Pd16pztNyZMcapR74vjQB9voqyosrj9UL",
+      "result": "null (no data returned)"
+    },
+    {
+      "reader": "no token",
+      "account": "5uKbN3NKma4Pd16pztNyZMcapR74vjQB9voqyosrj9UL",
+      "result": "null (no data returned)"
+    },
+    {
+      "reader": "A (member)",
+      "account": "AQpWL3nQaaqjPzugW8D92w75e8KnpwRL5xdbiCHp47Nd",
+      "result": "data",
+      "owner": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1",
+      "len": 101
+    },
+    {
+      "reader": "B (non-member)",
+      "account": "AQpWL3nQaaqjPzugW8D92w75e8KnpwRL5xdbiCHp47Nd",
+      "result": "null (no data returned)"
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "when": "2026-11-24T21:47:03.805Z",
+  "maxAgeSecs": 10,
+  "partA": [
+    {
+      "feed": "SOL/USD",
+      "lazerId": 6,
+      "pda": "ENYwebBThHzmzwPLAQvCucUTsjyfBSZdD9ViXksS4jPu",
+      "feedListExponent": -8,
+      "usdUsingFeedListExponent": 69.30717546,
+      "tee": {
+        "endpoint": "devnet-tee",
+        "found": true,
+        "owner": "PriCems5tHihc6UDXDjzjeawomAwBduWMGAi8ZUjppd",
+        "dataLen": 134,
+        "writeAuthority": "11111111111111111111111111111111",
+        "verification": "Full",
+        "feedId": "ENYwebBThHzmzwPLAQvCucUTsjyfBSZdD9ViXksS4jPu",
+        "price": "6930717546",
+        "conf": "0",
+        "storedExponent": 8,
+        "publishTime": 1795556797,
+        "postedSlot": "879943542",
+        "ageSecs": 6
+      },
+      "base": {
+        "endpoint": "devnet base",
+        "found": true,
+        "owner": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh",
+        "dataLen": 134,
+        "writeAuthority": "11111111111111111111111111111111",
+        "verification": "Full",
+        "feedId": "ENYwebBThHzmzwPLAQvCucUTsjyfBSZdD9ViXksS4jPu",
+        "price": "0",
+        "conf": "0",
+        "storedExponent": 8,
+        "publishTime": 1745852560,
+        "postedSlot": "0",
+        "ageSecs": 49704244
+      }
+    },
+    {
+      "feed": "BTC/USD",
+      "lazerId": 1,
+      "pda": "71wtTRDY8Gxgw56bXFt2oc6qeAbTxzStdNiC425Z51sr",
+      "feedListExponent": -8,
+      "usdUsingFeedListExponent": 59806.284815470004,
+      "tee": {
+        "endpoint": "devnet-tee",
+        "found": true,
+        "owner": "PriCems5tHihc6UDXDjzjeawomAwBduWMGAi8ZUjppd",
+        "dataLen": 134,
+        "writeAuthority": "11111111111111111111111111111111",
+        "verification": "Full",
+        "feedId": "71wtTRDY8Gxgw56bXFt2oc6qeAbTxzStdNiC425Z51sr",
+        "price": "5980628481547",
+        "conf": "0",
+        "storedExponent": 8,
+        "publishTime": 1795556799,
+        "postedSlot": "879943692",
+        "ageSecs": 6
+      },
+      "base": {
+        "endpoint": "devnet base",
+        "found": true,
+        "owner": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh",
+        "dataLen": 134,
+        "writeAuthority": "11111111111111111111111111111111",
+        "verification": "Full",
+        "feedId": "71wtTRDY8Gxgw56bXFt2oc6qeAbTxzStdNiC425Z51sr",
+        "price": "9382964980219",
+        "conf": "0",
+        "storedExponent": 8,
+        "publishTime": 1746458791,
+        "postedSlot": "5057486",
+        "ageSecs": 49098015
+      }
+    },
+    {
+      "feed": "ETH/USD",
+      "lazerId": 2,
+      "pda": "5vaYr1hpv8yrSpu8w3K95x22byYxUJCCNCSYJtqVWPvG",
+      "feedListExponent": -8,
+      "usdUsingFeedListExponent": 1678.8112636,
+      "tee": {
+        "endpoint": "devnet-tee",
+        "found": true,
+        "owner": "PriCems5tHihc6UDXDjzjeawomAwBduWMGAi8ZUjppd",
+        "dataLen": 134,
+        "writeAuthority": "11111111111111111111111111111111",
+        "verification": "Full",
+        "feedId": "5vaYr1hpv8yrSpu8w3K95x22byYxUJCCNCSYJtqVWPvG",
+        "price": "167881126360",
+        "conf": "0",
+        "storedExponent": 8,
+        "publishTime": 1795556800,
+        "postedSlot": "879943802",
+        "ageSecs": 6
+      },
+      "base": {
+        "endpoint": "devnet base",
+        "found": true,
+        "owner": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh",
+        "dataLen": 134,
+        "writeAuthority": "11111111111111111111111111111111",
+        "verification": "Full",
+        "feedId": "5vaYr1hpv8yrSpu8w3K95x22byYxUJCCNCSYJtqVWPvG",
+        "price": "0",
+        "conf": "0",
+        "storedExponent": 8,
+        "publishTime": 1745852524,
+        "postedSlot": "0",
+        "ageSecs": 49704283
+      }
+    }
+  ],
+  "partB": [
+    {
+      "feed": "SOL/USD",
+      "ok": true,
+      "teeSig": "aftwT1BRdKW1nHHge2GMdsqUCsfSCG9PE9rsxPH3vJ9ekXSU7gNQze8R9RraM6rsEXvAiR6sqk6P1DAAr1cPRFU",
+      "ms": 5775,
+      "logs": [
+        "Program log: oracle lazer_id=6 price=6932545971 stored_exponent=8 feed_list_exponent=-8 publish_time=1795556804 now=1795556804 age_s=0 posted_slot=879944182"
+      ]
+    },
+    {
+      "feed": "BTC/USD",
+      "ok": true,
+      "teeSig": "5davWzzfmJX9WYzJH2sBg7DiHHXerxSu2WVscmwuEH6C5c9SsATsLbZyHQE5kCDkEp1FcrAwhecZPRudRctzH58u",
+      "ms": 3860,
+      "logs": [
+        "Program log: oracle lazer_id=1 price=5982338874976 stored_exponent=8 feed_list_exponent=-8 publish_time=1795556808 now=1795556808 age_s=0 posted_slot=879944582"
+      ]
+    },
+    {
+      "feed": "ETH/USD",
+      "ok": true,
+      "teeSig": "27pCbcGaEgHi7K7qNod8XoDv63dhnj5B3ycfct25u8bzmBzoGLS7rdDutEoJpqbSuqg5kga83c1bJ5AWxwsktBpR",
+      "ms": 3821,
+      "logs": [
+        "Program log: oracle lazer_id=2 price=167915339139 stored_exponent=8 feed_list_exponent=-8 publish_time=1795556813 now=1795556813 age_s=0 posted_slot=879945152"
+      ]
+    }
+  ]
+}

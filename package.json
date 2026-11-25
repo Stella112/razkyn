@@ -1,0 +1,30 @@
+{
+  "name": "razkyn",
+  "private": true,
+  "type": "module",
+  "description": "RAZKYN — a market-driven multiplayer extraction game on Solana (MagicBlock Solana Blitz v10).",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "spike:s1": "tsx scripts/spike-s1-per.ts",
+    "spike:s2": "tsx scripts/spike-s2-tick.ts",
+    "spike:s3": "tsx scripts/spike-s3-oracle.ts",
+    "spike:s4": "tsx scripts/spike-s4-vrf.ts",
+    "spike:s5": "tsx scripts/spike-s5-action.ts",
+    "spike:s6": "tsx scripts/spike-s6-crank.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "0.32.1",
+    "@magicblock-labs/ephemeral-rollups-sdk": "0.18.0",
+    "@solana/spl-token": "0.4.14",
+    "@solana/spl-token-metadata": "0.1.6",
+    "@solana/web3.js": "1.98.4",
+    "tweetnacl": "1.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  }
+}

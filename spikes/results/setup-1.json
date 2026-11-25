@@ -1,0 +1,41 @@
+{
+  "id": "1",
+  "programId": "AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6",
+  "pdas": {
+    "probe": "AhMR2zzigFgNrY1LgdiQM1gpC3PCfh9rAtvtL78RG41B",
+    "secret": "5uKbN3NKma4Pd16pztNyZMcapR74vjQB9voqyosrj9UL",
+    "flag": "4fMxPnH3TqkfDuiX9XJGS7j1n8B4seCJtJTsyTprvNR3"
+  },
+  "delegateSig": "3V9sWRTSSagWPLJ7HtgLunTo7kLLxvTmxfUyCQJLLVaPTntzzr7PbXX8QZ84kaoPzzg48Uch4zLnVS5wN89N3xR2",
+  "explorer": "https://explorer.solana.com/tx/3V9sWRTSSagWPLJ7HtgLunTo7kLLxvTmxfUyCQJLLVaPTntzzr7PbXX8QZ84kaoPzzg48Uch4zLnVS5wN89N3xR2?cluster=devnet",
+  "routerStatus": {
+    "probe": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "isDelegated": true,
+        "fqdn": "https://devnet-tee.magicblock.app/",
+        "delegationRecord": {
+          "authority": "MTEWGuqxUpYZGFJQcp8tLN7x5v9BSeoFHYWQQ3n3xzo",
+          "owner": "AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6",
+          "delegationSlot": 525929146,
+          "lamports": 1772920
+        }
+      }
+    },
+    "secret": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "isDelegated": true,
+        "fqdn": "https://devnet-tee.magicblock.app/",
+        "delegationRecord": {
+          "authority": "MTEWGuqxUpYZGFJQcp8tLN7x5v9BSeoFHYWQQ3n3xzo",
+          "owner": "AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6",
+          "delegationSlot": 525929146,
+          "lamports": 940928
+        }
+      }
+    }
+  }
+}

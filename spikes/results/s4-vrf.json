@@ -1,0 +1,48 @@
+{
+  "when": "2026-11-24T21:51:14.471Z",
+  "pass": false,
+  "queue": "5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc",
+  "rounds": [
+    {
+      "round": 0,
+      "requestOk": true,
+      "requestSig": "5NxVnAFxdTPPQty7ZCUnVutFp9QBiq4VZcSmgjtFrfK2n9TPXYk3qLQuC91M5BAPFfK6yeU6DhXTKAmdP9dt4hAw",
+      "callbackSig": "5AP5UJwr6cwCcaDeUMZ7SnazRYGGa2bRQYrZyCHpxr3cLTGE3LZhwKFUrFwn9KjdrqRmTc7p6HYCd7B1jv73va9s",
+      "fulfilledMs": 6376,
+      "randomness": "e4df8c9e9ab77ae5f9ee18c6b0036037b49e930888aaa28e20a39b0673b4f133"
+    },
+    {
+      "round": 1,
+      "requestOk": true,
+      "requestSig": "98YFx9hqwMuGAGbqqFU5JJXYLPDhkbSoRhXx4SocERpW1zn4V1kygmwgnycZx4DgYPf7H8ewYPwQSsUHshqs8Wb",
+      "callbackSig": "4FvBTdjiaQrQyN5nkJAKgUdsKfaJpQo7GcnEFXEmCz65xmxrsbYX9gjeySU52M8hTXCiTw1hShobhabugWMdEhkX",
+      "fulfilledMs": 5744,
+      "randomness": "f0b74e8b43b018473aab450956ec60c49e528de1b277a40c5c36d14c381e157d"
+    },
+    {
+      "round": 2,
+      "requestOk": true,
+      "requestSig": "2EzksrjBKxu6bEKAtgS8DoBQsucbr7ANgss8buQLzDvgaf9bPtSCrQPkeJKFxNi1yVt3oHYZTwLm9ABfEovDYBw",
+      "callbackSig": "5SNmrq4Nr4dxMmF2PSKy5rX2dFpyh6S2HiPqDxjaMeEVJ1sxnuX54FwrwqVHxfX8GuiGmuYxzGb1Hy5VJNxPqh2i",
+      "fulfilledMs": 5966,
+      "randomness": "e9e7bc628b3c7a3f8446d586339852c01bfb7d2bc42ad214cbc3def43e49bf22"
+    },
+    {
+      "round": 3,
+      "requestOk": true,
+      "requestSig": "41XV8gQGRGTtAtpJgnmcLRtiSLfKK1cY9Br93Zs2ziHNEeqeXjxUL6tHyaNCMRPH3cP8iBZqsdbq4nHpabsVZ6Up",
+      "callbackSig": "4GM6d24UJR9rnYLhQf5WsaLsovUjaV7unM1WDBaVSqh8K8VHmKUoviGtuhY3K8jFhCZFMXCibMDcvq1HAnxx6agr",
+      "fulfilledMs": 5976,
+      "randomness": "1f7dfc7dd25af372c02b5fb60b2c58ec9569f09e6ab540d47e956f451b6e9d60"
+    },
+    {
+      "round": 4,
+      "requestOk": true,
+      "requestSig": "jBnJCiDgerWVxXhipFqMh14HCLUDYbT3QZKkifVfNfwrFnC6L9S5o9ndQW5oB9N4s24kCHzmCPrTMxuC7mzgKUu",
+      "callbackSig": "5GVTerytTk2rsn9YD7YRfkL4mkGUWBXviaqQbxomwhTaE85RJe2qVbQQhyC7zzTpFzDCPrG1EmBW79VBcuvY1Fj2",
+      "fulfilledMs": 5998,
+      "randomness": "e8e200204beb71fe6327de994df21455f2d8bceca7a745a2ef31c79441126aa4"
+    }
+  ],
+  "maxMs": 6376
+}

@@ -1,0 +1,148 @@
+{
+  "when": "2026-11-24T21:56:25.378Z",
+  "id": "3",
+  "forcedFailure": false,
+  "pass": true,
+  "erTickNoBeforeCommit": "3",
+  "teeScheduleSig": "2xcQmfYWu2B7LXSxjjqNyQAYLNqq6ifZGpVcx72C3FccWKFpq2x81dA38TWMGcvg8CaB5oegwtWCD3P9pMgtM1NU",
+  "scheduleLogs": [
+    "Program log: Instruction: CommitWithAction",
+    "Program Magic11111111111111111111111111111111111111 invoke [2]",
+    "ScheduleCommit: parent program id: AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6",
+    "Scheduled commit with ID: 194032",
+    "ScheduledCommitSent signature: 45gicGu8hvRgXtqpftjoj4mC3ejkvaD6H7UkQSLgUGcaSZPAYzyCPLhtztucu5rT52PvrjTwuX7se77o82SzkziD",
+    "Program Magic11111111111111111111111111111111111111 success"
+  ],
+  "baseCommitSig": "5ZjVsDNjHwh8u98ejVQBZxuzQjjiFcGkqEeR5Znr4gLUKjdT48SJ7rnZkkVXdpaepN6TCeDzheLiEn6uxzvio4Xq",
+  "baseCommitExplorer": "https://explorer.solana.com/tx/5ZjVsDNjHwh8u98ejVQBZxuzQjjiFcGkqEeR5Znr4gLUKjdT48SJ7rnZkkVXdpaepN6TCeDzheLiEn6uxzvio4Xq?cluster=devnet",
+  "commitTrackingError": null,
+  "baseCommitTx": {
+    "err": null,
+    "logs": [
+      "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh invoke [1]",
+      "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh consumed 1212 of 440000 compute units",
+      "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh success",
+      "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh invoke [1]",
+      "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 invoke [2]",
+      "Program log: Instruction: SetFlag",
+      "Program log: set_flag: probe owner at action time = DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh",
+      "Program log: set_flag: committed probe tick_no=3 moves=0",
+      "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 consumed 18516 of 425388 compute units",
+      "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 success",
+      "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh consumed 32811 of 438788 compute units",
+      "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh success",
+      "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh invoke [1]",
+      "Program 11111111111111111111111111111111 invoke [2]",
+      "Program 11111111111111111111111111111111 success",
+      "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 invoke [2]",
+      "Program log: Instruction: ProcessUndelegation",
+      "Program 11111111111111111111111111111111 invoke [3]",
+      "Program 11111111111111111111111111111111 success",
+      "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 consumed 18357 of 368921 compute units",
+      "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 success",
+      "Program 11111111111111111111111111111111 invoke [2]",
+      "Program 11111111111111111111111111111111 success",
+      "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh consumed 57728 of 405977 compute units",
+      "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh success",
+      "Program noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV invoke [1]",
+      "Program noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV consumed 97 of 348249 compute units",
+      "Program noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV success"
+    ]
+  },
+  "observed": {
+    "secsAfterSchedule": 2,
+    "probeOwnerOnBase": "AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6",
+    "probeUndelegated": true,
+    "probeStillDelegated": false,
+    "baseTickNo": "3",
+    "flag": {
+      "set": true,
+      "count": "1",
+      "committedTickNo": "3"
+    }
+  },
+  "flagTxs": [
+    {
+      "sig": "5ZjVsDNjHwh8u98ejVQBZxuzQjjiFcGkqEeR5Znr4gLUKjdT48SJ7rnZkkVXdpaepN6TCeDzheLiEn6uxzvio4Xq",
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5ZjVsDNjHwh8u98ejVQBZxuzQjjiFcGkqEeR5Znr4gLUKjdT48SJ7rnZkkVXdpaepN6TCeDzheLiEn6uxzvio4Xq?cluster=devnet",
+      "detail": {
+        "err": null,
+        "logs": [
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh invoke [1]",
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh consumed 1212 of 440000 compute units",
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh success",
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh invoke [1]",
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 invoke [2]",
+          "Program log: Instruction: SetFlag",
+          "Program log: set_flag: probe owner at action time = DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh",
+          "Program log: set_flag: committed probe tick_no=3 moves=0",
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 consumed 18516 of 425388 compute units",
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 success",
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh consumed 32811 of 438788 compute units",
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh success",
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh invoke [1]",
+          "Program 11111111111111111111111111111111 invoke [2]",
+          "Program 11111111111111111111111111111111 success",
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 invoke [2]",
+          "Program log: Instruction: ProcessUndelegation",
+          "Program 11111111111111111111111111111111 invoke [3]",
+          "Program 11111111111111111111111111111111 success",
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 consumed 18357 of 368921 compute units",
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 success",
+          "Program 11111111111111111111111111111111 invoke [2]",
+          "Program 11111111111111111111111111111111 success",
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh consumed 57728 of 405977 compute units",
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh success",
+          "Program noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV invoke [1]",
+          "Program noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV consumed 97 of 348249 compute units",
+          "Program noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV success"
+        ]
+      }
+    },
+    {
+      "sig": "2WPJdsaF4EJg1ndLZf3emFNQrCtZC4Pmmq1X8ZoyqEBPV3ThQ9fnCAxBfQ4HQzzzM9bmyYn3Zxq2g6oshWsvc4dk",
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2WPJdsaF4EJg1ndLZf3emFNQrCtZC4Pmmq1X8ZoyqEBPV3ThQ9fnCAxBfQ4HQzzzM9bmyYn3Zxq2g6oshWsvc4dk?cluster=devnet",
+      "detail": {
+        "err": null,
+        "logs": [
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 invoke [1]",
+          "Program log: Instruction: Init",
+          "Program 11111111111111111111111111111111 invoke [2]",
+          "Program 11111111111111111111111111111111 success",
+          "Program 11111111111111111111111111111111 invoke [2]",
+          "Program 11111111111111111111111111111111 success",
+          "Program 11111111111111111111111111111111 invoke [2]",
+          "Program 11111111111111111111111111111111 success",
+          "Program 11111111111111111111111111111111 invoke [2]",
+          "Program 11111111111111111111111111111111 success",
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 consumed 38637 of 400000 compute units",
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 success",
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 invoke [1]",
+          "Program log: Instruction: DelegatePda",
+          "Program 11111111111111111111111111111111 invoke [2]",
+          "Program 11111111111111111111111111111111 success",
+          "Program 11111111111111111111111111111111 invoke [2]",
+          "Program 11111111111111111111111111111111 success",
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh invoke [2]",
+          "Program 11111111111111111111111111111111 invoke [3]",
+          "Program 11111111111111111111111111111111 success",
+          "Program 11111111111111111111111111111111 invoke [3]",
+          "Program 11111111111111111111111111111111 success",
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh consumed 19100 of 325592 compute units",
+          "Program DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh success",
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 consumed 56415 of 361363 compute units",
+          "Program AQ9D9GCfwopEQCRjqFzykJgxG3QnWEZrxSDz3WjZKTj6 success"
+        ]
+      }
+    }
+  ],
+  "routerStatus": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isDelegated": false
+    }
+  }
+}
