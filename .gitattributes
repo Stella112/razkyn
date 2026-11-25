@@ -1,0 +1,4 @@
+# Keep LF everywhere: the .sh scripts run in WSL and break with CRLF.
+* text=auto eol=lf
+*.so binary
+*.zip binary
