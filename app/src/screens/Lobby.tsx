@@ -4,10 +4,11 @@ import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { navigate } from "../App";
 import { base, buildJoinTx, dusdBalance, raidKeyFor, readRaidBase, readPublic, teePublic, type RaidAcc } from "../lib/chain";
 import { explorerTx } from "../lib/config";
-import { getLobby, type Lobby as LobbyT } from "../lib/keeper";
+import { getLobby, openRaid, type Lobby as LobbyT } from "../lib/keeper";
 import { useGameWallet } from "../lib/wallet";
 
 const PHASE: Record<LobbyT["phase"], string> = {
+  idle: "No raid running",
   lobby: "Lobby open: join before the deadline",
   setup: "Setting up: delegating to the TEE, permissions, VRF seed, crates",
   live: "Raid live",
@@ -32,7 +33,7 @@ export default function Lobby() {
       const l = await getLobby();
       if (stop) return;
       setLobby(l);
-      if (l) {
+      if (l && l.phase !== "idle") {
         // Before delegation the base copy is current; after it, the TEE copy is (public, no token).
         const r = l.phase === "lobby" ? await readRaidBase(l.raidId) : (await readPublic(teePublic, l.raidId)).raid ?? (await readRaidBase(l.raidId));
         if (!stop) setRaid(r);
@@ -63,6 +64,15 @@ export default function Lobby() {
   useEffect(() => {
     if (lobby && mySlot >= 0 && (lobby.phase === "live")) navigate(`/raid/${lobby.raidId}`);
   }, [lobby, mySlot]);
+
+  const [opening, setOpening] = useState(false);
+  const open = async (mode: "mystery" | "live") => {
+    setErr(""); setOpening(true);
+    const r = await openRaid(mode);
+    setOpening(false);
+    if (!r.ok) setErr(r.error ?? "could not open a raid");
+    else setLobby(await getLobby());
+  };
 
   const join = async () => {
     if (!lobby || !w.publicKey || freeHuman === undefined) return;
@@ -96,7 +106,23 @@ export default function Lobby() {
             <p className="note">The keeper is not serving a lobby right now. Start one with <span className="mono">tsx keeper/src/index.ts --humans 1</span>, or watch a finished raid's report.</p>
           </div>
         )}
-        {lobby && (
+        {lobby && lobby.phase === "idle" && (
+          <div className="card" style={{ maxWidth: 640 }}>
+            <h3>No raid running</h3>
+            <p className="note">Open one: you get a seat (another human can take the second), BOT raiders fill the rest, and it drops ~3 minutes after the join window. Mystery Market Day replays a real past day you only learn after the raid; Live tracks SOL, BTC and ETH right now.</p>
+            <div className="row">
+              <button className="btn primary big" disabled={opening || lobby.canOpen?.ok === false} onClick={() => open("mystery")}>Open a Mystery raid</button>
+              <button className="btn big" disabled={opening || lobby.canOpen?.ok === false} onClick={() => open("live")}>Open a Live raid</button>
+            </div>
+            {opening && <p className="note">Creating the raid on devnet…</p>}
+            {lobby.canOpen?.ok === false && <p className="note amber">{lobby.canOpen.reason}</p>}
+            {err && <p className="err">{err}</p>}
+            {lobby.last?.raidId && (
+              <p className="note">Last raid {lobby.last.raidId}: {lobby.last.error ? <span className="down">failed ({lobby.last.error.slice(0, 80)})</span> : <a href={`/report/${lobby.last.raidId}`} onClick={(e) => { e.preventDefault(); navigate(`/report/${lobby.last!.raidId}`); }}>Market Raid Report</a>}</p>
+            )}
+          </div>
+        )}
+        {lobby && lobby.phase !== "idle" && (
           <div className="grid2">
             <div className="card">
               <h3>Raid</h3>

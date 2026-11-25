@@ -3,8 +3,20 @@ import { KEEPER_URL } from "./config";
 
 export type Lobby = {
   raidId: string; raid: string; mode: "mystery" | "live"; slots: number; humanSlots: number[];
-  phase: "lobby" | "setup" | "live" | "settling" | "done"; joinDeadline: number; startTs?: number; reportHash?: string;
+  phase: "idle" | "lobby" | "setup" | "live" | "settling" | "done"; joinDeadline: number; startTs?: number; reportHash?: string;
+  last?: { raidId: string; reportHash?: string; error?: string };
+  canOpen?: { ok: boolean; reason?: string };
 };
+
+/** Serve mode: ask the keeper to open a raid. */
+export async function openRaid(mode: "mystery" | "live"): Promise<{ ok: boolean; error?: string; raidId?: string }> {
+  try {
+    const r = await fetch(`${KEEPER_URL}/lobby/open`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mode }) });
+    return (await r.json()) as { ok: boolean; error?: string; raidId?: string };
+  } catch (e) {
+    return { ok: false, error: `keeper unreachable: ${String(e).slice(0, 80)}` };
+  }
+}
 export type WireLine = {
   t: number; tag: "LIVE" | "BREAKING" | "IN-GAME EVENT" | "DEBRIEF"; text: string; source: "llm" | "template";
   slot?: number; headlines?: { title: string; url: string; ts: string }[];

@@ -17,8 +17,12 @@ export type Lobby = {
   mode: "mystery" | "live";
   slots: number;
   humanSlots: number[];
-  /** lobby: waiting for players; setup: delegating/seeding; live; settling; done */
-  phase: "lobby" | "setup" | "live" | "settling" | "done";
+  /** idle: no raid, a player may open one (serve mode); lobby: waiting for players; setup: delegating/seeding; live; settling; done */
+  phase: "idle" | "lobby" | "setup" | "live" | "settling" | "done";
+  /** Serve mode, idle: the previous raid (for its report) and why the last open failed, if it did. */
+  last?: { raidId: string; reportHash?: string; error?: string };
+  /** Serve mode, idle: raids left this hour and whether the keeper has SOL for one. */
+  canOpen?: { ok: boolean; reason?: string };
   joinDeadline: number; // unix ms
   startTs?: number;
   reportHash?: string;
@@ -28,13 +32,31 @@ export class WireServer {
   private wires = new Map<string, Wire>();
   private server: Server;
   lobby: Lobby | null = null;
+  /** Serve mode only: open a raid on request. */
+  onOpen: ((mode: "mystery" | "live") => Promise<{ ok: boolean; error?: string; raidId?: string }>) | null = null;
 
   constructor(readonly port = Number(process.env.WIRE_PORT ?? 8787)) {
     this.server = createServer((req, res) => {
       res.setHeader("access-control-allow-origin", "*");
+      res.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
+      res.setHeader("access-control-allow-headers", "content-type");
       const url = (req.url ?? "").split("?")[0];
       const json = (code: number, body: unknown) => res.writeHead(code, { "content-type": "application/json", "cache-control": "no-store" }).end(JSON.stringify(body));
-      if (url === "/lobby") return json(this.lobby ? 200 : 404, this.lobby ?? { error: "no raid" });
+      if (req.method === "OPTIONS") return res.writeHead(204).end();
+      if (url === "/lobby" && req.method === "GET") return json(this.lobby ? 200 : 404, this.lobby ?? { error: "no raid" });
+      // Serve mode: a player asks the keeper to open a raid ({"mode":"mystery"|"live"}).
+      if (url === "/lobby/open" && req.method === "POST") {
+        if (!this.onOpen) return json(404, { error: "this keeper runs a fixed raid (not serve mode)" });
+        let body = "";
+        req.on("data", (c) => { body += c; if (body.length > 1000) req.destroy(); });
+        req.on("end", async () => {
+          let mode: "mystery" | "live" = "mystery";
+          try { mode = JSON.parse(body || "{}").mode === "live" ? "live" : "mystery"; } catch { /* default */ }
+          const r = await this.onOpen!(mode);
+          json(r.ok ? 202 : 409, r);
+        });
+        return;
+      }
       const rep = /^\/reports\/(\d+)\/?$/.exec(url);
       if (rep) {
         const f = join(REPO, "app", "public", "reports", `${rep[1]}.json`);
