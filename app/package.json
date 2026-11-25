@@ -14,10 +14,10 @@
     "@coral-xyz/anchor": "0.32.1",
     "@magicblock-labs/ephemeral-rollups-sdk": "0.18.0",
     "@solana/spl-token": "0.4.14",
-    "@solana/wallet-adapter-base": "0.9.27",
-    "@solana/wallet-adapter-react": "0.15.39",
-    "@solana/wallet-adapter-react-ui": "0.9.39",
-    "@solana/web3.js": "1.98.4",
+    "@solana/wallet-adapter-base": "0.9.28",
+    "@solana/wallet-adapter-react": "0.15.40",
+    "@solana/wallet-adapter-react-ui": "0.9.40",
+    "@solana/web3.js": "1.99.0",
     "buffer": "6.0.3",
     "phaser": "3.90.0",
     "react": "18.3.1",
@@ -33,8 +33,7 @@
   },
   "overrides": {
     "@types/react": "18.3.12",
-    "@types/react-dom": "18.3.1",
-    "@solana/wallet-adapter-react": "0.15.39"
+    "@types/react-dom": "18.3.1"
   },
   "engines": {
     "node": ">=22"
