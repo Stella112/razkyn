@@ -56,6 +56,12 @@ The keeper serves `GET /lobby`, `GET /reports/:id` and THE WIRE (`/wire/:id/stre
 
 Devnet: program `CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97`; mints in `config/devnet.json`.
 
+### Deployment (judging)
+
+- **Client**: Vercel, https://razkyn.vercel.app (`app/`, build env `VITE_KEEPER_URL`).
+- **Keeper**: a VPS (AWS Lightsail, Ubuntu 24.04; ~170 ms round trip to `devnet-tee`) running `keeper/src/serve.ts` as the systemd service in `deploy/razkyn-keeper.service`: idle until a player presses **Open a raid** in the lobby, one raid at a time, at most 4 per hour, only with enough keeper SOL; memory-capped at 600 MB. HTTPS through Caddy (`deploy/Caddyfile.razkyn`) at `https://razkyn.16-61-50-207.sslip.io` (`/lobby`, `/lobby/open`, `/reports/:id`, `/wire/:id/stream`).
+- Run only one keeper per keeper wallet at a time (the BOT wallets are shared).
+
 ## Tests
 
 - MagicSVM (local): full 8-raider raid settles and claims sum to escrow; determinism; movement cheat and wrong signer rejected; guards on `finalize_raid` / `claim`; `verify_slice` rejects a wrong slice or leaf; payout conservation (randomized).

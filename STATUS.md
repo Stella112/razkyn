@@ -1,6 +1,6 @@
 # STATUS.md
 
-_Last updated: 2026-11-25 — M7 client built and played on devnet (join → raid → peek → crate → reveal + debrief → report). Tests 9, 13 pass; test 8 needs a re-run in a live raid (keeper out of SOL). Next: finish M7 checks, then M8._
+_Last updated: 2026-11-25 — Deployed: client https://razkyn.vercel.app, keeper (serve mode) on the beam VPS at https://razkyn.16-61-50-207.sslip.io, idle until a player opens a raid. Blocked on keeper SOL for raids._
 
 ## Done
 - §4.1 setup: MagicBlock dev skill v0.5.1 (commit `88f6719`, 2026-11-24) installed; references read. `vendor/` cloned (examples `3376663`, starter-kits, SDK tag `v0.18.0`).
@@ -300,6 +300,10 @@ TEST 10 PASS: no private value reached a prompt or an output
 - **§9 test 8**: the run during the live raid failed on its own control (a View's only member is the raider, so the keeper cannot read it either; test fixed). Must re-run in a live raid: blocked on keeper SOL. The in-game peek above already showed a non-member refused for a sealed crate, another RaiderPrivate and RaidSecret.
 - Bugs found in the play-through and fixed: `anchor.Wallet` is not in Anchor's browser build (minimal wallet object); movement prediction diverged past the map edge (pending −1.78 M units) → moves capped at 50 units, prediction bounded to 3 tiles, range checks use the on-chain position; added an error boundary.
 - Known: ~45% of pipelined moves are rejected as too fast (7.5 tiles in 3 s vs 6 tiles/s max); watch mode checked only after the raid (live view not yet seen); production build OK (`vite build`, one chunk > 500 kB).
+
+## M8 — ship (in progress)
+- Deployed: Vercel https://razkyn.vercel.app (report page verified there: hash ✓, Merkle ✓); keeper serve mode on the beam VPS as systemd `razkyn-keeper` (idle 128 MB, capped 600 MB, 127.0.0.1 only) behind HTTPS `https://razkyn.16-61-50-207.sslip.io` (edge-caddy site, DECISIONS #32). Public lobby reaches the keeper and shows "needs devnet SOL". Repo private: github.com/Stella112/razkyn.
+- To do: SOL → first public raid on the VPS, test 8 re-run, live watch check, test 12 from the VPS; SUBMISSION links; demo video.
 
 ## Blocked
 - Keeper wallet `GxoEJukA7Cr5n3FyLbwyMnGkopf84zyuCH5mtZbK6dAG` has 0.046 devnet SOL: not enough for another raid (~0.35 SOL each). Needed for the test 8 re-run, a live watch-mode check and M8.
