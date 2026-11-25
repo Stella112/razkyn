@@ -20,9 +20,19 @@ const LAST_WINDOW = 270;
 const DISTRICT_TILES: [number, number][] = [[0, 20], [22, 42], [44, 63]];
 const DANGER_ROWS: [number, number] = [11, 28];
 const DANGER_BPS = -150;
-const SAFE_ROWS_Y = [1050, 2950]; // rows 10 and 29, centre of tile
+// Safe rows 9 and 30 leave one tile of slack outside the band: walkTo stops within a radius, and
+// stopping on the band's margin row made BOTs "escape" again and again (devnet raid 1795625037689).
+const SAFE_ROWS_Y = [950, 3050];
 const CORRIDORS_X = [2150, 4350]; // x tiles 21 and 43: between districts, never hazard tiles
-const RISKY_EXIT_MIN_HP = 85; // a band exit costs ~2 s walking + 5 s standing at 10 HP/s
+const WAYPOINT_WITHIN = 30; // keeps waypoints inside a 1-tile corridor / on the safe row
+// Planning speed: measured on devnet (raid 1795626234189) a planned 15 s exit run took > 25 s,
+// so plan at ~2.8 tiles/s plus a fixed overhead for the final position check.
+const WALK_UNITS_PER_S = 280;
+const WALK_OVERHEAD_S = 2;
+const WAYPOINT_SYNC_S = 1; // confirmation wait + position read at each waypoint
+const EXTRACT_SECS = 6; // 5 s channel + send slack
+const RAID_END = 300;
+const RISKY_EXIT_MIN_HP = 95; // a band exit costs 2-4 s walking + 5 s standing at 10 HP/s (one BOT died at 85+)
 type Bands = ([number, number] | null)[];
 const districtOfX = (x: number) => DISTRICT_TILES.findIndex(([lo, hi]) => Math.floor(x / 100) >= lo && Math.floor(x / 100) <= hi);
 export function inBand(x: number, y: number, bands: Bands) {
@@ -30,6 +40,29 @@ export function inBand(x: number, y: number, bands: Bands) {
   const b = d >= 0 ? bands[d] : null;
   const ty = Math.floor(y / 100);
   return !!b && ty >= b[0] && ty <= b[1];
+}
+/** On or within r units of a danger band (a walk that stops within r of the point may land there). */
+function nearBand(x: number, y: number, r: number, bands: Bands) {
+  return [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]].some(([dx, dy]) => inBand(x + dx, y + dy, bands));
+}
+/** Shortest safe polyline (waypoints) from a to b, or null. Direct, via a safe row, or via a corridor. */
+export function planRoute(ax: number, ay: number, x: number, y: number, bands: Bands, allowTargetInBand = false): { wps: [number, number][]; len: number } | null {
+  const candidates: [number, number][][] = [[]];
+  for (const ry of SAFE_ROWS_Y) candidates.push([[ax, ry], [x, ry]]);
+  for (const ry1 of SAFE_ROWS_Y) for (const ry2 of SAFE_ROWS_Y) for (const cx of CORRIDORS_X) candidates.push([[ax, ry1], [cx, ry1], [cx, ry2], [x, ry2]]);
+  let best: { wps: [number, number][]; len: number } | null = null;
+  for (const wps of candidates) {
+    const pts: [number, number][] = [[ax, ay], ...wps, [x, y]];
+    let ok = true, len = 0;
+    for (let i = 1; i < pts.length && ok; i++) {
+      len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      // Into a target on hazard rows only straight down/up from a safe row (shortest time on hazard).
+      const last = i === pts.length - 1 && Math.abs(pts[i - 1][0] - x) < 50;
+      if (!(last && allowTargetInBand) && !segmentSafe(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], bands)) ok = false;
+    }
+    if (ok && (!best || len < best.len)) best = { wps, len };
+  }
+  return best;
 }
 function segmentSafe(ax: number, ay: number, bx: number, by: number, bands: Bands) {
   const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 25));
@@ -78,39 +111,65 @@ export class BotCrew {
 
   /**
    * Walk to (x, y) without crossing a danger band: leave a band first (straight up or down, at
-   * full speed), then go straight if the line is clear, else via a safe row (10 or 29).
-   * Returns false if the target itself is inside a band (caller picks another target).
+   * full speed, to a safe row), then follow the shortest safe route (planRoute).
+   * Returns false if the target is on or next to a band (caller picks another target) or no route exists.
    */
   private async safeWalk(slot: number, x: number, y: number, within: number, intervalMs = 250, allowTargetInBand = false): Promise<boolean> {
     const bands = await this.bands();
     let me = await this.S.rprv(slot);
     if (inBand(me.x, me.y, bands)) {
       const ty = SAFE_ROWS_Y.reduce((a, b) => (Math.abs(a - me.y) < Math.abs(b - me.y) ? a : b));
-      await this.S.walkTo(slot, me.x, ty, 60, 110);
+      await this.S.walkTo(slot, me.x, ty, WAYPOINT_WITHIN, 110);
       this.log(slot, "hazard_escape", { to: [me.x, ty] });
       me = await this.S.rprv(slot);
     }
-    if (inBand(x, y, bands) && !allowTargetInBand) return false;
-    if (segmentSafe(me.x, me.y, x, y, bands)) { await this.S.walkTo(slot, x, y, within, intervalMs); return true; }
-    // Detour: via a safe row (10 or 29), or switch rows inside a corridor between districts
-    // (x tiles 21 / 43, never hazardous). For a target inside a band, the last leg goes in at full speed.
-    const candidates: [number, number][][] = [];
-    for (const ry of SAFE_ROWS_Y) candidates.push([[me.x, ry], [x, ry]]);
-    for (const ry1 of SAFE_ROWS_Y) for (const ry2 of SAFE_ROWS_Y) for (const cx of CORRIDORS_X) candidates.push([[me.x, ry1], [cx, ry1], [cx, ry2], [x, ry2]]);
-    let best: [number, number][] | null = null, bestLen = Infinity;
-    for (const wps of candidates) {
-      const pts: [number, number][] = [[me.x, me.y], ...wps, [x, y]];
-      let ok = true, len = 0;
-      for (let i = 1; i < pts.length && ok; i++) {
-        len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-        const last = i === pts.length - 1;
-        if (!(last && allowTargetInBand) && !segmentSafe(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], bands)) ok = false;
-      }
-      if (ok && len < bestLen) { best = wps; bestLen = len; }
+    if (!allowTargetInBand && nearBand(x, y, within, bands)) return false;
+    // Stream the whole route; if some moves were rejected, re-plan from where the BOT really is.
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const route = planRoute(me.x, me.y, x, y, bands, allowTargetInBand);
+      if (!route) return false;
+      if (await this.walkPath(slot, [...route.wps, [x, y]], within, allowTargetInBand ? 110 : intervalMs, bands, allowTargetInBand)) return true;
+      me = await this.S.rprv(slot);
     }
-    if (!best) return false;
-    for (const [wx, wy] of best) await this.S.walkTo(slot, wx, wy, 60, intervalMs);
-    await this.S.walkTo(slot, x, y, within, inBand(x, y, bands) ? 110 : intervalMs);
+    return false;
+  }
+
+  /**
+   * Stream moves along a polyline (same pacing as RaidSession.walkTo). Moves are relative, so a
+   * rejected move shifts the rest of the path; at each waypoint the BOT waits for its moves and
+   * re-reads its real position before the next leg (corridors are only 1 tile wide: devnet raid
+   * 1795627119584, 4 BOTs drifted onto hazard tiles without this).
+   * Returns true when the BOT ends within `within` of the last point.
+   */
+  private async walkPath(slot: number, pts: [number, number][], within: number, intervalMs: number, bands: Bands, allowTargetInBand: boolean): Promise<boolean> {
+    const S = this.S;
+    for (let i = 0; i < pts.length; i++) {
+      const [tx, ty] = pts[i];
+      const last = i === pts.length - 1;
+      const tol = last ? within : WAYPOINT_WITHIN;
+      // Up to 5 rounds per leg: stream the moves, wait, read the real position, top up the rest.
+      for (let round = 0; ; round++) {
+        const at = await S.rprv(slot);
+        if (Math.hypot(tx - at.x, ty - at.y) <= tol) break;
+        if (round >= 5) return false;
+        // The correction from where the BOT really is must itself stay off the danger band.
+        if (!(last && allowTargetInBand) && !segmentSafe(at.x, at.y, tx, ty, bands)) return false;
+        let cx = at.x, cy = at.y;
+        const inflight: Promise<unknown>[] = [];
+        for (;;) {
+          const dx = tx - cx, dy = ty - cy, d = Math.hypot(dx, dy);
+          if (d <= Math.max(last ? within - 10 : 5, 0.5)) break;
+          const step = Math.min(50, d);
+          const sx = Math.round((dx * step) / d), sy = Math.round((dy * step) / d);
+          if (sx === 0 && sy === 0) break;
+          const ix = await S.T.methods.moveTo(slot, sx, sy).accountsPartial({ raid: S.raid, rprv: S.slot("rprv", slot), raidKey: S.raiders[slot].raidKey.publicKey }).instruction();
+          inflight.push(S.sendFast(slot, ix).catch(() => null));
+          cx += sx; cy += sy;
+          await sleep(intervalMs);
+        }
+        await Promise.all(inflight);
+      }
+    }
     return true;
   }
 
@@ -138,7 +197,7 @@ export class BotCrew {
     let best = -1, bd = Infinity;
     for (let i = 0; i < NUM_CRATES; i++) {
       if (this.claimed.has(i)) continue;
-      if (inBand(pos[i].x, pos[i].y, bands)) continue; // on (or near) hazard tiles: not now
+      if (nearBand(pos[i].x, pos[i].y, 60, bands)) continue; // on (or next to) hazard tiles: not now
       if (i % 12 >= 8 && !districts[Math.floor(i / 12)].awake) continue; // dormant, district asleep
       const d = Math.hypot(pos[i].x - me.x, pos[i].y - me.y);
       if (this.elapsed() > LAST_WINDOW - 70 && d > 1000) continue; // late: only crates within 10 tiles
@@ -179,7 +238,7 @@ export class BotCrew {
     if (from < 0) return;
     const to = (from + 1 + Math.floor(this.rnd() * 2)) % 3;
     const bands = await this.bands();
-    const safe = TERMINALS.filter(([tx, ty]) => !inBand(tx, ty, bands));
+    const safe = TERMINALS.filter(([tx, ty]) => !nearBand(tx, ty, 60, bands));
     if (!safe.length) return;
     const term = safe.reduce((a, b) => (Math.hypot(a[0] - me.x, a[1] - me.y) < Math.hypot(b[0] - me.x, b[1] - me.y) ? a : b));
     if (!(await this.safeWalk(slot, term[0], term[1], 60))) return;
@@ -201,29 +260,50 @@ export class BotCrew {
   }
 
   private async extract(slot: number) {
-    // Stage near the middle, on the first point outside every danger band; re-check while waiting.
-    const stages = [CENTER, [CENTER[0], SAFE_ROWS_Y[0]], [CENTER[0], SAFE_ROWS_Y[1]], [2150, CENTER[1]], [4350, CENTER[1]]];
+    // Stage near the middle, off every danger band (re-checked each second while waiting): the
+    // exits of the last window are private until it opens, and the middle is closest to all four.
+    const stages = [CENTER, [CENTER[0], SAFE_ROWS_Y[0]], [CENTER[0], SAFE_ROWS_Y[1]], [CORRIDORS_X[0], CENTER[1]], [CORRIDORS_X[1], CENTER[1]]];
     const stage = async () => {
       const bands = await this.bands();
       const me = await this.S.rprv(slot);
-      if (!inBand(me.x, me.y, bands) && Math.hypot(me.x - CENTER[0], me.y - CENTER[1]) < 1200) return;
-      for (const [sx, sy] of stages) if (await this.safeWalk(slot, sx, sy, 150, 110)) return;
+      if (!nearBand(me.x, me.y, WAYPOINT_WITHIN, bands) && Math.hypot(me.x - CENTER[0], me.y - CENTER[1]) < 1300) return;
+      // Shortest safe route first (a BOT in the bottom half stages at the bottom, not across the map).
+      const ranked = stages.map(([sx, sy]) => ({ sx, sy, r: nearBand(sx, sy, WAYPOINT_WITHIN, bands) ? null : planRoute(me.x, me.y, sx, sy, bands) }))
+        .filter((c) => c.r).sort((a, b) => a.r!.len - b.r!.len).map((c) => [c.sx, c.sy]);
+      for (const [sx, sy] of ranked) {
+        try { if (await this.safeWalk(slot, sx, sy, WAYPOINT_WITHIN, 110)) return; } catch { /* try the next stage */ }
+      }
     };
     await stage();
     let raid = await this.state();
     while (raid.status === 2 && raid.exitWindow !== 3) { await sleep(1000); await stage(); raid = await this.state(); }
     if (raid.status !== 2) return;
-    const me = await this.S.rprv(slot);
+
+    // Pick the exit by estimated time over the safe route; a band exit only with enough HP.
     const hp = (await this.S.rpub(slot)).hp;
     const bands = await this.bands();
-    const dist = (e: number) => Math.hypot(EXITS[e][0] - me.x, EXITS[e][1] - me.y);
-    // Prefer exits off hazard tiles; enter a band exit only with enough HP to survive it.
-    const choices = [...raid.openExits].filter((e) => e !== 255 && (!inBand(EXITS[e][0], EXITS[e][1], bands) || hp >= RISKY_EXIT_MIN_HP))
-      .sort((a, b) => Number(inBand(EXITS[a][0], EXITS[a][1], bands)) - Number(inBand(EXITS[b][0], EXITS[b][1], bands)) || dist(a) - dist(b));
-    if (!choices.length) { this.log(slot, "extract_skipped", { reason: "open exits on hazard tiles", hp }); return; }
-    const exit = choices[0];
+    const me = await this.S.rprv(slot);
+    const left = RAID_END - this.elapsed() - 1;
+    const options = [...raid.openExits].filter((e) => e !== 255).map((e) => {
+      const band = inBand(EXITS[e][0], EXITS[e][1], bands);
+      const route = planRoute(me.x, me.y, EXITS[e][0], EXITS[e][1], bands, true);
+      const secs = route ? route.len / WALK_UNITS_PER_S + route.wps.length * WAYPOINT_SYNC_S + WALK_OVERHEAD_S + EXTRACT_SECS : Infinity;
+      return { e, band, secs, ok: secs <= left && (!band || hp >= RISKY_EXIT_MIN_HP) };
+    }).sort((a, b) => Number(b.ok) - Number(a.ok) || Number(a.band) - Number(b.band) || a.secs - b.secs);
+    const pick = options[0];
+    if (!pick || !pick.ok) {
+      this.log(slot, "extract_skipped", { reason: pick ? (pick.secs > left ? "too far for the time left" : "open exits on hazard tiles") : "no exit", hp, left: Math.round(left), options });
+      return;
+    }
+    const exit = pick.e;
+    this.log(slot, "extract_go", { exit, estSecs: Math.round(pick.secs), left: Math.round(left), band: pick.band });
+    // Retry the walk while there is time (a walk can fail under load); start_extract needs ≤ 1 tile.
+    let arrived = false;
+    while (!arrived && this.elapsed() < RAID_END - EXTRACT_SECS - 1) {
+      try { arrived = await this.safeWalk(slot, EXITS[exit][0], EXITS[exit][1], 60, 110, true); } catch { /* re-plan from where we are */ }
+    }
     try {
-      if (!(await this.safeWalk(slot, EXITS[exit][0], EXITS[exit][1], 60, 110, true))) throw new Error("no safe route to exit");
+      if (!arrived) throw new Error("did not reach the exit in time");
       await this.S.startExtract(slot, exit);
       await sleep(5400);
       await this.S.finishExtract(slot);
