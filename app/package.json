@@ -7,7 +7,7 @@
   "scripts": {
     "sync-idl": "node -e \"const f=require('fs');f.copyFileSync('../idl/razkyn.json','src/lib/razkyn.json');f.copyFileSync('../config/devnet.json','src/lib/devnet.json');f.copyFileSync('../data/mystery/merkle.json','src/lib/merkle.json')\"",
     "dev": "npm run sync-idl && vite",
-    "build": "npm run sync-idl && tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -35,5 +35,8 @@
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "@solana/wallet-adapter-react": "0.15.39"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
