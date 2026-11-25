@@ -1,0 +1,9 @@
+{
+  "test": "§9 test 9 — spoiler scan of client traffic during a Mystery raid (window.__razkynSpoilerScan, app/src/lib/spoilerScan.ts)",
+  "raid": "1795630441921",
+  "client": "http://localhost:5173/raid/1795630441921?devwallet=1&record=1 (raider 1, dev wallet)",
+  "coverage": "recording restarted at the last page load (after the movement fix), ~80 s before the end of the live raid through the end; not the full 300 s",
+  "result": { "responses": 644, "accountsDecoded": 7694, "districts": 489, "wireLines": 73, "findings": [] },
+  "trafficUrls": ["https://devnet-tee.magicblock.app", "http://localhost:8787/reports/1795630441921 (after the reveal, excluded from the scan)", "/reports/1795630441921.json (after the reveal, excluded)"],
+  "checks": "dates YYYY-MM-DD, tickers/coin/exchange names, month names in all decoded JSON and WIRE lines (not DEBRIEF); SOLUSDT/BTCUSDT/ETHUSDT/dates in raw account bytes; every decoded District: start_raw == 0 and prices inside the ×10^4 index band"
+}

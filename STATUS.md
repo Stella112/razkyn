@@ -1,6 +1,6 @@
 # STATUS.md
 
-_Last updated: 2026-11-25 — M6 THE WIRE built and run on devnet (template path; model path waits for ANTHROPIC_API_KEY). Next: M7 (client)._
+_Last updated: 2026-11-25 — M7 client built and played on devnet (join → raid → peek → crate → reveal + debrief → report). Tests 9, 13 pass; test 8 needs a re-run in a live raid (keeper out of SOL). Next: finish M7 checks, then M8._
 
 ## Done
 - §4.1 setup: MagicBlock dev skill v0.5.1 (commit `88f6719`, 2026-11-24) installed; references read. `vendor/` cloned (examples `3376663`, starter-kits, SDK tag `v0.18.0`).
@@ -292,8 +292,17 @@ TEST 10 PASS: no private value reached a prompt or an output
 - **BOT extraction** (commit `34d6c4a`): BOTs stage before the last window at the safe point with the shortest route; pick the exit by estimated time over the safe route (2.8 tiles/s + 1 s per waypoint + 6 s channel), prefer exits off hazard rows, and take a hazard-row exit only with ≥ 95 HP; moves stream along the whole route and re-sync the real position at each waypoint (relative moves drift when some are rejected). Fixed: escapes landing on the band margin row and repeating (safe rows are now 9 and 30, waypoints within 30 units). Simulation adds drift (25% moves rejected → 0 hazard samples through a 1-tile corridor) and escape-then-route (1 escape, no repeat).
 - Devnet runs while fixing: crash day `9g2eTxp6…` (2022-11-08) 3/8 extracted, 1 died on a hazard exit (HP threshold raised to 95); deep crash `EdoqbSNZ…` (2022-11-09, Tower −24%) 4/4 exit runs extracted but 4 BOTs died while staging (drift + wrong staging side, both fixed after). Final run `H9twc1TM…` (id 1795628725761, 2021-10-03, flat day): **8/8 extracted, 8/8 alive**, all via the far side exit within the time estimate; 2,778/2,778 ticks, max gap 646 ms, 0 stalls; report `9962c0eb…` posted `1tjfAjNT…`.
 
+## M7 — client (built; play-through done on devnet; test 8 re-run pending)
+- `app/` (Vite 6.3.5 + React 18.3.1 + TS 5.9.3 + Phaser 3.90.0, wallet adapter 0.15.39 / ui 0.9.39, ephemeral-rollups-sdk 0.18.0, anchor 0.32.1; exact pins): Landing (wordmark, tagline, Play / Watch) → Lobby (`/play`: keeper lobby, raider list with BOT labels, join = faucet + stake in one wallet signature) → Raid (`/raid/:id`: Phaser map, HUD with HP, live backpack value + sparkline, protected slot, timer, exit windows, district chips, THE WIRE chyron over SSE, Try to peek, E open/trade, Space extract, click to shoot, touch stick) → reveal + debrief overlay → Report (`/report/:id`). Watch (`/watch[/:id]`) uses a token-less TEE connection (public accounts only). Raid key = burner in localStorage; TEE token via `getAuthToken` signed by it, cached and refreshed 60 s before expiry. Keeper: `GET /lobby`, `GET /reports/:id`, `--linger`. DECISIONS #29–#31.
+- **Devnet play-through** (raid `E4f1fjEK…`, id 1795630441921, Mystery, 1 human + 7 BOTs): dev wallet joined (`3j4ncvxx…`, faucet + stake); raid went live; movement on-chain (7.5 tiles in 3 s); **Try to peek** → sealed crate, raider 2's RaiderPrivate and RaidSecret all "refused: the TEE returned nothing"; walked to crate 7 and opened it with E (1,573,707 Tower units in the backpack); died when Tower's hazard escalated to level 2 under the crate; after end_raid the overlay showed the reveal (2021-12-04, Merkle proof **Verified ✓**), payout 7.33 dUSD (4.00 protected + pro-rata) and THE WIRE debrief; report `b0c69df2…` posted `2sfRAxF6…`.
+- **§9 test 13 PASS** (`tests/devnet/test13-report-tamper.ts`): `/report/1795628725761` shows "Verified ✓" (recomputed sha256 = on-chain Settlement.report_hash, Merkle proof ✓ vs Raid.day_root); the copy with raider 1's payout +1 dUSD (`?src=/test-fixtures/tampered-1795628725761.json`) shows "Mismatch".
+- **§9 test 9 PASS (partial coverage)**: in-browser scan (`?record=1`, `app/src/lib/spoilerScan.ts`) of 644 responses, 7,694 decoded account payloads, 489 District snapshots (start_raw = 0, prices in the index band) and 73 WIRE lines → 0 dates, tickers, months or absolute prices. Recording covered the last ~80 s of the live raid + end (page reloaded after a fix), not all 300 s. Evidence `spikes/results/test9-spoiler-1795630441921.json`.
+- **§9 test 8**: the run during the live raid failed on its own control (a View's only member is the raider, so the keeper cannot read it either; test fixed). Must re-run in a live raid: blocked on keeper SOL. The in-game peek above already showed a non-member refused for a sealed crate, another RaiderPrivate and RaidSecret.
+- Bugs found in the play-through and fixed: `anchor.Wallet` is not in Anchor's browser build (minimal wallet object); movement prediction diverged past the map edge (pending −1.78 M units) → moves capped at 50 units, prediction bounded to 3 tiles, range checks use the on-chain position; added an error boundary.
+- Known: ~45% of pipelined moves are rejected as too fast (7.5 tiles in 3 s vs 6 tiles/s max); watch mode checked only after the raid (live view not yet seen); production build OK (`vite build`, one chunk > 500 kB).
+
 ## Blocked
-- (nothing)
+- Keeper wallet `GxoEJukA7Cr5n3FyLbwyMnGkopf84zyuCH5mtZbK6dAG` has 0.046 devnet SOL: not enough for another raid (~0.35 SOL each). Needed for the test 8 re-run, a live watch-mode check and M8.
 
 ## Stubbed / not real yet
 - In-game events: no scripted event plan; WIRE EVENTS narrate rule-driven events (DECISIONS #26, pending). `event_plan_hash` stays zero.
@@ -303,4 +312,4 @@ TEST 10 PASS: no private value reached a prompt or an output
 - BOT extraction on deep crash days is verified in simulation only (`scripts/check-bot-hazard-sim.ts`); the last devnet crash day (raid 1795627119584, Tower −24%) predates the staging/drift fix and lost 4 BOTs while staging.
 
 ## Next
-- M7: client (Vite + React + Phaser: landing, lobby, raid HUD with THE WIRE ticker over SSE, Try to peek, watch mode, reveal + debrief, report page). Tests 8, 9, 13.
+- Re-run test 8 in a live raid; check watch mode live; reduce rejected moves. Then M8 (deploy app to Vercel, keeper host in Singapore + test 12 there, README, SUBMISSION.md, demo script).

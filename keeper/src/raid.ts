@@ -40,6 +40,7 @@ export async function runRaid(o: RaidOptions) {
 
   await S.createRaid(o.slots);
   lap(`raid ${S.raidId.toString()} ${S.raid.toBase58()} (${o.mode}) created`);
+  o.wireServer?.setLobby({ raidId: S.raidId.toString(), raid: S.raid.toBase58(), mode: o.mode, slots: o.slots, humanSlots: o.humanSlots, phase: "lobby", joinDeadline: Date.now() + o.humanWaitSecs * 1000 });
 
   // Humans join from the client (join_raid); wait for their slots, then fill the rest with BOTs.
   if (o.humanSlots.length) {
@@ -60,6 +61,7 @@ export async function runRaid(o: RaidOptions) {
   }
   lap(`joined: humans ${JSON.stringify(humans)}, BOTs ${JSON.stringify(botSlots)}`);
 
+  o.wireServer?.patchLobby({ phase: "setup" });
   const delegated = await S.delegateAll();
   await S.connectTee();
   await S.teeSetup(delegated);
@@ -81,6 +83,7 @@ export async function runRaid(o: RaidOptions) {
   const startTs = Number(((await S.readRaid()) as unknown as { startTs: anchor.BN }).startTs.toString());
   const offset = ((await S.teeK.getBlockTime(await S.teeK.getSlot())) ?? Date.now() / 1000) - Date.now() / 1000;
   const elapsed = () => Date.now() / 1000 + offset - startTs;
+  o.wireServer?.patchLobby({ phase: "live", startTs });
   lap(`live (VRF ${vrfMs} ms${mystery ? `, mystery leaf ${(mysteryDay as { leafIndex: number }).leafIndex}` : ""})`);
 
   // THE WIRE: public facts only, read with a key that is never a permission member.
@@ -130,6 +133,7 @@ export async function runRaid(o: RaidOptions) {
   lap(`raid over; ticks ${tick.landed}/${tick.sent} (${tick.landedPct}%), p95 ${tick.p95} ms, max gap ${tick.maxGapMs} ms, stalls>1s ${tick.stallsOver1s}`);
 
   // Settlement: end_raid → finalize action; fallback settle_stuck_raid after 120 s.
+  o.wireServer?.patchLobby({ phase: "settling" });
   const endSig = await S.endRaid();
   let baseCommit = "";
   try { baseCommit = await GetCommitmentSignature(endSig, S.teeK); } catch (e) { baseCommit = `unavailable: ${String(e).slice(0, 80)}`; }
@@ -200,6 +204,7 @@ export async function runRaid(o: RaidOptions) {
     wire: { model: "claude-sonnet-5-5", stats: wireStats, live: wire.lines.filter((l) => l.tag !== "DEBRIEF"), debriefs, headlinesCited: debriefs.flatMap((d) => d.headlines ?? []) },
   };
   const pub = await publishReport(S, report);
+  o.wireServer?.patchLobby({ phase: "done", reportHash: pub.hash });
   lap(`report ${pub.hash} posted ${pub.sig}`);
   return { S, report, pub, tick, wire: wireStats };
 }

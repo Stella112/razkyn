@@ -1,0 +1,12 @@
+{
+  "programId": "CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97",
+  "mintAuth": "9WPyyGkTMrck6pts8KHoAtpnXftxAvJvXsAg7o16m1p1",
+  "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+  "mints": {
+    "dusd": "42S5iBrHQok4bNrvT2xrjK83xo8AcdZsf8ftMLqLqNwY",
+    "twr": "9SPhR2ufXCvcqChXsQb7s2HtERRPgmenY2uTo53sXHP3",
+    "fac": "BycRy1zKaDFX5Zp9jvADL8HNWvAHwyDUqrzzu7U4VzSc",
+    "hrb": "EKJA3eBBJEDkoxEMYBa7h3dncv8pFrDJAdmP5qMN7vua",
+    "play": "418Y8pTcoeyYKqPteZthTLnjnPqq4X7fLmRR6TDVv4wD"
+  }
+}

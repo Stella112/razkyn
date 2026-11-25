@@ -23,6 +23,9 @@ const out = await runRaid({
   hz: Number(arg("--hz", "10")),
   wireServer,
 });
-await wireServer.close();
 saveEvidence(`keeper-raid-${out.S.raidId.toString()}`, { reportHash: out.pub.hash, postReportSig: out.pub.sig, reportFile: out.pub.file, tick: out.tick, wire: out.wire });
+// Keep serving the lobby, report and WIRE lines so the client can show the reveal and debrief.
+const linger = Number(arg("--linger", "600"));
+if (linger > 0) { console.log(`serving the report and WIRE for ${linger} s (--linger)`); await new Promise((r) => setTimeout(r, linger * 1000)); }
+await wireServer.close();
 process.exit(0);
