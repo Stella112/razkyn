@@ -12,6 +12,7 @@ import {
 } from "../lib/chain";
 import { CSS, PAL, buildWorld, fow, type World } from "./three/world";
 import { CrateModel, ExitModel, LOOKS, Operator, TerminalModel } from "./three/actors";
+import { getTheme } from "./three/themes";
 
 export type Visible = { slot: number; x: number; y: number };
 export type SceneInput = {
@@ -115,7 +116,7 @@ export class RaidScene {
     this.renderer.domElement.style.display = "block";
     this.renderer.domElement.style.touchAction = "none";
 
-    this.world = buildWorld(this.renderer);
+    this.world = buildWorld(this.renderer, getTheme());
     this.scene = this.world.scene;
     this.camera = new THREE.PerspectiveCamera(36, 1, 0.5, 400);
     this.camera.position.set(MAP_W / 2, 30, MAP_H + 28);
@@ -455,13 +456,13 @@ export class RaidScene {
     const snap = !this.camInit || this.camTarget.distanceTo(target) > 12;
     this.camInit = true;
     this.camTarget.lerp(target, snap ? 1 : 1 - Math.exp(-dt * (focus ? 6 : 2)));
-    const dist = watch || !focus ? 2.35 : this.zoom;
-    const off = new THREE.Vector3(0, 11 * dist, 14 * dist); // ~38° down
+    const dist = watch || !focus ? 3.0 : this.zoom;
+    const off = new THREE.Vector3(0, 8.6 * dist, 10.8 * dist); // ~38° down, close like a street-level action game
     const want = this.camTarget.clone().add(off);
     this.camera.position.lerp(want, snap ? 1 : 1 - Math.exp(-dt * 8));
     this.shake *= Math.exp(-dt * 9);
     if (this.shake > 0.01) this.camera.position.add(new THREE.Vector3((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake, 0));
-    this.camera.lookAt(this.camTarget.x, 0.8, this.camTarget.z - 1.5);
+    this.camera.lookAt(this.camTarget.x, 0.9, this.camTarget.z - 1.0);
 
     // Effects.
     this.tracers = this.tracers.filter((tr) => { if (tr.until > t) { (tr.m.material as THREE.MeshBasicMaterial).opacity = (tr.until - t) / 110; return true; } this.scene.remove(tr.m); tr.m.geometry.dispose(); return false; });

@@ -13,6 +13,7 @@ import { getLobby, getReport, subscribeWire, verifyMystery, hex, type ReportFile
 import { startGame, type RaidScene } from "../game/RaidScene3D";
 import Market from "../game/Market";
 import Minimap from "../game/Minimap";
+import HowToPlay, { howToSeen } from "./HowToPlay";
 import { sfx } from "../lib/sfx";
 
 const RAID_SECS = 300;
@@ -79,6 +80,13 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const [channel, setChannel] = useState<{ label: string; start: number; ms: number } | null>(null);
   const [peek, setPeek] = useState<Peek | null>(null);
   const [trade, setTrade] = useState(false);
+  const [help, setHelp] = useState(() => !watch && !howToSeen());
+  useEffect(() => {
+    if (help) return;
+    const k = (e: KeyboardEvent) => { if (e.key.toLowerCase() === "h" && !(e.target as HTMLElement)?.closest?.("input,textarea")) setHelp(true); };
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, [help]);
   useEffect(() => {
     if (!trade) return;
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setTrade(false); };
@@ -474,6 +482,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
           {watch ? <span className="pill">WATCH · public only</span> : mySlot >= 0 ? <span className="pill live">RAIDER {mySlot + 1}</span> : null}
           <button className="act mute" title={muted ? "Sound off" : "Sound on"} onClick={() => setMuted(sfx.toggle())}>{muted ? "SND OFF" : "SND"}</button>
           <button className="act mute" title={voice ? "THE WIRE voice on" : "THE WIRE voice off"} onClick={toggleVoice} style={{ opacity: voice ? 1 : 0.5 }}>VOICE</button>
+          <button className="act mute help-btn" title="How to play (H)" onClick={() => setHelp(true)}>HELP</button>
         </div>
         {watch && raidId && <Market raidId={raidId} pub={pub} />}
         {!watch && mySlot >= 0 && (
@@ -574,6 +583,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
         <div className="overlay"><div className="card"><h3>Not your raid key</h3><p className="note">This browser has no raid key for raid {raidId}. Join from the lobby, or watch it.</p><div className="row"><button className="btn" onClick={() => navigate("/play")}>Lobby</button><button className="btn" onClick={() => navigate(`/watch/${raidId}`)}>Watch</button></div></div></div>
       )}
 
+      {help && <HowToPlay onClose={() => setHelp(false)} />}
       {/* trade picker */}
       {trade && mine?.rprv && (
         <div className="term-wrap" onClick={() => setTrade(false)}>

@@ -88,7 +88,7 @@ export class Operator {
     const barrel = box(0.04, 0.04, 0.32, mat(0x22282c, 0.4, 0.8)); barrel.position.z = 0.36; this.gun.add(barrel);
     const sight = box(0.02, 0.02, 0.1, this.visorMat); sight.position.set(0, 0.08, 0.05); this.gun.add(sight);
     this.muzzle.position.z = 0.54; this.gun.add(this.muzzle);
-    this.root.scale.setScalar(1.12);
+    this.root.scale.setScalar(1.3);
     // Class gear (hidden until setClass): Scout antenna + wide visor, Trader wrist terminal, Gunner long barrel + plates.
     const gearMat = mat(0x1a1f23, 0.5, 0.6);
     const antenna = box(0.015, 0.34, 0.015, gearMat); antenna.position.set(0.1, 0.3, -0.06); this.head.add(antenna);

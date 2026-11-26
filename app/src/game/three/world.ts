@@ -10,6 +10,7 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { DISTRICT_TILES, EXITS, HAZARD_ROWS, MAP_H, MAP_W, TERMINALS } from "../../lib/chain";
 import { dressCity } from "./dressing";
+import { LOOK, buildFarm, buildMall, paintThemedFloor, type Theme } from "./themes";
 
 /** Market Noir palette. */
 export const PAL = {
@@ -70,11 +71,13 @@ function canvasTex(w: number, h: number, draw: (c: CanvasRenderingContext2D) => 
 }
 
 /** The market floor: one texture for the whole 64 × 40 playfield, 32 px per tile. */
-function floorTexture() {
+function floorTexture(theme: Theme) {
   const P = 32;
   const r = rng(7);
   return canvasTex(MAP_W * P, MAP_H * P, (c) => {
     c.fillStyle = "#14191d"; c.fillRect(0, 0, MAP_W * P, MAP_H * P);
+    if (theme !== "street") paintThemedFloor(c, theme, P, r);
+    else {
     DISTRICT_TILES.forEach(([lo, hi], d) => {
       const x0 = lo * P, w = (hi - lo + 1) * P, H = MAP_H * P;
       if (d === 0) { // polished stone plaza: big slabs, silver seams
@@ -114,6 +117,7 @@ function floorTexture() {
       for (let y = 0; y < MAP_H * P; y += 6) { c.beginPath(); c.moveTo(cx * P, y); c.lineTo(cx * P + P, y); c.stroke(); }
       c.fillStyle = "rgba(217,172,101,0.7)";
       for (let y = 0; y < MAP_H * P; y += 40) { c.fillRect(cx * P, y, 4, 20); c.fillRect(cx * P + P - 4, y + 20, 4, 20); }
+    }
     }
     // Terminal pads.
     for (const [tx, ty] of TERMINALS) {
@@ -219,18 +223,19 @@ export type World = {
   embers: THREE.Points[];
   rain: THREE.LineSegments;
   steam: THREE.Points;
-  water: THREE.Mesh;
+  water: THREE.Mesh | null;
   tick: (t: number, dt: number, focus: THREE.Vector3) => void;
 };
 
-export function buildWorld(renderer: THREE.WebGLRenderer): World {
+export function buildWorld(renderer: THREE.WebGLRenderer, theme: Theme = "street"): World {
+  const L = LOOK[theme];
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(PAL.night);
-  scene.fog = new THREE.FogExp2(0x0c1216, 0.0085);
+  scene.background = new THREE.Color(L.bg);
+  scene.fog = new THREE.FogExp2(L.fog, L.fogD);
 
   // Lighting: cool moonlight (shadows on the playfield), dim sky fill, district market lights.
-  scene.add(new THREE.HemisphereLight(0x5a6e7c, 0x14181c, 1.9));
-  const moon = new THREE.DirectionalLight(0xc6d4e0, 2.4);
+  scene.add(new THREE.HemisphereLight(L.sky, L.ground, L.hemi));
+  const moon = new THREE.DirectionalLight(L.moon, L.moonI);
   moon.position.set(MAP_W / 2 - 18, 40, MAP_H / 2 + 22);
   moon.target.position.set(MAP_W / 2, 0, MAP_H / 2);
   moon.castShadow = true;
@@ -248,7 +253,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer): World {
   });
 
   // Floor.
-  const floorTex = floorTexture();
+  const floorTex = floorTexture(theme);
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(MAP_W, MAP_H),
     patchFow(new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.5, metalness: 0.18, envMapIntensity: 1.0 }), 0.62),
@@ -258,7 +263,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer): World {
   floor.receiveShadow = true;
   scene.add(floor);
   // Ground outside the playfield (streets / quay), slightly darker.
-  const outer = new THREE.Mesh(new THREE.PlaneGeometry(260, 200), new THREE.MeshStandardMaterial({ color: 0x0d1013, roughness: 0.5, metalness: 0.3 }));
+  const outer = new THREE.Mesh(new THREE.PlaneGeometry(260, 200), new THREE.MeshStandardMaterial({ color: L.outer, roughness: 0.6, metalness: 0.2 }));
   outer.rotation.x = -Math.PI / 2; outer.position.set(MAP_W / 2, -0.02, MAP_H / 2); outer.receiveShadow = true;
   scene.add(outer);
   // Curb around the playfield.
@@ -269,8 +274,12 @@ export function buildWorld(renderer: THREE.WebGLRenderer): World {
   ];
   scene.add(new THREE.Mesh(mergeGeometries(curbs), curbMat));
 
-  // City blocks (one merged mesh, one material).
   const r = rng(3);
+  const chimneys: [number, number][] = [[25, -10], [33, -12], [40, -9]];
+  let water: THREE.Mesh | null = null;
+  let themed: { tick: (t: number, dt: number) => void } | null = null;
+  if (theme === "street") {
+  // City blocks (one merged mesh, one material).
   const fac = facadeTextures();
   const facadeMat = new THREE.MeshStandardMaterial({ map: fac.map, emissiveMap: fac.emissive, emissive: 0xffffff, emissiveIntensity: 0.8, roughness: 0.55, metalness: 0.45 });
   const glassMat = new THREE.MeshStandardMaterial({ map: fac.map, emissiveMap: fac.emissive, emissive: 0xbfeee6, emissiveIntensity: 0.7, roughness: 0.18, metalness: 0.85 });
@@ -307,7 +316,6 @@ export function buildWorld(renderer: THREE.WebGLRenderer): World {
     g.rotateZ(Math.PI / 2); g.translate(x + 3.2, 9.4, -9 + k * 2.4);
     saw.push(g);
   }
-  const chimneys: [number, number][] = [[25, -10], [33, -12], [40, -9]];
   for (const [cx, cz] of chimneys) {
     const g = new THREE.CylinderGeometry(0.9, 1.3, 22, 12); g.translate(cx, 11, cz); pipes.push(g);
     const band = new THREE.CylinderGeometry(1.05, 1.05, 0.5, 12); band.translate(cx, 18, cz); pipes.push(band);
@@ -348,7 +356,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer): World {
   const craneMesh = new THREE.Mesh(mergeGeometries(crane), new THREE.MeshStandardMaterial({ color: 0x9a7b45, roughness: 0.55, metalness: 0.6 }));
   craneMesh.castShadow = true;
   scene.add(craneMesh);
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(90, 160), new THREE.MeshStandardMaterial({ color: 0x0a1418, roughness: 0.12, metalness: 0.9, envMapIntensity: 1.2 }));
+  water = new THREE.Mesh(new THREE.PlaneGeometry(90, 160), new THREE.MeshStandardMaterial({ color: 0x0a1418, roughness: 0.12, metalness: 0.9, envMapIntensity: 1.2 }));
   water.rotation.x = -Math.PI / 2; water.position.set(122, -0.4, 10);
   scene.add(water);
   const quay = new THREE.Mesh(cityBox(2, 0.6, 120, 78, -0.6, 10), curbMat);
@@ -369,6 +377,8 @@ export function buildWorld(renderer: THREE.WebGLRenderer): World {
     const h = new THREE.BoxGeometry(0.9, 0.12, 0.25); h.translate(x, 5, z); lampHeads.push(h);
   }
   scene.add(new THREE.Mesh(mergeGeometries(lampPosts), steelMat), new THREE.Mesh(mergeGeometries(lampHeads), lampMat));
+
+  } else themed = theme === "mall" ? buildMall(scene, r) : buildFarm(scene, r);
 
   // District signs (live district moves), mounted high on the north side, facing the camera.
   const signs = DISTRICT_TILES.map(([lo, hi]) => {
@@ -417,6 +427,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer): World {
   for (let i = 0; i < steamN; i++) { const c = chimneys[i % 3]; steamPos[i * 3] = c[0]; steamPos[i * 3 + 1] = 22 + r() * 10; steamPos[i * 3 + 2] = c[1]; }
   const steamGeo = new THREE.BufferGeometry(); steamGeo.setAttribute("position", new THREE.BufferAttribute(steamPos, 3));
   const steam = new THREE.Points(steamGeo, new THREE.PointsMaterial({ map: emberTex, color: 0x7d8a92, size: 3.2, transparent: true, opacity: 0.22, depthWrite: false }));
+  steam.visible = theme === "street";
   scene.add(steam);
 
   // Rain: streaks in a box that follows the camera focus.
@@ -428,6 +439,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer): World {
   const rainGeo = new THREE.BufferGeometry(); rainGeo.setAttribute("position", new THREE.BufferAttribute(rainPos, 3));
   const rain = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: 0x9fb2bd, transparent: true, opacity: 0.13, depthWrite: false }));
   rain.frustumCulled = false;
+  rain.visible = L.rain;
   scene.add(rain);
 
   // Environment reflections for wet metal.
@@ -439,9 +451,10 @@ export function buildWorld(renderer: THREE.WebGLRenderer): World {
   scene.environment = pmrem.fromScene(envScene, 0.04).texture;
   pmrem.dispose();
 
-  const dressing = dressCity(scene);
+  const dressing = theme === "street" ? dressCity(scene) : null;
   const tick = (t: number, dt: number, focus: THREE.Vector3) => {
-    dressing.tick(dt, focus);
+    dressing?.tick(dt, focus);
+    themed?.tick(t, dt);
     // Rain falls and wraps around the focus.
     const a = rainGeo.attributes.position as THREE.BufferAttribute;
     const arr = a.array as Float32Array;
@@ -469,7 +482,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer): World {
       for (let i = 0; i < ea.length; i += 3) { ea[i + 1] += dt * (0.8 + ((i / 3) % 7) * 0.15); if (ea[i + 1] > 3.2) ea[i + 1] = 0; }
       e.needsUpdate = true;
     }
-    (water.material as THREE.MeshStandardMaterial).roughness = 0.1 + 0.04 * Math.sin(t / 900);
+    if (water) (water.material as THREE.MeshStandardMaterial).roughness = 0.1 + 0.04 * Math.sin(t / 900);
   };
 
   return { scene, floor, districtLights, signs, hazards, embers, rain, steam, water, tick };

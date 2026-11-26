@@ -106,6 +106,17 @@ export function dressCity(scene: THREE.Scene) {
   const steam = new THREE.Points(sg, new THREE.PointsMaterial({ map: steamTex, color: 0x9aa8b0, size: 1.4, transparent: true, opacity: 0.14, depthWrite: false }));
   scene.add(steam);
 
+  // Overhead lantern cables across the market (high above head height: thin, never block a view).
+  const cableMat = new THREE.MeshStandardMaterial({ color: 0x15191c, roughness: 0.6, metalness: 0.4 });
+  const bulbs: THREE.BufferGeometry[] = [], cables: THREE.BufferGeometry[] = [];
+  for (const z of [7, 15, 25, 33]) {
+    const pts = [new THREE.Vector3(-1.4, 5.2, z), new THREE.Vector3(MAP_W / 4, 4.2, z + 0.4), new THREE.Vector3(MAP_W / 2, 4.6, z - 0.3), new THREE.Vector3((MAP_W * 3) / 4, 4.2, z + 0.4), new THREE.Vector3(MAP_W + 1.4, 5.2, z)];
+    const curve = new THREE.CatmullRomCurve3(pts);
+    cables.push(new THREE.TubeGeometry(curve, 60, 0.025, 4));
+    for (let k = 0.02; k < 1; k += 0.025) { const p = curve.getPoint(k); const b = new THREE.SphereGeometry(0.05, 6, 4); b.translate(p.x, p.y - 0.12, p.z); bulbs.push(b); }
+  }
+  scene.add(new THREE.Mesh(mergeGeometries(cables), cableMat), new THREE.Mesh(mergeGeometries(bulbs), new THREE.MeshBasicMaterial({ color: 0xe8b86a, toneMapped: false })));
+
   return {
     /** Occlusion: fade the gantries while the focus is close to a corridor (camera is south of it). */
     tick(dt: number, focus?: THREE.Vector3) {

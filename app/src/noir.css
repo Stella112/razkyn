@@ -128,3 +128,36 @@ body { background: #0b0f12; letter-spacing: 0.005em; }
 .term-btn:hover:not(:disabled) { background: #45C9B2; color: #08140f; }
 .term-btn:disabled { opacity: 0.3; cursor: default; }
 .term-warn { margin-top: 8px; font-size: 10.5px; letter-spacing: 0.06em; color: #E4514E; }
+
+/* ---------- how to play ---------- */
+.howto-wrap { position: fixed; inset: 0; z-index: 50; background: rgba(6, 8, 10, 0.78); display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
+.howto { width: min(980px, 100%); max-height: 100%; overflow-y: auto; background: #10151a; border: 1px solid rgba(200, 210, 209, 0.18); border-top: 3px solid #D9AC65; padding: 18px 22px; color: var(--text); }
+.howto-head { display: flex; justify-content: space-between; align-items: center; font-family: var(--display); font-weight: 800; letter-spacing: 0.2em; font-size: 26px; }
+.howto-goal { font-size: 14.5px; line-height: 1.6; color: #cfd8d7; margin: 8px 0 14px; }
+.c-amber { color: #D9AC65; }
+.howto-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 22px; }
+@media (max-width: 780px) { .howto-grid { grid-template-columns: 1fr; } }
+.howto-step { border-left: 3px solid #D9AC65; padding: 4px 0 4px 12px; margin-bottom: 10px; }
+.hs-t { font-family: var(--display); font-weight: 800; letter-spacing: 0.16em; font-size: 15px; }
+.hs-d { font-size: 13px; line-height: 1.55; color: #aab5b8; }
+.howto-sub { font-family: var(--display); font-weight: 700; letter-spacing: 0.2em; font-size: 12px; color: var(--dim); margin-bottom: 6px; }
+.legend { display: grid; grid-template-columns: 22px 64px 1fr; gap: 8px; align-items: center; font-size: 12.5px; color: #aab5b8; margin-bottom: 6px; }
+.legend b { font-family: var(--display); letter-spacing: 0.12em; color: var(--text); font-size: 13px; }
+.legend .sw { width: 18px; height: 12px; display: inline-block; }
+.legend .sym { font-size: 11px; color: var(--text); }
+.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 12.5px; color: #aab5b8; }
+.controls kbd { font-family: var(--mono); font-size: 11px; border: 1px solid rgba(200, 210, 209, 0.3); padding: 1px 6px; margin-right: 8px; color: var(--text); }
+.theme-pick { display: flex; gap: 6px; margin-top: 18px; align-items: center; }
+.theme-pick .tp-l { font-family: var(--display); font-weight: 700; letter-spacing: 0.2em; font-size: 12px; color: var(--dim); margin-right: 4px; }
+.theme-pick button { font-family: var(--display); font-weight: 700; letter-spacing: 0.14em; font-size: 13px; padding: 6px 12px; background: rgba(16, 21, 26, 0.8); color: var(--dim); border: 1px solid rgba(200, 210, 209, 0.2); cursor: pointer; }
+.theme-pick button.on { color: #10151a; background: #D9AC65; border-color: #D9AC65; }
+.theme-blurb { font-size: 12px; color: var(--dim); margin-top: 6px; max-width: 420px; }
+.help-btn { pointer-events: auto; }
+
+.training-theme { position: absolute; left: 12px; top: 48px; z-index: 5; background: rgba(11,15,18,0.8); padding: 2px 10px 8px; }
+.training-theme .theme-pick { margin-top: 6px; }
+@media (max-height: 820px) {
+  .menu-item { padding: 6px 14px; } .menu-item.primary { padding: 10px 18px; } .mi-label { font-size: 20px; } .menu-item.primary .mi-label { font-size: 28px; }
+  .mi-sub { font-size: 11.5px; } .logo-sub { margin: 8px 0 14px 26px; } .logo-text { font-size: clamp(48px, 7vw, 84px); } .wick { height: clamp(54px, 7vw, 84px); }
+  .theme-pick { margin-top: 10px; } .title-menu { top: 46%; }
+}

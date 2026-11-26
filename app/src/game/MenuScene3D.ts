@@ -7,8 +7,9 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { CSS, PAL, buildWorld } from "./three/world";
 import { CrateModel, ExitModel, LOOKS, Operator, TerminalModel } from "./three/actors";
+import type { Theme } from "./three/themes";
 
-export function startMenuScene(parent: HTMLElement) {
+export function startMenuScene(parent: HTMLElement, theme: Theme = "street") {
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -19,7 +20,7 @@ export function startMenuScene(parent: HTMLElement) {
   parent.appendChild(renderer.domElement);
   renderer.domElement.style.display = "block";
 
-  const world = buildWorld(renderer);
+  const world = buildWorld(renderer, theme);
   const scene = world.scene;
   world.signs.forEach((s, i) => s.draw(["TOWER", "FACTORY", "HARBOR"][i], "MARKET OPEN 24/7", [CSS.teal, CSS.amber, CSS.silver][i]));
   world.districtLights.forEach((l, i) => { l.color.setHex([PAL.teal, PAL.amber, PAL.red][i]); l.intensity = 34; });
