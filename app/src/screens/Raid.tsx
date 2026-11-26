@@ -10,7 +10,7 @@ import {
 import { programError } from "../lib/errors";
 import { explorerTx } from "../lib/config";
 import { getLobby, getReport, subscribeWire, verifyMystery, hex, type ReportFile, type WireLine } from "../lib/keeper";
-import { startGame, type RaidScene } from "../game/RaidScene";
+import { startGame, type RaidScene } from "../game/RaidScene3D";
 import Market from "../game/Market";
 import { sfx } from "../lib/sfx";
 
@@ -208,7 +208,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       const tier = gain >= 2_000_000 ? "JACKPOT" : gain >= 1_000_000 ? "RARE" : "";
       pop(`${tier ? tier + " " : ""}+${(gain / 1e6).toFixed(2)} dUSD`);
       sfx.loot(); if (tier) setTimeout(() => sfx.loot(), 160); if (tier === "JACKPOT") setTimeout(() => sfx.extract(), 320);
-      if (tier) { sceneRef.current()?.burst({ x: mine!.rprv!.x, y: mine!.rprv!.y }, tier === "JACKPOT" ? 0xff2bd6 : 0x22f2ff, tier === "JACKPOT" ? 90 : 55); }
+      if (tier) { sceneRef.current()?.burst({ x: mine!.rprv!.x, y: mine!.rprv!.y }, tier === "JACKPOT" ? 0xd9ac65 : 0x45c9b2, tier === "JACKPOT" ? 90 : 55); }
       const sc = sceneRef.current();
       if (sc && mine?.rprv) { sc.burst({ x: mine.rprv.x, y: mine.rprv.y }); sc.popText({ x: mine.rprv.x, y: mine.rprv.y }, `+${(gain / 1e6).toFixed(2)}`); }
     }
@@ -327,7 +327,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       await player.send(await player.finishExtractIx());
       say("EXTRACTED: your backpack settles to your wallet", 3500);
       sfx.extract();
-      sceneRef.current()?.burst(me, 0xb6ff3b, 60);
+      sceneRef.current()?.burst(me, 0x45c9b2, 60);
     } catch (e) { say(programError(e)); } finally { setChannel(null); }
   };
 

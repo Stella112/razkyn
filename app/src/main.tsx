@@ -7,6 +7,7 @@ import App from "./App";
 import { BASE_RPC } from "./lib/config";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import "./styles.css";
+import "./noir.css";
 import { spoilerScan } from "./lib/spoilerScan";
 
 // Test 9 hooks (only with ?record=1): WIRE lines are recorded too, and the scan runs on demand.

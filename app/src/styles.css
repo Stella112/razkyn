@@ -1,27 +1,28 @@
 /* RAZKYN — neon night market. */
 :root {
-  --bg: #07051a;
-  --bg2: #0d0a26;
-  --bg3: #140f36;
-  --panel: rgba(16, 11, 44, 0.82);
-  --line: rgba(120, 90, 255, 0.22);
-  --line2: rgba(160, 120, 255, 0.42);
-  --text: #f2ecff;
-  --dim: #a59bd0;
-  --faint: #5f5590;
-  --magenta: #ff2bd6;
-  --cyan: #22f2ff;
-  --acid: #b6ff3b;
-  --up: #3dffa0;
-  --down: #ff3b6b;
-  --amber: #ffc53d;
-  --violet: #9b7bff;
-  --display: "Bungee", "Space Grotesk", system-ui, sans-serif;
+  /* Market Noir (docs/STYLE_GUIDE.md). Legacy names kept so components need no rename. */
+  --bg: #0b0f12;
+  --bg2: #10151a;
+  --bg3: #182026;
+  --panel: rgba(16, 21, 26, 0.9);
+  --line: rgba(200, 210, 209, 0.12);
+  --line2: rgba(200, 210, 209, 0.24);
+  --text: #e3e9e8;
+  --dim: #95a1a6;
+  --faint: #56636a;
+  --magenta: #d9ac65;   /* primary accent = loot amber */
+  --cyan: #45c9b2;      /* market teal */
+  --acid: #45c9b2;
+  --up: #45c9b2;
+  --down: #e4514e;
+  --amber: #d9ac65;
+  --violet: #8a979d;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --sans: "Space Grotesk", system-ui, -apple-system, Segoe UI, sans-serif;
-  --glow-m: 0 0 6px rgba(255, 43, 214, 0.9), 0 0 22px rgba(255, 43, 214, 0.55);
-  --glow-c: 0 0 6px rgba(34, 242, 255, 0.9), 0 0 22px rgba(34, 242, 255, 0.5);
-  --glow-a: 0 0 6px rgba(182, 255, 59, 0.9), 0 0 22px rgba(182, 255, 59, 0.45);
+  --sans: "Inter", system-ui, -apple-system, Segoe UI, sans-serif;
+  --glow-m: none;
+  --glow-c: none;
+  --glow-a: none;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -285,3 +286,9 @@ table.t th { color: var(--dim); font-weight: 600; font-size: 11px; letter-spacin
 .event-banner { position: absolute; top: 58px; left: 50%; transform: translateX(-50%); z-index: 6; padding: 6px 14px; border-radius: 8px; font-family: "Bungee", sans-serif; letter-spacing: 1px; font-size: 14px; background: rgba(20, 6, 30, 0.85); border: 1px solid #ffc400; color: #ffc400; box-shadow: 0 0 22px rgba(255, 196, 0, 0.35); pointer-events: none; white-space: nowrap; }
 .event-banner.halt { border-color: #ff3b6b; color: #ff3b6b; box-shadow: 0 0 22px rgba(255, 59, 107, 0.4); }
 @media (max-width: 560px) { .event-banner { font-size: 11px; top: 50px; } }
+
+/* ---------- training ground ---------- */
+.training-bar { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; gap: 14px; align-items: center; z-index: 5; pointer-events: none; }
+.training-bar a { pointer-events: auto; }
+.tag { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; padding: 4px 8px; border: 1px solid rgba(217,172,101,0.6); color: #D9AC65; background: rgba(16,21,26,0.8); }
+.prompt { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); z-index: 5; padding: 8px 16px; background: rgba(16,21,26,0.82); border-left: 3px solid #D9AC65; color: #C8D2D1; font-family: var(--mono); font-size: 13px; pointer-events: none; white-space: nowrap; }
