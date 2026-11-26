@@ -6,6 +6,33 @@ Eight raiders drop into a 64 × 40 map for five minutes. The map is the market: 
 
 > Devnet demo. dUSD, dTWR, dFAC, dHRB and dPLAY are devnet stand-in tokens, not shares and not real money. BOT raiders are labelled BOT everywhere.
 
+## Why MagicBlock
+
+**The problem.** Extraction games are huge, but their loot is worthless outside the game. Trading apps are real, but they feel like casinos. Fantasy stock games teach the market, but nothing you win is real.
+
+**Who has it.** Extraction-game players who grind for loot they can never own, and crypto-curious players who want market stakes with game mechanics instead of a trading terminal.
+
+**Best alternatives and the pain they leave in place**
+| Alternative | What still hurts |
+|---|---|
+| Web2 game server | Players must trust the operator not to peek at loot, rig crates or backdate moves. Prizes are custodied points |
+| Plain Solana | ~400 ms confirmations are too slow for live combat, every move costs a fee, and every backpack is public |
+| Another fast chain | Cut off from Solana wallets, SPL tokens and the tokenized-asset rails the loot settles into |
+
+**Edge.** Only a TEE-backed rollup at ~10–20 ms of execution time (measured in spike S2, on top of network round trip) lets 8 players fight over hidden, real assets in a live market, where no rival can peek and every move is timestamped onchain.
+
+**What each MagicBlock piece does in RAZKYN**
+| Piece | Job |
+|---|---|
+| Private Ephemeral Rollup (TEE) + permissions | Fog of war, sealed crates, private backpacks, the secret mystery day. "Try to peek" shows the refusal live |
+| Ephemeral Rollup execution | Gasless movement, shooting, trading and looting at 10 Hz (100 ms ticks; from the game server 5,908/5,908 ticks landed in a 300 s raid, p95 376 ms including network) |
+| VRF | Spawns, crate contents, exits and the mystery-day pick, verifiable on the report page |
+| MagicBlock Pricing Oracle (read on the TEE with full validation) | Live-mode district prices |
+| Commit + Magic Action | One settlement commit; per-raider claims that can't pay twice, with a recovery path anyone can trigger |
+| Raid keys | One wallet signature to join, then no popups |
+
+**Honest limits.** Devnet only. dTWR/dFAC/dHRB are devnet demo tokens, not shares. The keeper is the game operator and holds permission to private state (like a game server). THE WIRE never does.
+
 ## How to play
 
 1. **Lobby** (`/play`): connect Phantom or Solflare (or the labelled devnet dev wallet). One signature fauceted 10 dUSD if needed and stakes it: 4.0 protected slot, 5.5 loot pool, 0.5 ops.
