@@ -4,7 +4,7 @@ import type { Connection, Keypair } from "@solana/web3.js";
 import { navigate } from "../App";
 import {
   CLASSES, EXITS, MAP_H, MAP_W, MARKET_EVENTS, NUM_CRATES, P, PRICE_ONE, RaidPlayer, TERMINALS, UNIT, districtNames, rangeTiles,
-  HAZARD_ROWS, backpackValue, changeBps, districtOfX, raidKeyFor, readMine, readPublic, readRaidBase, teeAuthed, teePublic,
+  HAZARD_ROWS, backpackValue, changeBps, districtOfX, raidKeyFor, readMine, readPublic, readRaidBase, readSettlement, teeAuthed, teePublic,
   type PublicState, type RprvAcc, type ViewAcc,
 } from "../lib/chain";
 import { programError } from "../lib/errors";
@@ -461,11 +461,14 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   // permissionless recovery path) → claims paid. Read from the base copy of the Raid account.
   const endedAt = useRef(0);
   if (ended && !endedAt.current) endedAt.current = Date.now();
-  const [baseRaid, setBaseRaid] = useState<{ status: number; settled: boolean } | null>(null);
+  const [baseRaid, setBaseRaid] = useState<{ status: number; settled: boolean; via: number } | null>(null);
   useEffect(() => {
     if (!ended || (baseRaid?.settled && report)) return;
     let stop = false;
-    const f = async () => { const b = await readRaidBase(raidId).catch(() => null); if (!stop && b) setBaseRaid({ status: b.status, settled: !!b.settled }); };
+    const f = async () => {
+      const [b, st] = await Promise.all([readRaidBase(raidId).catch(() => null), readSettlement(raidId).catch(() => null)]);
+      if (!stop && b) setBaseRaid({ status: b.status, settled: !!st?.settled, via: st?.settledVia ?? 0 });
+    };
     f();
     const i = setInterval(f, 3000);
     return () => { stop = true; clearInterval(i); };
@@ -827,9 +830,9 @@ function TouchStick({ onMove }: { onMove: (x: number, y: number) => void }) {
 /** Every settlement state, from the base layer: pending → committed → settled (Magic Action, or the
  *  permissionless settle_stuck_raid recovery after 120 s) → paid. "Failed" shows if nothing has
  *  settled 10 minutes after the end; anyone can still call settle_stuck_raid, and claims are idempotent. */
-function SettleSteps({ ended, base, paid, endedAt, now }: { ended: boolean; base: { status: number; settled: boolean } | null; paid: boolean; endedAt: number; now: number }) {
+function SettleSteps({ ended, base, paid, endedAt, now }: { ended: boolean; base: { status: number; settled: boolean; via: number } | null; paid: boolean; endedAt: number; now: number }) {
   if (!ended) return null;
-  const committed = !!base && base.status >= 3;
+  const committed = (!!base && base.status >= 3) || paid;
   const settled = !!base?.settled;
   const waited = endedAt ? (now - endedAt) / 1000 : 0;
   const recovering = committed && !settled && waited > 120;
@@ -837,7 +840,7 @@ function SettleSteps({ ended, base, paid, endedAt, now }: { ended: boolean; base
   const steps: [string, boolean, string][] = [
     ["RAID ENDED", true, "final state frozen on the Private ER"],
     ["COMMITTED", committed || settled, "results committed to Solana"],
-    [recovering ? "RECOVERING" : "SETTLED", settled, recovering ? "Magic Action missed · settle_stuck_raid path" : "Magic Action finalize_raid"],
+    [recovering ? "RECOVERING" : "SETTLED", settled, recovering ? "Magic Action missed · settle_stuck_raid path" : base?.via === 2 ? "recovered by settle_stuck_raid" : "Magic Action finalize_raid"],
     ["PAID", paid, "claims sent to every wallet"],
   ];
   const cur = steps.findIndex((x) => !x[1]);

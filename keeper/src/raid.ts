@@ -66,7 +66,7 @@ export async function runRaid(o: RaidOptions) {
       const r = (await S.P.account.raid.fetch(S.raid)) as unknown as { raiders: { joined: boolean; wallet: PublicKey; rawKey: PublicKey }[] };
       if (o.humanSlots.every((s) => r.raiders[s].joined) || Date.now() > until) break;
       const joinedHumans = o.humanSlots.filter((s) => r.raiders[s].joined);
-      if (o.wireServer?.allReady(S.raidId.toString(), joinedHumans)) { lap(`all joined players READY (${JSON.stringify(joinedHumans)}): dropping early`); break; }
+      if (o.wireServer?.allReady(S.raidId.toString(), joinedHumans)) { lap(`all joined players READY (${JSON.stringify(joinedHumans)}): dropping early`); o.wireServer?.patchLobby({ joinDeadline: Date.now() }); break; }
       await sleep(2000);
     }
   }

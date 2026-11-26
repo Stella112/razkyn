@@ -288,3 +288,8 @@ export const changeBps = (d: DistrictAcc | null) => {
 /** Backpack value in dUSD base units at current district prices (units × index / 10^6). */
 export const backpackValue = (bp: BN[] | undefined, ds: (DistrictAcc | null)[]) =>
   (bp ?? []).reduce((a, u, i) => a + (Number(u.toString()) * Number(ds[i]?.currentPrice.toString() ?? PRICE_ONE)) / PRICE_ONE, 0);
+
+/** Base-layer settlement record ["settle", raid_id]: settled flag and how (1 = Magic Action finalize_raid, 2 = settle_stuck_raid recovery). */
+export async function readSettlement(id: string) {
+  return decode<{ settled: boolean; settledVia: number }>("settlement", (await base.getAccountInfo(P.settlement(id)))?.data);
+}

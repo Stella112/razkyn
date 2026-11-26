@@ -21,7 +21,7 @@ const COLOURS: [string, string, string][] = [
 ];
 const CONTROLS: [string, string][] = [
   ["WASD / arrows", "move"], ["Mouse", "aim"], ["Click", "shoot"], ["E", "open crate / trade at terminal"],
-  ["Hold Space", "extract on an open exit"], ["Wheel", "zoom"], ["H", "this guide"], ["Phone", "left stick + on-screen buttons"],
+  ["Hold Space", "extract on an open exit"], ["Wheel", "zoom"], ["H", "this guide"], ["Tab", "inventory"], ["M", "full map"], ["Phone", "left stick + on-screen buttons"],
 ];
 
 export default function HowToPlay({ onClose }: { onClose: () => void }) {

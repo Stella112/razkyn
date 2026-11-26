@@ -61,7 +61,7 @@ export default function Settings() {
         </div>
         <div className="card" style={{ marginTop: 16 }}>
           <h3>CONTROLS</h3>
-          <div className="kv">{CONTROLS.map(([k, v]) => [<span key={k} className="mono">{k}</span>, <span key={k + "v"}>{v}</span>])}</div>
+          <div className="kv settings-keys" style={{ gridTemplateColumns: "190px 1fr" }}>{CONTROLS.map(([k, v]) => [<span key={k} className="mono">{k}</span>, <span key={k + "v"}>{v}</span>])}</div>
         </div>
       </div>
     </div>
