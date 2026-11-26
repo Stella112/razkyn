@@ -26,6 +26,8 @@ export type GameWallet = {
   label: string;
   /** Sign with the wallet and send to the base layer; resolves when confirmed. */
   signAndSend: (tx: Transaction) => Promise<string>;
+  /** Sign only (no send), e.g. a co-signature on a rollup transaction. */
+  signTx: (tx: Transaction) => Promise<Transaction>;
   enableDev: () => void;
 };
 
@@ -42,6 +44,7 @@ export function useGameWallet(): GameWallet {
       return {
         publicKey: adapter.publicKey, kind: "adapter", label: adapter.wallet?.adapter.name ?? "Wallet",
         signAndSend: async (tx) => confirm(await adapter.sendTransaction(tx, connection), tx),
+        signTx: async (tx) => { if (!adapter.signTransaction) throw new Error("this wallet cannot sign without sending"); return adapter.signTransaction(tx); },
         enableDev: () => setDev(devKeypair()),
       };
     }
@@ -53,9 +56,10 @@ export function useGameWallet(): GameWallet {
           tx.sign(dev);
           return confirm(await connection.sendRawTransaction(tx.serialize()), tx);
         },
+        signTx: async (tx) => { tx.partialSign(dev); return tx; },
         enableDev: () => {},
       };
     }
-    return { publicKey: null, kind: null, label: "", signAndSend: () => Promise.reject(new Error("no wallet")), enableDev: () => setDev(devKeypair()) };
-  }, [adapter.publicKey, adapter.sendTransaction, adapter.wallet, connection, dev]);
+    return { publicKey: null, kind: null, label: "", signAndSend: () => Promise.reject(new Error("no wallet")), signTx: () => Promise.reject(new Error("no wallet")), enableDev: () => setDev(devKeypair()) };
+  }, [adapter.publicKey, adapter.sendTransaction, adapter.signTransaction, adapter.wallet, connection, dev]);
 }

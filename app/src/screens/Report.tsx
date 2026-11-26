@@ -146,6 +146,47 @@ export default function Report({ raidId }: { raidId: string }) {
               </p>
             </div>
 
+            {r.awards && (
+              <div className="card">
+                <h3>Awards · from recorded results</h3>
+                <div className="awards">
+                  {r.awards.topRaider && <div className="award"><span className="aw-k">TOP RAIDER</span><b>{r.awards.topRaider.who}</b><span>{(r.awards.topRaider.value / 1e6).toFixed(2)} dUSD total payout</span></div>}
+                  {r.awards.biggestExtraction && <div className="award"><span className="aw-k">BIGGEST EXTRACTION</span><b>{r.awards.biggestExtraction.who}</b><span>{(r.awards.biggestExtraction.backpack / 1e6).toFixed(2)} dUSD backpack banked</span></div>}
+                  {r.awards.mostDramaticEscape && <div className="award"><span className="aw-k">MOST DRAMATIC ESCAPE</span><b>{r.awards.mostDramaticEscape.who}</b><span>extracted on {r.awards.mostDramaticEscape.hp} HP</span></div>}
+                  {r.awards.mostKnockouts && <div className="award"><span className="aw-k">MOST KNOCKOUTS</span><b>{r.awards.mostKnockouts.who}</b><span>{r.awards.mostKnockouts.kills} knockout{r.awards.mostKnockouts.kills === 1 ? "" : "s"}</span></div>}
+                  {r.awards.topSpectator && <div className="award"><span className="aw-k">TOP SPECTATOR</span><b className="mono">{r.awards.topSpectator.wallet.slice(0, 4)}…{r.awards.topSpectator.wallet.slice(-4)}</b><span>{r.awards.topSpectator.correct}/{r.awards.topSpectator.picks} correct · streak {r.awards.topSpectator.bestStreak}</span></div>}
+                </div>
+              </div>
+            )}
+
+            {r.livePicks && (
+              <div className="card">
+                <h3>RAZKYN LIVE · on-chain spectator picks</h3>
+                <p className="note">{r.livePicks.rules}</p>
+                <div className="kv" style={{ marginBottom: 8 }}>
+                  <span>Pick book</span><span className="mono"><a href={explorerAddr(r.livePicks.book)} target="_blank" rel="noreferrer">{r.livePicks.book.slice(0, 8)}… ↗</a> {r.livePicks.status === 1 ? "· committed to Solana" : r.livePicks.status === 2 ? "· cancelled (refunded)" : ""}</span>
+                  {r.livePicks.sigs?.create && <><span>Created / delegated</span><span className="mono"><a href={explorerTx(String(r.livePicks.sigs.create))} target="_blank" rel="noreferrer">create ↗</a> · <a href={explorerTx(String(r.livePicks.sigs.delegate))} target="_blank" rel="noreferrer">delegate ↗</a></span></>}
+                  {r.livePicks.sigs?.crank && <><span>Resolve crank</span><span className="mono" style={{ fontSize: 12 }}>{String(r.livePicks.sigs.crank).slice(0, 20)}… <span className="dim">(TEE tx)</span></span></>}
+                  {Array.isArray(r.livePicks.sigs?.badgeClaims) && r.livePicks.sigs.badgeClaims.length > 0 && <><span>Badge claims</span><span>{(r.livePicks.sigs.badgeClaims as string[]).map((s) => <a key={s} href={explorerTx(s)} target="_blank" rel="noreferrer" className="mono" style={{ marginRight: 8 }}>{s.slice(0, 8)}… ↗</a>)}</span></>}
+                </div>
+                <table className="t">
+                  <thead><tr><th>Pick</th><th>Outcome</th><th>Picks</th><th>Called it</th><th>Paid</th></tr></thead>
+                  <tbody>
+                    {(r.livePicks.pools as { pool: number; name: string; choices: string[]; outcome: number; bets: number; pct: number; mult: number }[]).map((p) => (
+                      <tr key={p.pool}>
+                        <td>{p.name}</td>
+                        <td>{p.outcome === 254 ? "refunded" : p.outcome === 255 ? "—" : p.pool >= 8 && p.pool < 13 && p.outcome < 3 ? DN[p.outcome] : p.choices[p.outcome]}</td>
+                        <td className="mono">{p.bets}</td><td className="mono">{p.pct}%</td><td className="mono">{p.mult ? `${p.mult.toFixed(1)}×` : "refund"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {(r.livePicks.leaderboard as { wallet: string; picks: number; correct: number; bestStreak: number; credits: number; badge: number; badgeClaimed: boolean }[]).slice(0, 10).map((x, i) => (
+                  <div key={x.wallet} className="mono" style={{ fontSize: 12 }}>{i + 1}. {x.wallet.slice(0, 4)}…{x.wallet.slice(-4)} · {x.correct}/{x.picks} correct · streak {x.bestStreak} · {x.credits} credits{x.badge ? ` · badge #${x.badge}${x.badgeClaimed ? " minted" : ""}` : ""}</div>
+                ))}
+              </div>
+            )}
+
             {r.spectators && (
               <div className="card">
                 <h3>EXTRACTION MARKET · dPLAY PLAY-MONEY</h3>

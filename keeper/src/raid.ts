@@ -15,6 +15,9 @@ import { Ticker, type TickStats } from "./ticker.ts";
 import { publishReport } from "./report.ts";
 import { claimAll } from "./claimer.ts";
 import { BetBook } from "./bets.ts";
+import { LivePicks, NUM_POOLS, POOL_CHOICES, POOL_NAMES, UNRESOLVED, boardOf, poolStats, type Book } from "./livepicks.ts";
+/** The pick book of the raid in progress (serve mode cancels it if the raid fails). */
+export let activePicks: LivePicks | null = null;
 import { PublicFeed } from "../wire/facts.ts";
 import { Wire, loadHeadlines, type WireLine } from "../wire/wire.ts";
 import type { WireServer } from "../wire/server.ts";
@@ -43,6 +46,11 @@ export async function runRaid(o: RaidOptions) {
 
   await S.createRaid(o.slots);
   lap(`raid ${S.raidId.toString()} ${S.raid.toBase58()} (${o.mode}) created`);
+  // RAZKYN LIVE: on-chain pick book, created in the lobby and delegated to the TEE (DECISIONS #39).
+  const live = new LivePicks(S);
+  let picksOn = false;
+  try { await live.createAndDelegate(); picksOn = true; activePicks = live; lap("pick book created + delegated"); }
+  catch (e) { lap(`pick book not created (${String(e).slice(0, 100)}); LIVE picks off for this raid`); }
   // Extraction Market: spectators can bet dPLAY from now until 270 s into the raid.
   const book = new BetBook(S, S.raidId.toString(), Math.floor(Date.now() / 1000) + 3600);
   await book.ensureAta().catch((e) => lap(`bet book: keeper dPLAY account not ready (${String(e).slice(0, 80)})`));
@@ -112,6 +120,36 @@ export async function runRaid(o: RaidOptions) {
   await feed.start();
   wire.start();
 
+  // RAZKYN LIVE: crank resolves every second; the keeper also resolves (fallback) and narrates opens/results.
+  let picksLoop: Promise<void> = Promise.resolve();
+  let picksRunning = picksOn;
+  if (picksOn) {
+    await live.scheduleCrank().then(() => lap("pick crank scheduled (resolve_picks every 1 s)")).catch((e) => lap(`pick crank not scheduled: ${String(e).slice(0, 100)}`));
+    const announced = new Set<number>(), opened = new Set<string>();
+    picksLoop = (async () => {
+      while (picksRunning) {
+        try {
+          await live.resolve().catch(() => null);
+          const b = await live.read();
+          const t = Math.max(0, Math.floor(elapsed()));
+          // Opens: NEXT CRACK every 60 s (5 s to pick), KNOCKOUT every 30 s (3 s to pick).
+          for (const [kind, every, lock] of [[0, 60, 5], [1, 30, 3]] as const) {
+            const w = Math.floor(t / every), key = `${kind}:${w}`;
+            if (t - w * every < lock && !opened.has(key) && w < (kind === 0 ? 5 : 10)) { opened.add(key); wire.push({ kind: "pick_open", t, pick: kind, window: w, lockIn: w * every + lock - t }); }
+          }
+          for (let p = 0; b && p < NUM_POOLS; p++) {
+            if (announced.has(p) || b.outcome[p] === UNRESOLVED) continue;
+            announced.add(p);
+            const st = poolStats(b, p);
+            if (!st.bets) continue; // announce only picks somebody made
+            wire.push({ kind: "pick_result", t, pick: p < 8 ? 2 : p < 13 ? 0 : 1, window: p < 8 ? p : p < 13 ? p - 8 : p - 13, outcome: b.outcome[p], pct: st.pct, mult10: Math.round(st.mult * 10), bets: st.bets });
+          }
+        } catch { /* transient */ }
+        await sleep(2000);
+      }
+    })();
+  }
+
   const ticker = new Ticker(S, o.hz);
   const tickMode = await ticker.start();
   const crew = new BotCrew(S, botSlots, elapsed, Number(S.raidId.toString().slice(-6)), humans.length);
@@ -140,6 +178,13 @@ export async function runRaid(o: RaidOptions) {
     await sleep(2000);
   }
   const tick: TickStats = await ticker.stop();
+  // RAZKYN LIVE: resolve the rest, close (VRF streak badges + commit to Solana) BEFORE end_raid takes the raid off the TEE.
+  picksRunning = false;
+  await picksLoop;
+  let finalBook: Book | null = null;
+  if (picksOn) finalBook = await live.closeAndClaim(lap).catch((e) => { lap(`picks close failed: ${String(e).slice(0, 120)}`); return null; });
+  if (finalBook) lap(`picks closed: ${finalBook.spectators.length} spectators, ${finalBook.bets.length} picks, ${(live.sigs.badgeClaims as string[] | undefined)?.length ?? 0} badges claimed`);
+  activePicks = null;
   // Market event plan (private in RaidSecret until the end; its hash was committed at the VRF callback).
   let eventPlan: Record<string, unknown> = { note: "not read" };
   let endRaidState: { classes?: number[] } | null = null;
@@ -218,6 +263,31 @@ export async function runRaid(o: RaidOptions) {
   const wireStats = { lines: wire.lines.length, llm: wire.lines.filter((l) => l.source === "llm").length, template: wire.lines.filter((l) => l.source === "template").length };
   lap(`WIRE: ${wireStats.lines} lines (${wireStats.llm} model, ${wireStats.template} template)`);
 
+  // End-of-raid awards, from recorded results only.
+  const value = (s: number) => Number(res.raiders[s].dusdPayout.toString()) + Number((res.raiders[s] as unknown as { mintValue: anchor.BN }).mintValue.toString());
+  const joinedSlots = Array.from({ length: o.slots }, (_, s) => s).filter((s) => res.raiders[s].joined);
+  const extractedSlots = joinedSlots.filter((s) => res.raiders[s].extracted);
+  const hp = (s: number) => (rpubs[s] as { hp?: number } | null)?.hp ?? 0;
+  const kills = (s: number) => (rpubs[s] as { kills?: number } | null)?.kills ?? 0;
+  const who = (s: number) => `${botSlots.includes(s) ? "BOT" : "Raider"} ${s + 1}`;
+  const top = (list: number[], f: (s: number) => number) => (list.length ? list.reduce((a, s) => (f(s) > f(a) ? s : a), list[0]) : -1);
+  const tr = top(joinedSlots, value), be = top(extractedSlots, (s) => Number((res.raiders[s] as unknown as { mintValue: anchor.BN }).mintValue.toString()));
+  const de = top(extractedSlots, (s) => -hp(s)), mk = top(joinedSlots, kills);
+  const ts = finalBook ? boardOf(finalBook)[0] : undefined;
+  const awards = {
+    topRaider: tr >= 0 ? { slot: tr, who: who(tr), value: value(tr) } : null,
+    biggestExtraction: be >= 0 ? { slot: be, who: who(be), backpack: Number((res.raiders[be] as unknown as { mintValue: anchor.BN }).mintValue.toString()) } : null,
+    mostDramaticEscape: de >= 0 ? { slot: de, who: who(de), hp: hp(de) } : null,
+    mostKnockouts: mk >= 0 && kills(mk) > 0 ? { slot: mk, who: who(mk), kills: kills(mk) } : null,
+    topSpectator: ts && ts.picks > 0 ? { wallet: ts.wallet, correct: ts.correct, picks: ts.picks, credits: ts.credits, bestStreak: ts.bestStreak } : null,
+  };
+  const livePicks = finalBook ? {
+    book: live.book.toBase58(), status: finalBook.status, sigs: live.sigs,
+    rules: "On-chain (TEE) play credits: 100 per registered spectator, non-redeemable. One choice per spectator per pick; locks by the program clock. EXTRACTS(raider) until start + 270 s; NEXT CRACK every 60 s (5 s to pick, watches the next 60 s); KNOCKOUT IN 30 S every 30 s (3 s to pick, watches the next 30 s). resolve_picks reads only public accounts (Raid, District, RaiderPublic), run by a 1 s crank. Pools pay parimutuel the moment they resolve; nobody on the winning side = refund. 3 correct in a row = a devnet badge token, variant from the raid's VRF seed.",
+    pools: Array.from({ length: NUM_POOLS }, (_, p) => ({ pool: p, name: POOL_NAMES(p), choices: POOL_CHOICES(p), totals: finalBook!.totals[p].slice(0, POOL_CHOICES(p).length), outcome: finalBook!.outcome[p], ...poolStats(finalBook!, p) })).filter((x) => x.bets > 0),
+    leaderboard: boardOf(finalBook).map((s) => ({ wallet: s.wallet, picks: s.picks, correct: s.correct, bestStreak: s.bestStreak, credits: s.credits, badge: s.badge, badgeClaimed: s.badgeClaimed })),
+  } : null;
+
   const report = {
     version: 1,
     game: "RAZKYN — market-driven extraction game (devnet demo)",
@@ -245,6 +315,8 @@ export async function runRaid(o: RaidOptions) {
     settlement: { endRaid: endSig, baseCommit, settledVia: st.settledVia, settleStuck: stuckSig },
     claims,
     tick: { ...tick, mode: tickMode, hz: o.hz },
+    awards,
+    livePicks,
     spectators: { ...book.view(), rules: "dPLAY play-money (devnet). EXTRACTS(raider) until raid start + 270 s; LIVE picks: NEXT CRACK every 60 s (locks after 5 s, watches the next 60 s), KNOCKOUT IN 30 S every 30 s (locks after 3 s, watches the next 30 s). A bet counts only if its on-chain block time is inside its window. Outcomes from public state only. Parimutuel, no dust; no winners or late bets are refunded." },
     wire: { model: "claude-sonnet-5-5", stats: wireStats, live: wire.lines.filter((l) => l.tag !== "DEBRIEF"), debriefs, headlinesCited: debriefs.flatMap((d) => d.headlines ?? []) },
   };

@@ -81,6 +81,9 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const [channel, setChannel] = useState<{ label: string; start: number; ms: number } | null>(null);
   const [peek, setPeek] = useState<Peek | null>(null);
   const [trade, setTrade] = useState(false);
+  const [specMode, setSpecMode] = useState<"overview" | "district" | "action" | "follow">("overview");
+  const [specDistrict, setSpecDistrict] = useState(0);
+  const [specFollow, setSpecFollow] = useState(-1);
   const [help, setHelp] = useState(() => !watch && !howToSeen());
   useEffect(() => {
     if (help) return;
@@ -599,6 +602,17 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       )}
 
       {help && <HowToPlay onClose={() => setHelp(false)} />}
+      {watch && pub?.raid && (
+        <div className="spec-cam">
+          <span className="sc-l">CAMERA</span>
+          {(["overview", "action"] as const).map((m) => <button key={m} className={specMode === m ? "on" : ""} onClick={() => { setSpecMode(m); const sc = sceneRef.current(); if (sc) sc.specMode = m; }}>{m === "overview" ? "OVERVIEW" : "ACTION CAM"}</button>)}
+          {DN.map((n, d) => <button key={n} className={specMode === "district" && specDistrict === d ? "on" : ""} onClick={() => { setSpecMode("district"); setSpecDistrict(d); const sc = sceneRef.current(); if (sc) { sc.specMode = "district"; sc.specDistrict = d; } }}>{n.toUpperCase()}</button>)}
+          {pub.rpubs.map((r, s2) => r && pub.raid!.raiders[s2]?.joined && (r.exposed || !r.alive || r.extracted) ? (
+            <button key={s2} className={specMode === "follow" && specFollow === s2 ? "on" : ""} title="Positions are public only while trading, down or out" onClick={() => { setSpecMode("follow"); setSpecFollow(s2); const sc = sceneRef.current(); if (sc) { sc.specMode = "follow"; sc.specFollow = s2; } }}>{r.isBot ? "BOT" : "P"}{s2 + 1}{r.exposed && r.alive ? " · TRADING" : !r.alive ? " · DOWN" : " · OUT"}</button>
+          ) : null)}
+          {specMode === "action" && <span className="sc-cap">{sceneRef.current()?.actionCaption}</span>}
+        </div>
+      )}
       {/* trade picker */}
       {trade && mine?.rprv && (
         <div className="term-wrap" onClick={() => setTrade(false)}>
@@ -660,6 +674,13 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
                   </div>
                 )}
                 {!watch && <div className="debrief">{myDebrief?.text ?? report.report.wire?.debriefs?.find((d: WireLine) => d.slot === mySlot)?.text ?? "THE WIRE is writing your debrief…"}</div>}
+                {report.report.awards && (
+                  <div className="awards" style={{ marginTop: 10 }}>
+                    {report.report.awards.topRaider && <div className="award"><span className="aw-k">TOP RAIDER</span><b>{report.report.awards.topRaider.who}</b><span>{(report.report.awards.topRaider.value / 1e6).toFixed(2)} dUSD</span></div>}
+                    {report.report.awards.mostDramaticEscape && <div className="award"><span className="aw-k">MOST DRAMATIC ESCAPE</span><b>{report.report.awards.mostDramaticEscape.who}</b><span>out on {report.report.awards.mostDramaticEscape.hp} HP</span></div>}
+                    {report.report.awards.topSpectator && <div className="award"><span className="aw-k">TOP SPECTATOR</span><b className="mono">{report.report.awards.topSpectator.wallet.slice(0, 4)}…</b><span>{report.report.awards.topSpectator.correct}/{report.report.awards.topSpectator.picks} picks</span></div>}
+                  </div>
+                )}
                 <div className="row" style={{ marginTop: 16 }}>
                   <button className="btn primary" onClick={() => navigate(`/report/${raidId}`)}>Market Raid Report</button>
                   <button className="btn" onClick={() => navigate("/play")}>Next raid</button>

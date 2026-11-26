@@ -59,6 +59,9 @@ server.onOpen = async (mode) => {
       const raidId = server.lobby?.raidId ?? "";
       last = { raidId, error: String(e).slice(0, 200) };
       log(`raid failed: ${String(e)}`);
+      // A failed raid refunds every open pick (cancel_picks on the TEE).
+      const { activePicks } = await import("./raid.ts");
+      if (activePicks) await activePicks.cancel().then(() => log("picks cancelled and refunded")).catch((x) => log(`pick cancel failed: ${String(x).slice(0, 100)}`));
     } finally {
       busy = false;
       await idle();

@@ -94,6 +94,15 @@ export class RaidScene {
   private camTarget = new THREE.Vector3(MAP_W / 2, 0, MAP_H / 2);
   private zoom = 1;
   private camInit = false;
+  /** Spectator camera (watch mode): public state only. */
+  specMode: "overview" | "district" | "action" | "follow" = "overview";
+  specDistrict = 0;
+  specFollow = -1;
+  /** Latest public moment (trade exposure, knockout, extraction) for the action cam; held 8 s. */
+  private action: { x: number; z: number; until: number; text: string } | null = null;
+  private pubPrev = new Map<number, { exposed: boolean; alive: boolean; extracted: boolean }>();
+  /** What the action cam is showing (for the HUD caption). */
+  actionCaption = "";
   private shake = 0;
   private rip: { x: number; z: number; start: number; ms: number; crate: CrateModel | null } | null = null;
   private tracers: { m: THREE.Mesh; until: number }[] = [];
@@ -477,12 +486,35 @@ export class RaidScene {
       if (focus) fow.uFowCenter.value.set(focus.x, focus.z);
     }
 
-    // Camera: damped follow (player) or overview (watch).
-    const target = focus ?? new THREE.Vector3(MAP_W / 2, 0, MAP_H / 2 - 2);
+    // Spectator: detect public moments for the action cam (positions are public only in these states).
+    if (watch && pub && raid) {
+      pub.rpubs.forEach((r, slot) => {
+        if (!r || !raid.raiders[slot]?.joined) return;
+        const prev = this.pubPrev.get(slot);
+        const who = `${r.isBot ? "BOT" : "RAIDER"} ${slot + 1}`;
+        if (prev) {
+          const text = r.exposed && !prev.exposed && r.alive ? `${who} TRADING` : !r.alive && prev.alive ? `${who} DOWN` : r.extracted && !prev.extracted ? `${who} EXTRACTED` : "";
+          if (text) this.action = { x: w(r.pubX), z: w(r.pubY), until: t + 8000, text };
+        }
+        this.pubPrev.set(slot, { exposed: r.exposed, alive: r.alive, extracted: r.extracted });
+      });
+    }
+    // Camera: damped follow (player) or a spectator shot (watch).
+    let specTarget: THREE.Vector3 | null = null, specDist = 3.0;
+    if (watch) {
+      if (this.specMode === "district") { const [lo, hi] = DISTRICT_TILES[this.specDistrict]; specTarget = new THREE.Vector3((lo + hi + 1) / 2, 0, MAP_H / 2); specDist = 1.55; }
+      else if (this.specMode === "action" && this.action && this.action.until > t) { specTarget = new THREE.Vector3(this.action.x, 0, this.action.z); specDist = 1.0; }
+      else if (this.specMode === "follow" && this.specFollow >= 0) {
+        const r = pub?.rpubs[this.specFollow];
+        if (r && (r.exposed || !r.alive || r.extracted)) { specTarget = new THREE.Vector3(w(r.pubX), 0, w(r.pubY)); specDist = 0.95; }
+      }
+      this.actionCaption = this.specMode === "action" ? (this.action && this.action.until > t ? this.action.text : "WAITING FOR THE NEXT PUBLIC MOMENT") : "";
+    }
+    const target = focus ?? specTarget ?? new THREE.Vector3(MAP_W / 2, 0, MAP_H / 2 - 2);
     const snap = !this.camInit || this.camTarget.distanceTo(target) > 12;
     this.camInit = true;
-    this.camTarget.lerp(target, snap ? 1 : 1 - Math.exp(-dt * (focus ? 6 : 2)));
-    const dist = watch || !focus ? 3.0 : this.zoom;
+    this.camTarget.lerp(target, snap && !watch ? 1 : 1 - Math.exp(-dt * (focus ? 6 : 2.2)));
+    const dist = watch ? specDist : !focus ? 3.0 : this.zoom;
     const off = new THREE.Vector3(Math.sin(YAW) * 10.8 * dist, 8.6 * dist, Math.cos(YAW) * 10.8 * dist); // ~38° down, diagonal three-quarter view
     const want = this.camTarget.clone().add(off);
     this.camera.position.lerp(want, snap ? 1 : 1 - Math.exp(-dt * 8));

@@ -1,0 +1,10 @@
+import * as anchor from "@coral-xyz/anchor";
+import { Connection } from "@solana/web3.js";
+import { readFileSync } from "node:fs";
+const idl = JSON.parse(readFileSync("idl/razkyn.json", "utf8"));
+const P = new anchor.Program(idl, { connection: new Connection("https://rpc.magicblock.app/devnet") });
+const pb = idl.accounts.find((a) => a.name === "PickBook");
+const ty = idl.types.find((t) => t.name === "PickBook");
+console.log("coder ok; PickBook account in IDL:", !!pb, "serialization:", ty?.serialization ?? "borsh", "repr:", JSON.stringify(ty?.repr));
+const ix = await P.methods.placePick(8, 1, 5).accountsPartial({ book: anchor.web3.Keypair.generate().publicKey, raid: anchor.web3.Keypair.generate().publicKey, session: anchor.web3.Keypair.generate().publicKey }).instruction();
+console.log("placePick ix data bytes:", ix.data.length, "accounts:", ix.keys.length);
