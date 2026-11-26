@@ -317,3 +317,9 @@ body { background: #0b0f12; letter-spacing: 0.005em; }
 .settings-keys > .mono { grid-column: 1; word-break: normal; overflow-wrap: normal; white-space: nowrap; letter-spacing: 0.02em; }
 
 .watch-hint { max-width: 380px; font-size: 13px; line-height: 1.45; color: var(--silver, #C8D2D1); border-left: 3px solid #45C9B2; margin-top: 8px; }
+/* Landscape phones: the watch column (fog hint + picks) must fit above the camera bar and THE WIRE. */
+@media (max-height: 500px) {
+  .watch-hint { font-size: 11px; max-width: 260px; line-height: 1.35; }
+  .hud-tl { max-height: calc(100vh - 64px); overflow-y: auto; }
+  .spec-cam { left: auto; right: 8px; transform: none; max-width: calc(100vw - 300px); }
+}
