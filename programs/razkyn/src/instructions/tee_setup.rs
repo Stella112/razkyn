@@ -237,6 +237,18 @@ pub fn vrf_callback_raid<'info>(
         if raid.leaf_count > 0 {
             s.leaf_index = (derive_u64(&randomness, b"leaf", 0) % raid.leaf_count as u64) as u32;
         }
+        // Market event plan: two distinct kinds, a district each, a second in [60, 210).
+        let first = (derive_u64(&randomness, b"evk", 0) % 3) as u8 + 1;
+        let second = (first + (derive_u64(&randomness, b"evk", 1) % 2) as u8) % 3 + 1;
+        for (i, kind) in [first, second].into_iter().enumerate() {
+            let district = (derive_u64(&randomness, b"evd", i as u32) % NUM_DISTRICTS as u64) as u8;
+            let at = (EVENT_MIN_AT + derive_u64(&randomness, b"evt", i as u32) % EVENT_AT_SPAN) as u16;
+            s.events[4 * i] = kind;
+            s.events[4 * i + 1] = district;
+            s.events[4 * i + 2..4 * i + 4].copy_from_slice(&at.to_le_bytes());
+        }
+        // Commit the plan publicly by hash; the plan itself stays private until each event fires.
+        raid.event_plan_hash = solana_sha256_hasher::hashv(&[b"razkyn-events".as_ref(), s.events.as_ref()]).to_bytes();
     }
 
     let mut k = 0usize;

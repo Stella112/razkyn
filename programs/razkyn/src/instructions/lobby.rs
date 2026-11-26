@@ -66,8 +66,8 @@ pub fn create_raid(
     day_root: [u8; 32],
     event_plan_hash: [u8; 32],
 ) -> Result<()> {
-    require!(mode == mode::MYSTERY || mode == mode::LIVE, RazkynError::BadMode);
-    require!(mode == mode::LIVE || leaf_count > 0, RazkynError::BadMode);
+    require!(mode == mode::MYSTERY || mode == mode::LIVE || mode == mode::LIVE_MARKETS, RazkynError::BadMode);
+    require!(mode != mode::MYSTERY || leaf_count > 0, RazkynError::BadMode);
     prefund(
         &ctx.accounts.keeper,
         ctx.accounts.secret.to_account_info(),
@@ -251,7 +251,8 @@ pub struct JoinRaid<'info> {
     pub token_program: Interface<'info, TokenInterface>,
 }
 
-pub fn join_raid(ctx: Context<JoinRaid>, slot: u8, raid_key: Pubkey) -> Result<()> {
+pub fn join_raid(ctx: Context<JoinRaid>, slot: u8, raid_key: Pubkey, class: u8) -> Result<()> {
+    require!(class < NUM_CLASSES, RazkynError::BadClass);
     let wallet = ctx.accounts.wallet.key();
     let is_bot = match &ctx.accounts.keeper {
         Some(k) => {
@@ -285,6 +286,7 @@ pub fn join_raid(ctx: Context<JoinRaid>, slot: u8, raid_key: Pubkey) -> Result<(
         DUSD_DECIMALS,
     )?;
     let raid = &mut ctx.accounts.raid;
+    raid.classes[slot as usize] = class;
     raid.raiders[slot as usize] = RaiderSlot {
         wallet,
         raid_key,

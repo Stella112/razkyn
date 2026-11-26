@@ -2693,6 +2693,10 @@ export type Razkyn = {
         {
           "name": "raidKey",
           "type": "pubkey"
+        },
+        {
+          "name": "class",
+          "type": "u8"
         }
       ]
     },
@@ -4059,6 +4063,12 @@ export type Razkyn = {
           "writable": true
         },
         {
+          "name": "district",
+          "docs": [
+            "v2: the district the terminal stands in (halt checks)."
+          ]
+        },
+        {
           "name": "raidKey",
           "signer": true
         }
@@ -4827,6 +4837,16 @@ export type Razkyn = {
       "code": 6050,
       "name": "forcedFailure",
       "msg": "forced finalize failure (test flag)"
+    },
+    {
+      "code": 6051,
+      "name": "tradingHalted",
+      "msg": "trading halted at this terminal"
+    },
+    {
+      "code": 6052,
+      "name": "badClass",
+      "msg": "unknown raider class"
     }
   ],
   "types": [
@@ -5302,6 +5322,40 @@ export type Razkyn = {
                 32
               ]
             }
+          },
+          {
+            "name": "classes",
+            "docs": [
+              "Class per slot (CLASS_*), chosen at join_raid."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "eventKind",
+            "docs": [
+              "Active market event (EVENT_*; EVENT_NONE when none), its district and end (unix s)."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "eventDistrict",
+            "type": "u8"
+          },
+          {
+            "name": "eventUntil",
+            "type": "i64"
+          },
+          {
+            "name": "eventsFired",
+            "docs": [
+              "Bit i = planned event i has fired."
+            ],
+            "type": "u8"
           }
         ]
       }
@@ -5475,6 +5529,18 @@ export type Razkyn = {
               "array": [
                 "u32",
                 900
+              ]
+            }
+          },
+          {
+            "name": "events",
+            "docs": [
+              "v2: market event plan, NUM_EVENTS × [kind, district, second lo, second hi] (private)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                8
               ]
             }
           }

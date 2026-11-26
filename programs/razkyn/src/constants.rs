@@ -150,3 +150,34 @@ pub const CLAIM_SEED: &[u8] = b"claim";
 pub const RESERVE_SEED: &[u8] = b"reserve";
 /// settle_stuck_raid may run this long after the raid ended if finalize_raid never landed.
 pub const SETTLE_STUCK_SECS: i64 = 120;
+
+// ---------- v2 (2026-11-26): Live Markets, classes, market events (DECISIONS #35) ----------
+/// Live Markets mode (mode 2): NVDA / TSLA / gold (XAU) from the MagicBlock Pricing Oracle on the
+/// TEE. Lazer ids 1314, 1435, 346; PDAs read live on devnet-tee 2026-11-26 (scripts/check-feeds.ts).
+pub const LIVE_MARKET_FEEDS: [anchor_lang::prelude::Pubkey; NUM_DISTRICTS] = [
+    anchor_lang::prelude::pubkey!("3AD13yFytFWiLQbcGsnEXDeWZ9GZezSx6Y3NqZRoJMaC"), // Equity.US.NVDA/USD (Tower)
+    anchor_lang::prelude::pubkey!("8L7ccCxTBZaLsMMdhAod5fFnpdEWGSDPW4y1td7y3y8N"), // Equity.US.TSLA/USD (Factory)
+    anchor_lang::prelude::pubkey!("9Eko45pM9kMQpz9N5d6Rcki8FMKUeyFb1tWhvixhBHBn"), // Metal.XAU/USD (Harbor / Gold Vault)
+];
+/// Raider classes, chosen at join (stored in Raid.classes).
+pub const CLASS_RAIDER: u8 = 0;
+pub const CLASS_SCOUT: u8 = 1;
+pub const CLASS_TRADER: u8 = 2;
+pub const CLASS_GUNNER: u8 = 3;
+pub const NUM_CLASSES: u8 = 4;
+pub const SCOUT_VISION_UNITS: u64 = 10 * UNITS_PER_TILE as u64; // 10 tiles instead of 8
+pub const TRADER_TRADE_SLOTS: u64 = 200; // 2 s instead of 3 s
+pub const GUNNER_RANGE_UNITS: u64 = 7 * UNITS_PER_TILE as u64; // 7 tiles instead of 6
+pub const GUNNER_COOLDOWN_SLOTS: u64 = 40; // 400 ms instead of 500 ms
+/// Market events: two per raid, planned from the VRF seed (kind, district, second), private in
+/// RaidSecret until they fire, committed by hash in Raid.event_plan_hash at the callback.
+pub const EVENT_NONE: u8 = 0;
+pub const EVENT_TRADING_HALT: u8 = 1; // the district's terminals close
+pub const EVENT_RATE_SHOCK: u8 = 2; // every district's hazards trigger at -1% / -3%
+pub const EVENT_EARNINGS: u8 = 3; // the district's dormant crates unlock
+pub const NUM_EVENTS: usize = 2;
+pub const EVENT_SECS: i64 = 30;
+pub const EVENT_MIN_AT: u64 = 60;
+pub const EVENT_AT_SPAN: u64 = 150; // fires between 60 s and 209 s
+pub const SHOCK_HAZARD1_BPS: i64 = -100;
+pub const SHOCK_HAZARD2_BPS: i64 = -300;

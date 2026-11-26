@@ -66,6 +66,8 @@ pub const E_ALREADY_SETTLED: u32 = ERR_BASE + 46;
 pub const E_UNAUTHORIZED: u32 = ERR_BASE + 1;
 pub const E_TOO_EARLY: u32 = ERR_BASE + 48;
 pub const E_NOT_COMMITTED: u32 = ERR_BASE + 49;
+pub const E_TRADING_HALTED: u32 = ERR_BASE + 51;
+pub const E_BAD_FEED: u32 = ERR_BASE + 40;
 const MINT_SIZE: usize = 82;
 
 pub fn a(p: Pubkey) -> Address {
@@ -361,6 +363,11 @@ impl World {
 }
 
 /// Lobby → delegate → permissions → VRF → crates placed (status SEEDED, not started).
+thread_local! {
+    /// v2: raider class per slot used by raid_seeded (default 0 = Raider). Set before building a world.
+    pub static CLASSES: std::cell::RefCell<Vec<u8>> = std::cell::RefCell::new(Vec::new());
+}
+
 pub fn raid_seeded(n: u8, seed: Option<[u8; 32]>, raid_mode: u8, leaf_count: u32, day_root: [u8; 32]) -> World {
     use TransactionTarget::{Base, Ephemeral};
     let mut svm = MagicSVM::new();
@@ -443,7 +450,7 @@ pub fn raid_seeded(n: u8, seed: Option<[u8; 32]>, raid_mode: u8, leaf_count: u32
         let user = kp(&r.wallet);
         w.send(Base, &[&r.wallet], &[ix(instruction::FaucetDusd { amount: STAKE }, faucet_accounts(user, w.dusd))], "faucet_dusd");
         w.send(Base, &[&r.wallet], &[ix(
-            instruction::JoinRaid { slot: s, raid_key: kp(&r.raid_key) },
+            instruction::JoinRaid { slot: s, raid_key: kp(&r.raid_key), class: CLASSES.with(|c| c.borrow().get(s as usize).copied().unwrap_or(0)) },
             accounts::JoinRaid {
                 config: config_pda(), raid: raid_pda(), rpub: slot_pda(RPUB_SEED, s), rprv: slot_pda(RPRV_SEED, s),
                 wallet_ata: ata(user, w.dusd), escrow_auth: escrow_auth(), escrow: ata(escrow_auth(), w.dusd),

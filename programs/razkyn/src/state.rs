@@ -45,6 +45,8 @@ pub mod status {
 pub mod mode {
     pub const MYSTERY: u8 = 0;
     pub const LIVE: u8 = 1;
+    /// Live Markets: NVDA / TSLA / gold feeds (constants::LIVE_MARKET_FEEDS).
+    pub const LIVE_MARKETS: u8 = 2;
 }
 
 pub mod vrf_state {
@@ -111,6 +113,15 @@ pub struct Raid {
     pub event_plan_hash: [u8; 32],
     pub settled: bool,
     pub report_hash: [u8; 32],
+    // ---- v2 (appended, so earlier offsets are unchanged) ----
+    /// Class per slot (CLASS_*), chosen at join_raid.
+    pub classes: [u8; MAX_RAIDERS],
+    /// Active market event (EVENT_*; EVENT_NONE when none), its district and end (unix s).
+    pub event_kind: u8,
+    pub event_district: u8,
+    pub event_until: i64,
+    /// Bit i = planned event i has fired.
+    pub events_fired: u8,
 }
 
 impl Raid {
@@ -235,6 +246,8 @@ pub struct RaidSecret {
     pub day_id: [u8; 16],
     /// Mystery price slice: 300 steps × 3 assets, rebased ×10^4 (M3).
     pub slice: [u32; SLICE_LEN],
+    /// v2: market event plan, NUM_EVENTS × [kind, district, second lo, second hi] (private).
+    pub events: [u8; 8],
 }
 
 pub mod crate_state {

@@ -280,7 +280,12 @@ fn m3_trade_at_terminal_with_exposure() {
     let trade = |w: &World, f: u8, t: u8, u: u64| {
         ix(
             instruction::StartTrade { slot: 0, from_asset: f, to_asset: t, units: u },
-            accounts::StartTrade { raid: raid_pda(), rprv: slot_pda(RPRV_SEED, 0), rpub: slot_pda(RPUB_SEED, 0), raid_key: kp(&w.raiders[0].raid_key) },
+            accounts::StartTrade {
+                raid: raid_pda(), rprv: slot_pda(RPRV_SEED, 0), rpub: slot_pda(RPUB_SEED, 0),
+                // v2: the district the trader stands in (halt checks)
+                district: slot_pda(DISTRICT_SEED, w.read::<RaiderPrivate>(TransactionTarget::Ephemeral, slot_pda(RPRV_SEED, 0)).map(|p| razkyn::util::district_of(p.x).unwrap_or(0) as u8).unwrap_or(0)),
+                raid_key: kp(&w.raiders[0].raid_key),
+            },
         )
     };
     let finish = |w: &World| {

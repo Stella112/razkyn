@@ -104,4 +104,8 @@ pub enum RazkynError {
     NotCommitted,
     #[msg("forced finalize failure (test flag)")]
     ForcedFailure,
+    #[msg("trading halted at this terminal")]
+    TradingHalted,
+    #[msg("unknown raider class")]
+    BadClass,
 }

@@ -2687,6 +2687,10 @@
         {
           "name": "raid_key",
           "type": "pubkey"
+        },
+        {
+          "name": "class",
+          "type": "u8"
         }
       ]
     },
@@ -4053,6 +4057,12 @@
           "writable": true
         },
         {
+          "name": "district",
+          "docs": [
+            "v2: the district the terminal stands in (halt checks)."
+          ]
+        },
+        {
           "name": "raid_key",
           "signer": true
         }
@@ -4821,6 +4831,16 @@
       "code": 6050,
       "name": "ForcedFailure",
       "msg": "forced finalize failure (test flag)"
+    },
+    {
+      "code": 6051,
+      "name": "TradingHalted",
+      "msg": "trading halted at this terminal"
+    },
+    {
+      "code": 6052,
+      "name": "BadClass",
+      "msg": "unknown raider class"
     }
   ],
   "types": [
@@ -5296,6 +5316,40 @@
                 32
               ]
             }
+          },
+          {
+            "name": "classes",
+            "docs": [
+              "Class per slot (CLASS_*), chosen at join_raid."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "event_kind",
+            "docs": [
+              "Active market event (EVENT_*; EVENT_NONE when none), its district and end (unix s)."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "event_district",
+            "type": "u8"
+          },
+          {
+            "name": "event_until",
+            "type": "i64"
+          },
+          {
+            "name": "events_fired",
+            "docs": [
+              "Bit i = planned event i has fired."
+            ],
+            "type": "u8"
           }
         ]
       }
@@ -5469,6 +5523,18 @@
               "array": [
                 "u32",
                 900
+              ]
+            }
+          },
+          {
+            "name": "events",
+            "docs": [
+              "v2: market event plan, NUM_EVENTS × [kind, district, second lo, second hi] (private)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                8
               ]
             }
           }

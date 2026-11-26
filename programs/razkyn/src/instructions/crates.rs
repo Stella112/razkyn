@@ -316,15 +316,23 @@ pub fn shoot(ctx: Context<Shoot>, slot: u8, target: u8) -> Result<()> {
     require!(target != slot && (target as usize) < MAX_RAIDERS, RazkynError::BadTarget);
     let t = ctx.accounts.raid.raiders[target as usize];
     require!(t.joined && t.alive && !t.extracted, RazkynError::BadTarget);
+    let gunner = ctx.accounts.raid.classes[slot as usize] == CLASS_GUNNER;
+    let (range, cooldown) = if gunner { (GUNNER_RANGE_UNITS, GUNNER_COOLDOWN_SLOTS) } else { (SHOOT_RANGE_UNITS, SHOT_COOLDOWN_SLOTS) };
     let sp = &mut ctx.accounts.shooter_prv;
-    let since = sp.last_shot_slot.max(ctx.accounts.raid.start_slot.saturating_sub(SHOT_COOLDOWN_SLOTS));
-    require!(clock.slot >= since.saturating_add(SHOT_COOLDOWN_SLOTS), RazkynError::Cooldown);
+    let since = sp.last_shot_slot.max(ctx.accounts.raid.start_slot.saturating_sub(cooldown));
+    require!(clock.slot >= since.saturating_add(cooldown), RazkynError::Cooldown);
     let tp = &ctx.accounts.target_prv;
-    require!(dist2(sp.x, sp.y, tp.x, tp.y) <= SHOOT_RANGE_UNITS * SHOOT_RANGE_UNITS, RazkynError::OutOfRange);
+    require!(dist2(sp.x, sp.y, tp.x, tp.y) <= range * range, RazkynError::OutOfRange);
     sp.last_shot_slot = clock.slot;
 
     let tpub = &mut ctx.accounts.target_pub;
     tpub.hp = tpub.hp.saturating_sub(SHOT_DAMAGE);
+    // Combat interrupts a trade: a hit cancels the target's channel before it commits.
+    if ctx.accounts.target_prv.channel_kind == CH_TRADE {
+        ctx.accounts.target_prv.channel_kind = CH_NONE;
+        tpub.exposed = false;
+        msg!("trade interrupted: slot {}", target);
+    }
     if tpub.hp == 0 {
         ctx.accounts.shooter_pub.kills = ctx.accounts.shooter_pub.kills.saturating_add(1);
         kill(

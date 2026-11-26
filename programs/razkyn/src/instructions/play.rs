@@ -119,10 +119,11 @@ pub fn tick(ctx: Context<Tick>) -> Result<()> {
                 crate::instructions::market::push_price(d, index);
             }
         } else {
+            let feed_set = if mode == crate::state::mode::LIVE_MARKETS { &LIVE_MARKET_FEEDS } else { &LIVE_FEEDS };
             for (i, d) in ds.into_iter().enumerate() {
                 let raw = feeds[i]
                     .as_ref()
-                    .and_then(|f| crate::instructions::market::read_feed(&f.to_account_info(), &LIVE_FEEDS[i], clock.unix_timestamp));
+                    .and_then(|f| crate::instructions::market::read_feed(&f.to_account_info(), &feed_set[i], clock.unix_timestamp));
                 match raw {
                     Some(raw) => {
                         if d.start_raw == 0 {
@@ -138,14 +139,41 @@ pub fn tick(ctx: Context<Tick>) -> Result<()> {
         raid.market_step = step;
     }
 
-    // The market moves the map: ≥ +2% wakes dormant crates; ≤ −2% / ≤ −5% hazard levels.
-    for d in [&mut ctx.accounts.district0, &mut ctx.accounts.district1, &mut ctx.accounts.district2] {
+    // Market events (v2): end the active one when its time is up; fire planned ones whose second
+    // has come (the plan is private in RaidSecret; its hash was committed at the VRF callback).
+    if raid.event_kind != EVENT_NONE && clock.unix_timestamp >= raid.event_until {
+        raid.event_kind = EVENT_NONE;
+    }
+    let mut earnings: Option<u8> = None;
+    {
+        let s = ctx.accounts.secret.load()?;
+        for i in 0..NUM_EVENTS {
+            let kind = s.events[4 * i];
+            let at = u16::from_le_bytes([s.events[4 * i + 2], s.events[4 * i + 3]]) as i64;
+            if kind != EVENT_NONE && raid.events_fired & (1 << i) == 0 && elapsed >= at {
+                raid.events_fired |= 1 << i;
+                raid.event_kind = kind;
+                raid.event_district = s.events[4 * i + 1];
+                raid.event_until = clock.unix_timestamp + EVENT_SECS;
+                if kind == EVENT_EARNINGS {
+                    earnings = Some(raid.event_district);
+                }
+                msg!("market event {} district {} at {}s", kind, raid.event_district, elapsed);
+            }
+        }
+    }
+    let shock = raid.event_kind == EVENT_RATE_SHOCK && clock.unix_timestamp < raid.event_until;
+    let (h1, h2) = if shock { (SHOCK_HAZARD1_BPS, SHOCK_HAZARD2_BPS) } else { (HAZARD1_BPS, HAZARD2_BPS) };
+
+    // The market moves the map: ≥ +2% wakes dormant crates; ≤ −2% / ≤ −5% hazard levels
+    // (≤ −1% / ≤ −3% during a RATE SHOCK). EARNINGS SURPRISE unlocks a district's dormant crates.
+    for (i, d) in [&mut ctx.accounts.district0, &mut ctx.accounts.district1, &mut ctx.accounts.district2].into_iter().enumerate() {
         let bps = change_bps(d.start_price, d.current_price);
-        if bps >= WAKE_BPS && !d.awake {
+        if (bps >= WAKE_BPS || earnings == Some(i as u8)) && !d.awake {
             d.awake = true;
             d.awake_mask = (1 << (CRATES_PER_DISTRICT - ACTIVE_PER_DISTRICT)) - 1;
         }
-        d.hazard_level = if bps <= HAZARD2_BPS { 2 } else if bps <= HAZARD1_BPS { 1 } else { 0 };
+        d.hazard_level = if bps <= h2 { 2 } else if bps <= h1 { 1 } else { 0 };
     }
 
     // Exit windows: copy the VRF-chosen pair from the private plan only while it is open.
@@ -243,8 +271,8 @@ pub fn tick_raiders<'info>(ctx: Context<'info, TickRaiders<'info>>) -> Result<()
         pos[i] = (r.alive && !r.extracted, p.x, p.y);
         slots.push((i, v));
     }
-    let v2 = VISION_UNITS * VISION_UNITS;
     let all: Vec<usize> = slots.iter().map(|(i, _)| *i).collect();
+    let classes = raid.classes;
     for (n, (i, v)) in slots.iter_mut().enumerate() {
         if v.tick_no == tick_no && tick_no != 0 {
             continue;
@@ -252,6 +280,9 @@ pub fn tick_raiders<'info>(ctx: Context<'info, TickRaiders<'info>>) -> Result<()
         v.tick_no = tick_no;
         v.count = 0;
         v.entries = [ViewEntry::default(); VIEW_ENTRIES];
+        // Scouts see 10 tiles, everyone else 8.
+        let vis = if classes[*i] == CLASS_SCOUT { SCOUT_VISION_UNITS } else { VISION_UNITS };
+        let v2 = vis * vis;
         if pos[*i].0 {
             for &j in all.iter() {
                 if j == *i || !pos[j].0 {

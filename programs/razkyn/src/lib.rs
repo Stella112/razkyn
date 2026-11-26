@@ -56,8 +56,8 @@ pub mod razkyn {
     pub fn create_districts(ctx: Context<CreateDistricts>) -> Result<()> {
         instructions::lobby::create_districts(ctx)
     }
-    pub fn join_raid(ctx: Context<JoinRaid>, slot: u8, raid_key: Pubkey) -> Result<()> {
-        instructions::lobby::join_raid(ctx, slot, raid_key)
+    pub fn join_raid(ctx: Context<JoinRaid>, slot: u8, raid_key: Pubkey, class: u8) -> Result<()> {
+        instructions::lobby::join_raid(ctx, slot, raid_key, class)
     }
     pub fn delegate_pda(ctx: Context<DelegateRaidPda>, raid_id: u64, account: RaidAccount) -> Result<()> {
         instructions::lobby::delegate_pda(ctx, raid_id, account)

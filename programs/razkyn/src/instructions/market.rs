@@ -142,6 +142,9 @@ pub struct StartTrade<'info> {
     pub rprv: Account<'info, RaiderPrivate>,
     #[account(mut, seeds = [RPUB_SEED, &raid.raid_id.to_le_bytes(), &[slot]], bump = rpub.bump)]
     pub rpub: Account<'info, RaiderPublic>,
+    /// v2: the district the terminal stands in (halt checks).
+    #[account(seeds = [DISTRICT_SEED, &raid.raid_id.to_le_bytes(), &[district.index]], bump = district.bump)]
+    pub district: Box<Account<'info, District>>,
     pub raid_key: Signer<'info>,
 }
 
@@ -157,6 +160,13 @@ pub fn start_trade(ctx: Context<StartTrade>, slot: u8, from_asset: u8, to_asset:
     require!(p.channel_kind != CH_TRADE, RazkynError::Trading);
     require!(p.backpack[from_asset as usize] >= units, RazkynError::InsufficientUnits);
     require!(at_terminal(p.x, p.y), RazkynError::NotAtTerminal);
+    // Trading halts: a crashing district (hazard level 2) trips its circuit breaker, and a
+    // TRADING HALT market event closes the district's terminals while it runs.
+    let d = &ctx.accounts.district;
+    require!(district_of(p.x) == Some(d.index as usize), RazkynError::BadAccount);
+    let raid = &ctx.accounts.raid;
+    let halted_event = raid.event_kind == EVENT_TRADING_HALT && raid.event_district == d.index && clock.unix_timestamp < raid.event_until;
+    require!(d.hazard_level < 2 && !halted_event, RazkynError::TradingHalted);
     p.channel_kind = CH_TRADE;
     p.channel_arg = from_asset | (to_asset << 4);
     p.channel_units = units;
@@ -198,7 +208,8 @@ pub fn finish_trade(ctx: Context<FinishTrade>, slot: u8) -> Result<()> {
     ];
     let p = &mut ctx.accounts.rprv;
     require!(p.channel_kind == CH_TRADE, RazkynError::NoChannel);
-    require!(clock.slot >= p.channel_start_slot.saturating_add(TRADE_CHANNEL_SLOTS), RazkynError::ChannelNotDone);
+    let need = if ctx.accounts.raid.classes[slot as usize] == CLASS_TRADER { TRADER_TRADE_SLOTS } else { TRADE_CHANNEL_SLOTS };
+    require!(clock.slot >= p.channel_start_slot.saturating_add(need), RazkynError::ChannelNotDone);
     let (from, to) = ((p.channel_arg & 0x0f) as usize, (p.channel_arg >> 4) as usize);
     let units = p.channel_units;
     require!(p.backpack[from] >= units, RazkynError::InsufficientUnits);
