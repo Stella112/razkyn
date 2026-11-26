@@ -63,7 +63,8 @@ export default function Report({ raidId }: { raidId: string }) {
   }, [raidId]);
 
   const r = file?.report;
-  const DN = districtNames(r?.mode === "live-markets" ? 2 : 0);
+  const liveMarkets = (r?.mode ?? r?.raid?.mode) === "live-markets";
+  const DN = districtNames(liveMarkets ? 2 : 0);
   return (
     <div className="page">
       <div className="topbar">
@@ -108,7 +109,7 @@ export default function Report({ raidId }: { raidId: string }) {
             </div>
 
             <div className="card">
-              <h3>Market · {r.mode === "mystery" || r.raid.mode === "mystery" ? "Mystery Market Day" : r.mode === "live-markets" ? "Stocks & gold (NVDA · TSLA · XAU), live" : "Live"} · {r.pricePathSource ?? "price path"}</h3>
+              <h3>Market · {r.mode === "mystery" || r.raid.mode === "mystery" ? "Mystery Market Day" : liveMarkets ? "Stocks & gold (NVDA · TSLA · XAU), live" : "Live"} · {r.pricePathSource ?? "price path"}</h3>
               <PricePath path={r.pricePath} />
               <div className="row note">
                 {(r.assets ?? []).map((a: { district: string; tracks: string }, i: number) => (
