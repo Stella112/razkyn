@@ -25,7 +25,7 @@ Eight raiders drop into a 64 × 40 map for five minutes. The map is the market: 
 | Piece | Job |
 |---|---|
 | Private Ephemeral Rollup (TEE) + permissions | Fog of war, sealed crates, private backpacks, the secret mystery day. "Try to peek" shows the refusal live |
-| Ephemeral Rollup execution | Gasless movement, shooting, trading and looting at 10 Hz (100 ms ticks; from the game server 5,908/5,908 ticks landed in a 300 s raid, p95 376 ms including network) |
+| Ephemeral Rollup execution | Gasless movement, shooting, trading and looting at 10 Hz (100 ms ticks; from the game server every tick transaction sent in a 300 s raid confirmed (5,908/5,908), p95 376 ms including network) |
 | VRF | Spawns, crate contents, exits, the two market events and the mystery-day pick, verifiable on the report page |
 | MagicBlock Pricing Oracle (read on the TEE with full validation) | Live district prices: SOL/BTC/ETH (Live Crypto) or NVDA/TSLA/SOL (Live Markets) |
 | Commit + Magic Action | One settlement commit; per-raider claims that can't pay twice, with a recovery path anyone can trigger |
@@ -56,7 +56,7 @@ Payouts (Option A): an extracted raider gets the protected slot plus their backp
 - **End screen**: EXTRACTED / KNOCKED OUT / STRANDED, payout, settlement steps (raid ended → committed → settled → paid), an **extraction receipt** (your claim and the settlement transactions), a shareable raid card, the Mystery reveal ("YOU JUST SURVIVED THE GLOBAL SELLOFF · 5 August 2024" with a sourced summary and outlet links, price data verified against the on-chain Merkle root) and THE WIRE's debrief.
 - **RAZKYN LIVE** (watch mode, on-chain): spectators sign once, get 100 non-redeemable play credits and a session key, then pick without popups: EXTRACTS per raider, NEXT CRACK (opens every 60 s, locks after 10 s) and KNOCKOUT IN 30 S (opens every 30 s, locks after 8 s). The program locks picks by its own clock, resolves them from public raid state only and pays parimutuel; a streak of 3 earns a devnet badge whose variant comes from the VRF seed. Spectator cameras and an `/overlay` view for streamers.
 - **Extraction Market** (watch mode): bet free devnet dPLAY play-money on "raider N extracts / doesn't", settled by the keeper as devnet transfers listed in the report (DECISIONS #33).
-- **Market Raid Report** and **Raid History**: every raid's report, hash-checked against the chain.
+- **Market Raid Report** and **Raid History**: every raid's report, hash-checked against the chain. A matching hash proves the report has not been edited since it was posted; it does not by itself prove every event in it. The on-chain parts (Results, payouts, settlement, claims, the Merkle proof, the market-event plan hash) are checked against chain data on the report page; BOT activity in the report comes from the keeper's own log.
 
 ## MagicBlock stack
 
@@ -75,12 +75,14 @@ SDK: `ephemeral-rollups-sdk` 0.18.0 (Rust and npm), Anchor 1.0.2, Agave 3.1.9.
 
 ## Trust model
 
-- **The keeper is the game operator.** It creates raids, drives ticks, runs the BOTs, settles and claims for everyone, and builds the report. It is a permission member of raiders' private state, sealed crates and the raid secret — the same trust you give a game server. It cannot change outcomes: movement, damage, loot and events come only from program rules and the VRF seed.
+- **The keeper is the game operator.** It creates raids, drives ticks, runs the BOTs, settles and claims for everyone, and builds the report. It is a permission member of raiders' private state, sealed crates and the raid secret, the same trust you give a game server.
+- **What the keeper cannot do**: change a move, a hit, a crate's contents, a market event, the Mystery day or a payout. Those come only from program rules, the VRF seed and the committed Merkle root, and players send their own moves straight to the TEE with their raid key (not through the keeper). `tick`, `claim` and `settle_stuck_raid` are permissionless, so a stalled keeper can be replaced by anyone.
+- **What the keeper could still do** (operator trust, not prevented by code): leak private state it can read (crate contents, positions, the Mystery day) to a player; delay or skip its own tick, BOT and claim transactions; decide when raids open; run the keeper-settled Extraction Market honestly or not. The BOTs are written to use only their own private state and public data (`keeper/src/bots.ts`: crates are chosen by public position), but that is code you have to read, not something the program enforces.
 - **The Mystery day is committed before the raid.** A Merkle root of 23 day slices is stored in `create_raid`; the VRF picks the leaf; `verify_slice` checks the loaded slice against the root at that index, and the raid cannot start unverified. The client re-checks the proof after the reveal.
 - **What the TEE protects**: sealed crate contents, every raider's position and backpack, each raider's fog view, and the Mystery day. Crate *positions* are public (DECISIONS #16). Public reads (watch mode) use no token.
 - **THE WIRE is never a permission member.** It reads public accounts through a token for a fresh key, rebuilds every fact from a public-field whitelist, and every line passes a post-filter (no tickers, dates or prices before the reveal, no invented quotes) or is replaced by a template. It narrates; it decides nothing.
 - **Settlement is reconcilable.** Payouts are idempotent (`claimed` records), `finalize_raid` verifies the escrow signer and the committed results hash, and anyone can call `settle_stuck_raid` if the action was dropped.
-- **Devnet stand-ins are not shares.** Minted assets are backed by dUSD in a reserve at final prices.
+- **Devnet stand-ins are not shares.** At settlement the program moves the dUSD value of every extracted backpack, at that raid's final prices, into a per-raid reserve, then mints those units as dTWR/dFAC/dHRB. If extracted value would exceed the loot pool (a rally), units are scaled down so the reserve never exceeds the pool; in a fall the difference goes back to everyone pro rata. Conservation (`payouts + reserve + ops == stakes`) is asserted on-chain and tested with randomized prices. Limits: there is no redeem instruction (the reserve is locked backing, not a withdrawable peg), the tokens are fungible across raids although each raid's reserve was set at its own final prices, and integer rounding leaves each raider's reserve at most 1 base unit (0.000001 dUSD) below the exact value.
 
 ## Run it
 

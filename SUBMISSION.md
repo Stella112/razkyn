@@ -30,7 +30,7 @@ Submit at https://build.magicblock.app/?stage=blitz#submit before **Fri 27 Nov 2
 | Piece | Job |
 |---|---|
 | Private Ephemeral Rollup (TEE) + permissions | Fog of war, sealed crates, private backpacks, the secret mystery day. "Try to peek" shows the refusal live |
-| Ephemeral Rollup execution | Gasless movement, shooting, trading and looting at 10 Hz (100 ms ticks; from the game server 5,908/5,908 ticks landed in a 300 s raid, p95 376 ms including network) |
+| Ephemeral Rollup execution | Gasless movement, shooting, trading and looting at 10 Hz (100 ms ticks; from the game server every tick transaction sent in a 300 s raid confirmed (5,908/5,908), p95 376 ms including network) |
 | VRF | Spawns, crate contents, exits, the two market events and the mystery-day pick, verifiable on the report page |
 | MagicBlock Pricing Oracle (read on the TEE with full validation) | Live district prices: SOL/BTC/ETH (Live Crypto) or NVDA/TSLA/SOL (Live Markets) |
 | Commit + Magic Action | One settlement commit; per-raider claims that can't pay twice, with a recovery path anyone can trigger |
