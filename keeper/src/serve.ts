@@ -76,7 +76,7 @@ server.onOpen = async (mode) => {
 // gets FUND_SOL once, only while a raid lobby is open, at most FUND_MAX_PER_HOUR per hour, and never
 // if it would leave the keeper short of what the next raid needs.
 const FUND_SOL = Number(process.env.RAZKYN_FUND_SOL ?? 0.01);
-const FUND_BELOW_SOL = 0.003; // the join costs ~0.002 SOL in fees and token-account rent
+const FUND_BELOW_SOL = 0.005; // the join costs ~0.002 SOL in fees and token-account rent; the lobby asks below 0.005
 const FUND_MAX_PER_HOUR = Number(process.env.RAZKYN_FUND_MAX_PER_HOUR ?? 20);
 const funded = new Set<string>();
 const fundTimes: number[] = [];

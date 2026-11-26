@@ -6,7 +6,7 @@ Eight raiders drop into a 64 × 40 map for five minutes. The map is the market: 
 
 > Devnet demo. dUSD, dTWR, dFAC, dHRB and dPLAY are transferable devnet game tokens, not shares and not real money. BOT raiders are labelled BOT everywhere.
 
-**Quick start:** open https://razkyn.vercel.app → **DEPLOY** → **OPEN RAID** (Mystery Market) → connect a devnet wallet or press **Use a dev wallet** → join (one signature) → play. After the raid, verify any payout from chain data with `npx tsx scripts/payout-proof.ts <raid_id>`. Program: `CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97` (devnet).
+**Quick start:** open https://razkyn.vercel.app → **DEPLOY** → **OPEN RAID** (Mystery Market) → connect a devnet wallet or press **Use a dev wallet** → join (one signature; no devnet SOL needed, the game server covers the join fee for an empty wallet) → play. After the raid, verify any payout from chain data with `npx tsx scripts/payout-proof.ts <raid_id>`. Program: `CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97` (devnet).
 
 ## Why MagicBlock
 

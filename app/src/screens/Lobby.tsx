@@ -22,8 +22,8 @@ const PHASE: Record<LobbyT["phase"], string> = {
 
 /** Join is locked in the last seconds of the countdown (the keeper then fills seats with BOTs). */
 const JOIN_CUTOFF_MS = 8_000;
-/** Below this the join (fees + token-account rent) can fail; matches FUND_BELOW_SOL in keeper/src/serve.ts. */
-const JOIN_GAS_LAMPORTS = 0.003 * LAMPORTS_PER_SOL;
+/** Below this the join (fees + token-account rent) can fail; matches FUND_BELOW_SOL in keeper/src/serve.ts (0.005). */
+const JOIN_GAS_LAMPORTS = 0.005 * LAMPORTS_PER_SOL;
 
 /** Readable reason for a failed join dry-run (RazkynError codes, programs/razkyn/src/errors.rs). */
 function explainJoinFailure(err: unknown, logs: string[]): string {
@@ -307,7 +307,7 @@ export default function Lobby() {
                       </button>
                     ))}
                   </div>
-                  <button className="btn primary big" style={{ width: "100%" }} disabled={!w.publicKey || freeHuman === undefined || !!busy || (sol ?? 0) < 0.005 || lobby.joinDeadline - now < JOIN_CUTOFF_MS} onClick={join}>
+                  <button className="btn primary big" style={{ width: "100%" }} disabled={!w.publicKey || freeHuman === undefined || !!busy || lobby.joinDeadline - now < JOIN_CUTOFF_MS} onClick={join}>
                     {freeHuman === undefined ? "NO SEAT FREE" : lobby.joinDeadline - now < JOIN_CUTOFF_MS ? "JOIN WINDOW CLOSED" : `JOIN AS ${CLASSES[cls].tag} · STAKE 10 dUSD`}
                   </button>
                   </>

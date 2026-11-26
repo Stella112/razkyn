@@ -20,7 +20,7 @@ Up to 8 raiders, 5 minutes, one city whose three districts follow a price tape (
 ## Try it (60 seconds)
 
 1. Open https://razkyn.vercel.app and press **DEPLOY**, then **OPEN RAID** on Mystery Market (the game server opens a raid on devnet; empty seats become labelled BOTs).
-2. Connect Phantom or Solflare on **devnet** (or press **Use a dev wallet**). One signature claims 10 free devnet dUSD and stakes it.
+2. Connect Phantom or Solflare on **devnet** (or press **Use a dev wallet**). One signature claims 10 free devnet dUSD and stakes it. A wallet with no devnet SOL gets the join fee from the game server automatically.
 3. In the raid: WASD to move, E at a crate (2 s) or a terminal (trade, position exposed), click a raider to shoot, hold Space on an open exit. **Try to Peek** sends real reads of private state and shows the TEE refusing them.
 4. After the raid: the Mystery day is revealed and proven, payouts land in your wallet, and the report page checks its hash against the chain.
 
