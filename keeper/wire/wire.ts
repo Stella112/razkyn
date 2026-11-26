@@ -40,6 +40,7 @@ function describe(f: Fact): string {
     case "exposed": return `t=${f.t}s ${who(f.slot, f.bot)} started a trade at a ${D(f.district)} terminal; position public while trading`;
     case "crate_opened": return `t=${f.t}s ${who(f.slot, f.bot)} opened ${f.drop ? "a dropped backpack" : "a crate"} in ${D(f.district)}`;
     case "kill": return `t=${f.t}s ${who(f.slot, f.bot)} knocked out${f.by != null ? ` by ${who(f.by, !!f.byBot)}` : ""}; backpack dropped as a crate`;
+    case "hit": return `t=${f.t}s ${who(f.slot, f.bot)} was shot, ${f.hp} HP left (location not public)`;
     case "extract": return `t=${f.t}s ${who(f.slot, f.bot)} extracted`;
     case "market_event": return `t=${f.t}s IN-GAME EVENT ${["", "TRADING HALT: terminals in " + D(f.district) + " closed for 30 s", "RATE SHOCK: every district's hazard thresholds tighten for 30 s", "EARNINGS SURPRISE: " + D(f.district) + "'s dormant crates wake"][f.event]}`;
     case "pick_result": return `t=${f.t}s spectator pick resolved: ${f.pick === 2 ? `raider ${f.window + 1} ${f.outcome === 0 ? "extracted" : "did not extract"}` : f.pick === 0 ? (f.outcome === 3 ? "no district cracked" : D(f.outcome) + " cracked first") : f.outcome === 0 ? "a raider was knocked out" : "nobody was knocked out"}; ${f.pct}% of ${f.bets} picks were right`;

@@ -13,7 +13,7 @@ const D = (d: number) => DISTRICTS[d] ?? "District";
 export const isEvent = (f: Fact) => f.kind === "hazard" || f.kind === "wake" || f.kind === "exit_open" || f.kind === "market_event";
 
 const PRIORITY: Record<Fact["kind"], number> = {
-  kill: 9, extract: 8, exposed: 7, crate_opened: 5, hazard: 6, wake: 6, exit_open: 6, market_event: 8, pick_result: 7, pick_open: 3, raid_end: 10, price: 1,
+  kill: 9, extract: 8, exposed: 7, hit: 6, crate_opened: 5, hazard: 6, wake: 6, exit_open: 6, market_event: 8, pick_result: 7, pick_open: 3, raid_end: 10, price: 1,
 };
 
 /** Pick the most newsworthy fact of a batch (ties: latest). */
@@ -45,6 +45,8 @@ export function templateLine(f: Fact): string {
       return f.drop ? `${raiderName(f.slot, f.bot)} loots a dropped backpack in ${D(f.district)}` : `${raiderName(f.slot, f.bot)} cracks a crate in ${D(f.district)}`;
     case "kill":
       return f.by != null ? `${raiderName(f.by, !!f.byBot)} drops ${raiderName(f.slot, f.bot)}, backpack on the floor` : `${raiderName(f.slot, f.bot)} is down, backpack on the floor`;
+    case "hit":
+      return f.hp <= 34 ? `${raiderName(f.slot, f.bot)} hit hard, one shot from going down (${f.hp} HP)` : `Shots fired: ${raiderName(f.slot, f.bot)} under fire, down to ${f.hp} HP`;
     case "extract":
       return `${raiderName(f.slot, f.bot)} extracts, bag banked`;
     case "market_event":

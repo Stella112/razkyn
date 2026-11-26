@@ -20,6 +20,8 @@ export function setDistrictNames(mode: "mystery" | "live" | "live-markets") {
 const NUM_CRATES = 36;
 const DROP_BASE = 36;
 const STATUS_LIVE = 2;
+const HIT_DROP = 30; // a shot is 34 HP; a hazard drains 10 HP/s
+const HIT_GAP_S = 4;
 
 /** Public facts. Positions are tiles; prices are relative (basis points vs raid start), never absolute. */
 export type Fact =
@@ -30,6 +32,8 @@ export type Fact =
   | { kind: "exposed"; t: number; slot: number; bot: boolean; district: number }
   | { kind: "crate_opened"; t: number; slot: number; bot: boolean; district: number; drop: boolean }
   | { kind: "kill"; t: number; slot: number; bot: boolean; by: number | null; byBot: boolean | null }
+  /** Public HP fell by at least one shot (34) since the last poll; no position (that stays private). */
+  | { kind: "hit"; t: number; slot: number; bot: boolean; hp: number }
   | { kind: "extract"; t: number; slot: number; bot: boolean }
   | { kind: "market_event"; t: number; event: number; district: number }
   /** RAZKYN LIVE pick resolved (bets.ts): pick 0 = NEXT CRACK, 1 = KNOCKOUT IN 30 S; pct / mult from recorded bets. */
@@ -57,6 +61,7 @@ export function sanitizeFact(f: unknown): Fact | null {
     case "exposed": return { kind: "exposed", t, slot: slotOf(o.slot), bot: bool(o.bot), district: dist(o.district) };
     case "crate_opened": return { kind: "crate_opened", t, slot: slotOf(o.slot), bot: bool(o.bot), district: dist(o.district), drop: bool(o.drop) };
     case "kill": return { kind: "kill", t, slot: slotOf(o.slot), bot: bool(o.bot), by: o.by == null ? null : slotOf(o.by), byBot: o.byBot == null ? null : bool(o.byBot) };
+    case "hit": return { kind: "hit", t, slot: slotOf(o.slot), bot: bool(o.bot), hp: Math.min(100, Math.max(0, int(o.hp))) };
     case "extract": return { kind: "extract", t, slot: slotOf(o.slot), bot: bool(o.bot) };
     case "market_event": return { kind: "market_event", t, event: Math.min(3, Math.max(1, int(o.event))), district: dist(o.district) };
     case "pick_result": return { kind: "pick_result", t, pick: Math.min(2, Math.max(0, int(o.pick))), window: Math.max(0, int(o.window)), outcome: Math.min(254, Math.max(0, int(o.outcome))), pct: Math.min(100, Math.max(0, int(o.pct))), mult10: Math.max(0, int(o.mult10)), bets: Math.max(0, int(o.bets)) };
@@ -88,6 +93,7 @@ export class PublicFeed {
   private prev = {
     hazard: [0, 0, 0], awake: [false, false, false], window: 0, exposed: [] as boolean[], alive: [] as boolean[],
     extracted: [] as boolean[], kills: [] as number[], opened: new Set<number>(), started: false, ended: false, eventsFired: 0,
+    hp: [] as number[], lastHit: [] as number[],
   };
   private priceHist: number[][] = [[], [], []]; // bps per second
   private startTs = 0;
@@ -193,6 +199,14 @@ export class PublicFeed {
       const bot = !!r.isBot;
       if (r.exposed && !P.exposed[s] && r.alive && !r.extracted) this.emit({ kind: "exposed", t, slot: s, bot, district: districtOfX(Number(r.pubX)) });
       P.exposed[s] = !!r.exposed;
+      // Under fire: HP fell by >= 30 since the last ~1 s poll. Hazards drain 10 HP/s, a shot takes 34,
+      // so only gunfire crosses this line. One callout per raider every HIT_GAP_S; a knockout is a kill fact.
+      const hp = Number(r.hp);
+      if (r.alive && !r.extracted && P.hp[s] != null && P.hp[s] - hp >= HIT_DROP && t - (P.lastHit[s] ?? -999) >= HIT_GAP_S) {
+        this.emit({ kind: "hit", t, slot: s, bot, hp });
+        P.lastHit[s] = t;
+      }
+      P.hp[s] = hp;
       if (P.alive[s] !== false && !r.alive) newlyDead.push(s);
       P.alive[s] = !!r.alive;
       if (r.extracted && !P.extracted[s]) this.emit({ kind: "extract", t, slot: s, bot });

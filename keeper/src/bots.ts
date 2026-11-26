@@ -171,6 +171,12 @@ export class BotCrew {
   }
   private feudSeed: number;
 
+  /** Knocked out or extracted (public RaiderPublic), so this BOT should stop acting. */
+  private async down(slot: number) {
+    const p = await this.S.rpub(slot).catch(() => null);
+    return !!p && !p.alive;
+  }
+
   /** Whether BOTs a and b fight (symmetric, fixed per raid by the crew seed). */
   private feud(a: number, b: number) {
     const lo = Math.min(a, b), hi = Math.max(a, b);
@@ -262,6 +268,7 @@ export class BotCrew {
    * Returns false if the target is on or next to a band (caller picks another target) or no route exists.
    */
   private async safeWalk(slot: number, x: number, y: number, within: number, intervalMs = 250, allowTargetInBand = false): Promise<boolean> {
+    if (await this.down(slot)) return false; // knocked out: every move would be refused
     const bands = await this.bands();
     let me = await this.S.rprv(slot);
     if (inBand(me.x, me.y, bands)) {
@@ -276,6 +283,7 @@ export class BotCrew {
       const route = planRoute(me.x, me.y, x, y, bands, allowTargetInBand);
       if (!route) return false;
       if (await this.walkPath(slot, [...route.wps, [x, y]], within, allowTargetInBand ? 110 : intervalMs, bands, allowTargetInBand)) return true;
+      if (await this.down(slot)) return false;
       me = await this.S.rprv(slot);
     }
     return false;
@@ -298,7 +306,7 @@ export class BotCrew {
       for (let round = 0; ; round++) {
         const at = await S.rprv(slot);
         if (Math.hypot(tx - at.x, ty - at.y) <= tol) break;
-        if (round >= 5) return false;
+        if (round >= 5 || (round > 0 && await this.down(slot))) return false;
         // The correction from where the BOT really is must itself stay off the danger band.
         if (!(last && allowTargetInBand) && !segmentSafe(at.x, at.y, tx, ty, bands)) return false;
         let cx = at.x, cy = at.y;
