@@ -92,7 +92,7 @@ Spectators can bet play-money (dPLAY) on "extracts / doesn't extract" for each r
 | Hazards | District ≤ −2% vs start: its hazard tiles activate, 10 HP/s. ≤ −5%: double the hazard area |
 | Terminals | 2 per district. Trade channel 3 s; the trader's position is public while channelling |
 | Exits | 4 exit points. Windows open at t = 120 s, 210 s and 270 s; each window uses 2 VRF-chosen exits for 30 s. Stand 5 s to extract |
-| Entry stake | 10 dUSD = 4.0 protected slot (40%) + 5.5 loot pool (55%) + 0.5 ops (5%) |
+| Entry stake | 10 dUSD = 2.0 protected slot (20%) + 7.5 loot pool (75%) + 0.5 ops (5%) (changed from 4.0 / 5.5 / 0.5 by DECISIONS #41, approved by Maris) |
 | Spectator pool | dPLAY (free faucet token); buying closes 30 s before the last exit window ends |
 | Session (raid) key | Valid only for this raid's instructions; expires at raid end + 10 min; can never move tokens |
 
@@ -235,7 +235,7 @@ Columns: name, who signs, where it's sent.
 **On the TEE (keeper)**
 
 - `setup_permissions` (keeper, TEE): `CreateEphemeralPermissionCpi` for each private account with exactly the members listed in §6.2.
-- `request_raid_vrf` / `vrf_callback_raid` (keeper → VRF): one 32-byte seed. Derive spawns, crate placement and contents (splitting the 55% loot pool across the 24 active + 12 dormant crates), exit choices and the mystery leaf index with domain-separated `hash(seed ‖ label ‖ i)`. Results go only into private accounts.
+- `request_raid_vrf` / `vrf_callback_raid` (keeper → VRF): one 32-byte seed. Derive spawns, crate placement and contents (splitting the 75% loot pool across the 24 active + 12 dormant crates), exit choices and the mystery leaf index with domain-separated `hash(seed ‖ label ‖ i)`. Results go only into private accounts.
 - `load_slice(chunk_index, bytes)` (keeper, TEE, Mystery mode): writes the chosen day's slice into `RaidSecret` in chunks. Then `verify_slice(merkle_proof)` checks `hash(slice) == leaf.data_hash`, `leaf.index == vrf_leaf_index` and the proof against `Raid.day_root`. The raid cannot start until verified. So the keeper cannot cheat: it can only load the slice the VRF chose.
 - `start_raid` (keeper, TEE): sets status Live and the start timestamp.
 
