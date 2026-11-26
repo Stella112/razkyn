@@ -110,7 +110,7 @@ export async function runRaid(o: RaidOptions) {
 
   const ticker = new Ticker(S, o.hz);
   const tickMode = await ticker.start();
-  const crew = new BotCrew(S, botSlots, elapsed, Number(S.raidId.toString().slice(-6)));
+  const crew = new BotCrew(S, botSlots, elapsed, Number(S.raidId.toString().slice(-6)), humans.length);
   const pricePath: { step: number; prices: string[] }[] = [];
   let recording = true;
   const recorder = (async () => {

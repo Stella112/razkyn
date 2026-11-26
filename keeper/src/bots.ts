@@ -11,6 +11,10 @@ export const EXITS = [[1, 20], [32, 1], [32, 38], [62, 20]].map(([x, y]) => [x *
 export const TERMINALS = [[5, 12], [15, 28], [27, 12], [37, 28], [49, 12], [59, 28]].map(([x, y]) => [x * 100 + 50, y * 100 + 50]);
 const CENTER = [3250, 2050];
 const LAST_WINDOW = 270;
+// Fairness for human raiders: each BOT opens at most 2 crates (14 of the 24 active ones for 7 BOTs),
+// and BOTs wait 15 s before looting when a human is in the raid.
+const MAX_BOT_CRATES = 2;
+const HUMAN_HEAD_START = 15;
 
 // Hazard avoidance (public information only: each District's hazard level and price change).
 // The program hurts a raider standing on rows 16-23 (level 1) or 12-27 (level 2) of a falling
@@ -75,10 +79,12 @@ export type BotEvent = { t: number; slot: number; kind: string; detail: Record<s
 export class BotCrew {
   readonly events: BotEvent[] = [];
   private claimed = new Set<number>();
+  private opened = new Map<number, number>();
   private seed: number;
 
   /** `elapsed()` returns raid seconds on the TEE clock. */
-  constructor(private S: RaidSession, private slots: number[], private elapsed: () => number, seed = 1) {
+  /** humans > 0: BOTs leave room for players (MAX_BOT_CRATES each, HUMAN_HEAD_START s before looting). */
+  constructor(private S: RaidSession, private slots: number[], private elapsed: () => number, seed = 1, private humans = 0) {
     this.seed = seed;
   }
 
@@ -178,6 +184,7 @@ export class BotCrew {
   }
 
   private async runOne(slot: number) {
+    if (this.humans > 0) await sleep(HUMAN_HEAD_START * 1000 + Math.floor(this.rnd() * 4000));
     for (;;) {
       const raid = await this.state();
       if (raid.status !== 2) return;
@@ -191,6 +198,7 @@ export class BotCrew {
   }
 
   private async lootOne(slot: number, pos: { x: number; y: number }[]) {
+    if ((this.opened.get(slot) ?? 0) >= MAX_BOT_CRATES) return false; // leave the rest for human raiders
     const me = await this.S.rprv(slot);
     const districts = await Promise.all([0, 1, 2].map((i) => this.S.districtAcc(i)));
     const bands = await this.bands();
@@ -214,6 +222,7 @@ export class BotCrew {
       await this.fast(slot, await this.S.finishOpenIx(slot, best));
       const bp = (await this.S.rprv(slot)).backpack.map((b) => b.toString());
       this.log(slot, "open_crate", { crate: best, backpack: bp });
+      this.opened.set(slot, (this.opened.get(slot) ?? 0) + 1);
       return true;
     } catch (e) {
       this.log(slot, "open_failed", { crate: best, error: String(e).match(/0x[0-9a-f]+/)?.[0] ?? String(e).slice(0, 80) });
