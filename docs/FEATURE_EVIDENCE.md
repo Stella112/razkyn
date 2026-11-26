@@ -33,3 +33,11 @@ Screenshots are in `docs/screens/`. Devnet raids: 1795697137007 (Mystery, 3D cli
 - No rigged / skinned character models: operators are original jointed primitives with procedural animation. Licensed CC0 packs (Kenney, Quaternius) were suggested but not downloaded.
 - No cover / line of sight (needs a program change; see #1).
 - No original sound effects beyond the existing Web Audio blips.
+
+## Added after owner feedback (2026-11-26, afternoon)
+| Item | Status | Evidence |
+|---|---|---|
+| Map themes: Street / Mall / Farm (title screen + Training Ground picker, saved per browser) | Built — looks only: floor paint, scenery outside the playfield, lighting, weather; rules, tiles, crates, hazards, exits unchanged | `app/src/game/three/themes.ts`; checked on the title screen and in Training Ground |
+| How to play + colour legend (title menu, HELP button, H key, auto-opens on the first raid / training visit) | Built | `app/src/screens/HowToPlay.tsx` |
+| Closer camera (~38°, about 40% nearer) and larger operators | Built | `RaidScene3D.ts`, `actors.ts` |
+| Overhead lantern cables over the Street market (above head height) | Built | `dressing.ts` |
