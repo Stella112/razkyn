@@ -37,7 +37,10 @@ export function useGameWallet(): GameWallet {
   const [dev, setDev] = useState<Keypair | null>(() => (devWalletEnabled() ? devKeypair() : null));
   return useMemo<GameWallet>(() => {
     const confirm = async (sig: string, tx: Transaction) => {
-      await connection.confirmTransaction({ signature: sig, blockhash: tx.recentBlockhash!, lastValidBlockHeight: (await connection.getLatestBlockhash()).lastValidBlockHeight }, "confirmed");
+      const lastValidBlockHeight = tx.lastValidBlockHeight ?? (await connection.getLatestBlockhash()).lastValidBlockHeight;
+      const res = await connection.confirmTransaction({ signature: sig, blockhash: tx.recentBlockhash!, lastValidBlockHeight }, "confirmed");
+      // A landed-but-failed transaction is not a success (e.g. two players racing for one seat).
+      if (res.value.err) throw new Error(`transaction ${sig} failed on-chain: ${JSON.stringify(res.value.err)}`);
       return sig;
     };
     if (adapter.publicKey && adapter.sendTransaction) {

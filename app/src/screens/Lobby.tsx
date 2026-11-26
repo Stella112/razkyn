@@ -117,19 +117,36 @@ export default function Lobby() {
     if (!lobby || !w.publicKey) return;
     setErr(""); setBusy("Checking your seat…");
     try {
-      // Re-read the seats right now: the keeper fills empty seats with BOTs when the countdown ends.
-      const fresh = await readRaidBase(lobby.raidId);
-      const seat = fresh ? lobby.humanSlots.find((s) => !fresh.raiders[s].joined) : undefined;
-      if (seat === undefined) throw new Error("All seats just filled. Open a new raid from the lobby.");
-      if (lobby.joinDeadline - Date.now() < JOIN_CUTOFF_MS) throw new Error("Too late: the join window is closing. Open a new raid in a moment.");
       const rk = raidKeyFor(lobby.raidId, true)!;
-      setBusy("Building the join (free 10 dUSD if needed + 10 dUSD stake)…");
-      const tx = await buildJoinTx(w.publicKey, lobby.raidId, seat, rk.publicKey, cls);
-      // Dry-run it first: wallets report a failed transaction only as "Unexpected error".
-      const sim = await base.simulateTransaction(tx);
-      if (sim.value.err) throw new Error(explainJoinFailure(sim.value.err, sim.value.logs ?? []));
-      setBusy("Approve in your wallet. This is the only signature until the payout.");
-      const sig = await w.signAndSend(tx);
+      const lost = new Set<number>();
+      let sig = "";
+      for (;;) {
+        // Re-read the seats right now: the keeper fills empty seats with BOTs when the countdown ends.
+        const fresh = await readRaidBase(lobby.raidId);
+        const free = fresh ? lobby.humanSlots.filter((s) => !fresh.raiders[s].joined && !lost.has(s)) : [];
+        if (!free.length) throw new Error("All seats just filled. Open a new raid from the lobby.");
+        // Start from a seat derived from the wallet, so two players clicking together usually differ.
+        const seat = free[w.publicKey.toBytes()[0] % free.length];
+        if (lobby.joinDeadline - Date.now() < JOIN_CUTOFF_MS) throw new Error("Too late: the join window is closing. Open a new raid in a moment.");
+        setBusy("Building the join (free 10 dUSD if needed + 10 dUSD stake)…");
+        const tx = await buildJoinTx(w.publicKey, lobby.raidId, seat, rk.publicKey, cls);
+        // Dry-run it first: wallets report a failed transaction only as "Unexpected error".
+        const sim = await base.simulateTransaction(tx);
+        if (sim.value.err) {
+          if (/"Custom":6004\b/.test(JSON.stringify(sim.value.err))) { lost.add(seat); continue; } // SlotTaken
+          throw new Error(explainJoinFailure(sim.value.err, sim.value.logs ?? []));
+        }
+        setBusy(lost.size ? "That seat was just taken: joining the other one. Approve in your wallet." : "Approve in your wallet. This is the only signature until the payout.");
+        try {
+          sig = await w.signAndSend(tx);
+          break;
+        } catch (e) {
+          // Another player took this seat between our dry-run and our transaction: try the next free one.
+          if (/"Custom":6004\b/.test(String((e as Error)?.message ?? e))) { lost.add(seat); continue; }
+          const m = /failed on-chain: (.*)$/.exec(String((e as Error)?.message ?? e));
+          throw m ? new Error(explainJoinFailure(m[1], [])) : e;
+        }
+      }
       setJoinSig(sig);
       setBusy("");
     } catch (e) {
