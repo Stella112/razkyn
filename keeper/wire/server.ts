@@ -3,6 +3,8 @@
 //   GET /reports/:raidId       -> Market Raid Report file ({report, hash, postReportSig})
 //   GET /wire/:raidId          -> THE WIRE lines so far (JSON)
 //   GET /wire/:raidId/stream   -> THE WIRE as Server-Sent Events, one `data:` JSON line per WireLine
+//   POST /avatar               -> a player sets their cosmetic avatar, signed with the seat raid key (avatars.ts)
+//   GET /avatars/:raidId       -> verified avatars by slot
 // THE WIRE lines are public by construction (public facts + post-filter); reports are published
 // after settlement; the lobby holds only public ids.
 import { createServer, type Server } from "node:http";
@@ -11,6 +13,7 @@ import { join } from "node:path";
 import { REPO } from "../../scripts/spike-lib.ts";
 import type { Wire, WireLine } from "./wire.ts";
 import type { BetBook } from "../src/bets.ts";
+import { AvatarBook } from "./avatars.ts";
 
 export type Lobby = {
   raidId: string;
@@ -41,6 +44,7 @@ function eventTitle(day: string): string | null {
 export class WireServer {
   private wires = new Map<string, Wire>();
   private books = new Map<string, BetBook>();
+  private avatars = new AvatarBook();
   private server: Server;
   lobby: Lobby | null = null;
   /** Serve mode only: open a raid on request. */
@@ -68,6 +72,20 @@ export class WireServer {
         });
         return;
       }
+      // Shared avatars (cosmetic; verified against the seat raid key on-chain).
+      if (url === "/avatar" && req.method === "POST") {
+        let body = "";
+        req.on("data", (c) => { body += c; if (body.length > 1000) req.destroy(); });
+        req.on("end", async () => {
+          let parsed: Record<string, unknown> = {};
+          try { parsed = JSON.parse(body || "{}"); } catch { return json(400, { error: "bad json" }); }
+          const err = await this.avatars.submit(parsed).catch((e) => `error: ${String(e).slice(0, 80)}`);
+          json(err ? 400 : 200, err ? { error: err } : { ok: true });
+        });
+        return;
+      }
+      const av = /^\/avatars\/(\d+)\/?$/.exec(url);
+      if (av && req.method === "GET") return json(200, this.avatars.get(av[1]));
       // Extraction Market: pools, bets and payouts for a raid.
       const bm = /^\/bets\/(\d+)\/?$/.exec(url);
       if (bm && req.method === "GET") {

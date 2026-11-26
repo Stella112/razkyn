@@ -119,3 +119,25 @@ export async function verifyMystery(m: { day: string; sliceStart: number; dataHa
   }
   return { leaf: hex(leaf), root: hex(node), ok: hex(node) === rootHex.toLowerCase() };
 }
+
+// ---------------- shared avatars (cosmetic; keeper/wire/avatars.ts) ----------------
+import nacl from "tweetnacl";
+import type { Keypair } from "@solana/web3.js";
+import type { HumanSpec } from "../game/three/actors";
+/** Must match avatarMessage in keeper/wire/avatars.ts byte for byte. */
+const avatarMessage = (raidId: string, slot: number, a: HumanSpec) =>
+  new TextEncoder().encode(`razkyn-avatar:${raidId}:${slot}:${a.body}:${a.skin}:${a.hair}:${a.hairColor}:${a.top}:${a.pants}`);
+/** Publish my avatar for this raid, signed with my raid key (the keeper checks it is my seat's key). */
+export async function publishAvatar(raidId: string, slot: number, raidKey: Keypair, a: HumanSpec): Promise<boolean> {
+  try {
+    const sig = nacl.sign.detached(avatarMessage(raidId, slot, a), raidKey.secretKey);
+    const r = await fetch(`${KEEPER_URL}/avatar`, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ raidId, slot, avatar: a, pubkey: raidKey.publicKey.toBase58(), sig: btoa(String.fromCharCode(...sig)) }),
+    });
+    return r.ok;
+  } catch { return false; }
+}
+export async function getAvatars(raidId: string): Promise<Record<number, HumanSpec>> {
+  try { const r = await fetch(`${KEEPER_URL}/avatars/${raidId}`, { cache: "no-store" }); return r.ok ? await r.json() : {}; } catch { return {}; }
+}

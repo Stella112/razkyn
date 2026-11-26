@@ -11,7 +11,7 @@ import {
   DISTRICT_TILES, EXITS, MAP_H, MAP_W, NUM_CRATES, TERMINALS, UNIT, VISION_TILES, changeBps, districtOfX, type PublicState,
 } from "../lib/chain";
 import { CSS, PAL, buildWorld, fow, type World } from "./three/world";
-import { CrateModel, ExitModel, LOOKS, Operator, TerminalModel, avatarFromSeed, loadAvatar, loadBotModel, type AvatarSpec } from "./three/actors";
+import { CrateModel, ExitModel, LOOKS, Operator, TerminalModel, avatarFromSeed, loadAvatar, loadBotModel, type AvatarSpec, type HumanSpec } from "./three/actors";
 import { getTheme, getWeather } from "./three/themes";
 
 export type Visible = { slot: number; x: number; y: number };
@@ -63,6 +63,8 @@ type RaiderView = {
   target: THREE.Vector3;
   seen: boolean;
   exposedRing: THREE.Mesh;
+  look: keyof typeof LOOKS;
+  specKey: string;
 };
 
 export class RaidScene {
@@ -255,6 +257,16 @@ export class RaidScene {
   }
 
   setInput(i: SceneInput) { this.input_ = i; }
+  /** Verified avatars other players chose (keeper /avatars). A raider whose look changes is rebuilt. */
+  private shared: Record<number, HumanSpec> = {};
+  setAvatars(a: Record<number, HumanSpec>) {
+    this.shared = a;
+    this.raiders.forEach((v, slot) => {
+      if (v.look !== "human" || !a[slot] || JSON.stringify(a[slot]) === v.specKey) return;
+      this.scene.remove(v.op.root);
+      this.raiders.delete(slot);
+    });
+  }
 
   // ------------------------------------------------------------ internals
   private spawnSparks(at: THREE.Vector3, color: number, n: number, speed: number) {
@@ -287,7 +299,7 @@ export class RaidScene {
     if (!v) {
       // You: your saved avatar. Other humans: a look derived from their wallet (the chain stores no avatar). BOTs: the chosen BOT style.
       const wallet = this.input_?.pub?.raid?.raiders[slot]?.wallet;
-      const spec: AvatarSpec = look === "me" ? loadAvatar() : look === "bot" ? { kind: "bot", model: loadBotModel() } : avatarFromSeed(wallet ? wallet.toBytes() : [slot * 41 + 7, slot * 13, slot * 7, slot * 3, slot, slot * 29]);
+      const spec: AvatarSpec = look === "me" ? loadAvatar() : look === "bot" ? { kind: "bot", model: loadBotModel() } : (this.shared[slot] ?? avatarFromSeed(wallet ? wallet.toBytes() : [slot * 41 + 7, slot * 13, slot * 7, slot * 3, slot, slot * 29]));
       const op = new Operator(LOOKS[look], spec);
       const label = textSprite("", CSS.silver);
       label.sp.position.y = 2.35;
@@ -297,7 +309,7 @@ export class RaidScene {
       op.root.add(ring);
       if (look === "me") { const lamp = new THREE.PointLight(0xdfeee9, 5, 7, 1.6); lamp.position.set(0, 1.5, 0.9); op.root.add(lamp); } // shoulder lamp
       this.scene.add(op.root);
-      v = { op, label, labelKey: "", pos: new THREE.Vector3(), target: new THREE.Vector3(), seen: false, exposedRing: ring };
+      v = { op, label, labelKey: "", pos: new THREE.Vector3(), target: new THREE.Vector3(), seen: false, exposedRing: ring, look, specKey: JSON.stringify(spec) };
       this.raiders.set(slot, v);
     }
     return v;

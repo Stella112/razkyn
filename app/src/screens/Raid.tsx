@@ -9,7 +9,8 @@ import {
 } from "../lib/chain";
 import { programError } from "../lib/errors";
 import { explorerTx } from "../lib/config";
-import { getLobby, getReport, subscribeWire, verifyMystery, hex, type ReportFile, type WireLine } from "../lib/keeper";
+import { getAvatars, getLobby, getReport, publishAvatar, subscribeWire, verifyMystery, hex, type ReportFile, type WireLine } from "../lib/keeper";
+import { loadAvatar } from "../game/three/actors";
 import { startGame, type RaidScene } from "../game/RaidScene3D";
 import Market from "../game/Market";
 import Minimap from "../game/Minimap";
@@ -182,6 +183,20 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     return () => { stop = true; clearInterval(i); };
   }, [kp, raidId, watch]);
   const player = useMemo(() => (tee && mySlot >= 0 ? new RaidPlayer(tee.conn, tee.kp, raidId, mySlot) : null), [tee, mySlot, raidId]);
+
+  // Shared avatars (cosmetic): publish mine once, signed with my raid key; fetch everyone's verified ones.
+  useEffect(() => {
+    if (watch || !raidId || !kp || mySlot < 0) return;
+    void publishAvatar(raidId, mySlot, kp, loadAvatar());
+  }, [watch, raidId, kp, mySlot]);
+  useEffect(() => {
+    if (!raidId) return;
+    let stop = false;
+    const f = async () => { const a = await getAvatars(raidId); if (!stop) sceneRef.current()?.setAvatars(a); };
+    void f();
+    const i = setInterval(f, 5000);
+    return () => { stop = true; clearInterval(i); };
+  }, [raidId]);
 
   // My private state (rprv + fog View), readable only with my raid key's token.
   useEffect(() => {
