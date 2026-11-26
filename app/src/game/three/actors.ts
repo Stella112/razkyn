@@ -89,6 +89,31 @@ export class Operator {
     const sight = box(0.02, 0.02, 0.1, this.visorMat); sight.position.set(0, 0.08, 0.05); this.gun.add(sight);
     this.muzzle.position.z = 0.54; this.gun.add(this.muzzle);
     this.root.scale.setScalar(1.12);
+    // Class gear (hidden until setClass): Scout antenna + wide visor, Trader wrist terminal, Gunner long barrel + plates.
+    const gearMat = mat(0x1a1f23, 0.5, 0.6);
+    const antenna = box(0.015, 0.34, 0.015, gearMat); antenna.position.set(0.1, 0.3, -0.06); this.head.add(antenna);
+    const tip = box(0.04, 0.04, 0.04, this.visorMat); tip.position.set(0.1, 0.48, -0.06); this.head.add(tip);
+    const wideVisor = box(0.3, 0.05, 0.05, this.visorMat); wideVisor.position.set(0, 0.07, 0.15); this.head.add(wideVisor);
+    const wrist = box(0.12, 0.03, 0.16, mat(0x2a3339, 0.4, 0.7)); wrist.position.set(0, -0.2, 0.05); this.arms[0].lower.add(wrist);
+    const wristScreen = box(0.1, 0.005, 0.12, glow(PAL.amber)); wristScreen.position.set(0, -0.184, 0.05); this.arms[0].lower.add(wristScreen);
+    const longBarrel = box(0.05, 0.05, 0.3, mat(0x22282c, 0.4, 0.8)); longBarrel.position.z = 0.66; this.gun.add(longBarrel);
+    const brake = box(0.08, 0.08, 0.06, dark); brake.position.z = 0.82; this.gun.add(brake);
+    const shoulder = box(0.14, 0.08, 0.2, accent); shoulder.position.set(0.3, 0.52, 0); this.torso.add(shoulder);
+    const shoulderL = shoulder.clone(); shoulderL.position.x = -0.3; this.torso.add(shoulderL);
+    this.gear = { scout: [antenna, tip, wideVisor], trader: [wrist, wristScreen], gunner: [longBarrel, brake, shoulder, shoulderL] };
+    this.setClass(0);
+  }
+
+  private gear!: { scout: THREE.Object3D[]; trader: THREE.Object3D[]; gunner: THREE.Object3D[] };
+  private cls = -1;
+  /** 0 Raider, 1 Scout, 2 Trader, 3 Gunner (constants.rs CLASS_*). Visible gear only; rules live on-chain. */
+  setClass(cls: number) {
+    if (cls === this.cls) return;
+    this.cls = cls;
+    this.gear.scout.forEach((o) => (o.visible = cls === 1));
+    this.gear.trader.forEach((o) => (o.visible = cls === 2));
+    this.gear.gunner.forEach((o) => (o.visible = cls === 3));
+    this.muzzle.position.z = cls === 3 ? 0.86 : 0.54;
   }
 
   fire() { this.recoil = 1; }

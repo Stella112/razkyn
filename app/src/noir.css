@@ -99,3 +99,17 @@ body { background: #0b0f12; letter-spacing: 0.005em; }
 .title-foot { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; gap: 16px; padding: 10px clamp(20px, 6vw, 96px); font-family: var(--mono); font-size: 11px; color: var(--faint); background: linear-gradient(0deg, rgba(8, 11, 13, 0.9), transparent); flex-wrap: wrap; }
 .title-foot .warn-t { color: var(--amber); letter-spacing: 0.08em; }
 @media (max-width: 720px) { .title-shade { background: linear-gradient(0deg, rgba(8, 11, 13, 0.95) 30%, rgba(8, 11, 13, 0.35) 75%); } .title-menu { top: auto; bottom: 56px; transform: none; } .logo-sub { margin-bottom: 16px; } .mi-sub { display: none; } }
+
+/* ---------- HUD layout: top-centre clock, minimap, context prompt ---------- */
+.hud-tc { top: 10px; left: 50%; transform: translateX(-50%); }
+.hud-tc .hud-box { text-align: center; padding: 4px 16px !important; }
+.hud-tc .timer, .hud-tc .label { text-align: center !important; }
+.minimap { background: rgba(11, 15, 18, 0.72); border: 1px solid rgba(200, 210, 209, 0.14); padding: 4px; pointer-events: none; }
+.mm-names { display: flex; justify-content: space-between; font-family: var(--display); font-weight: 600; font-size: 10px; letter-spacing: 0.12em; color: var(--dim); padding: 3px 2px 0; text-transform: uppercase; }
+.ctx-prompt { position: absolute; z-index: 5; left: 50%; bottom: 58px; transform: translateX(-50%); padding: 7px 16px; background: rgba(11, 15, 18, 0.86); border-left: 3px solid var(--amber); font-family: var(--display); font-weight: 700; letter-spacing: 0.14em; font-size: 16px; color: #f3efe6; pointer-events: none; white-space: nowrap; }
+.lock { font-family: var(--display); font-weight: 800; letter-spacing: 0.14em; color: var(--down); filter: none; font-size: 14px; margin-right: 6px; }
+.phase-steps > div.on { background: var(--amber) !important; box-shadow: none !important; }
+.phase-steps > div { background: rgba(200, 210, 209, 0.12) !important; border-radius: 0 !important; }
+@media (max-width: 900px) { .minimap canvas { width: 128px !important; height: 80px !important; } .districts { display: none; } }
+
+.op-preview { height: 230px; margin: -6px 0 6px; background: radial-gradient(ellipse at 50% 85%, rgba(217,172,101,0.12), transparent 60%); }

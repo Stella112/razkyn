@@ -403,6 +403,7 @@ export class RaidScene {
         if (moved > 0.004) v.op.facing = Math.atan2(v.pos.x - before.x, v.pos.z - before.z);
         v.op.root.position.copy(v.pos);
         v.op.root.visible = true;
+        v.op.setClass(raid.classes?.[slot] ?? 0); // classes are public on Raid
         const key = label + labelColor;
         if (key !== v.labelKey) { v.label.set(label, labelColor); v.labelKey = key; }
         shown.add(slot);

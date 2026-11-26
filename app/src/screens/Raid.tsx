@@ -12,6 +12,7 @@ import { explorerTx } from "../lib/config";
 import { getLobby, getReport, subscribeWire, verifyMystery, hex, type ReportFile, type WireLine } from "../lib/keeper";
 import { startGame, type RaidScene } from "../game/RaidScene3D";
 import Market from "../game/Market";
+import Minimap from "../game/Minimap";
 import { sfx } from "../lib/sfx";
 
 const RAID_SECS = 300;
@@ -172,17 +173,24 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   useEffect(() => {
     if (!player) return;
     let stop = false;
+    let inFlight = false;
+    const MAXP = 300;
     const poll = async () => {
+      // One read at a time: overlapping reads would each subtract the same sent moves and run the
+      // prediction away (seen on a slow / background tab: pending.dy reached -6,501,600).
+      if (inFlight) return;
+      inFlight = true;
       const before = { ...pending.current };
       try {
         const m = await readMine(player.conn, raidId, player.slot);
         if (stop) return;
-        pending.current = { dx: pending.current.dx - before.dx, dy: pending.current.dy - before.dy };
+        const dx = pending.current.dx - before.dx, dy = pending.current.dy - before.dy;
+        pending.current = { dx: Math.max(-MAXP, Math.min(MAXP, dx)), dy: Math.max(-MAXP, Math.min(MAXP, dy)) };
         setMine(m);
         if (m.rprv && pubRef.current) {
           values.current = [...values.current.slice(-90), backpackValue(m.rprv.backpack, pubRef.current.districts)];
         }
-      } catch { /* transient */ }
+      } catch { /* transient */ } finally { inFlight = false; }
     };
     poll();
     const i = setInterval(poll, 300);
@@ -429,14 +437,27 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const inHaz = !!(myRows && mine?.rprv && rpub?.alive && Math.floor(mine.rprv.y / 100) >= myRows[0] && Math.floor(mine.rprv.y / 100) <= myRows[1]);
   const outcome = watch ? { t: "RAID OVER", c: "meh" } : rpub?.extracted || myResult?.extracted ? { t: "EXTRACTED", c: "win" } : rpub && !rpub.alive ? { t: "KNOCKED OUT", c: "lose" } : { t: "STRANDED", c: "meh" };
 
+  // Contextual prompt (bottom centre): what E / Space would do right here, from the on-chain position.
+  const ctxPrompt = (() => {
+    const m = mine?.rprv;
+    if (watch || !canAct || !m || !pub?.raid || channel) return null;
+    if (TERMINALS.some((t) => { const c = center(t); return dist(c.x, c.y, m.x, m.y) <= UNIT; })) return haltedHere(pub.raid, m.x) ? "TRADING HALTED · terminals frozen" : `E · TRADE AT TERMINAL · ${pub.raid.classes?.[mySlot] === 2 ? 2 : 3} s exposed`;
+    const openEx = pub.raid.exitWindow ? pub.raid.openExits.filter((e) => e !== 255) : [];
+    if (openEx.some((e) => { const c = center(EXITS[e]); return dist(c.x, c.y, m.x, m.y) <= UNIT; })) return "HOLD SPACE · EXTRACT · 5 s";
+    const sealed = pub.raid.cratePos.some((c, i) => i < NUM_CRATES && !(c.x === 0 && c.y === 0) && pub.crates[i]?.state !== 1 && dist(c.x, c.y, m.x, m.y) <= UNIT)
+      || pub.crates.slice(NUM_CRATES).some((c) => c?.placed && c.state === 0 && dist(c.x, c.y, m.x, m.y) <= UNIT);
+    return sealed ? "E · CRACK SEAL · 2 s" : null;
+  })();
+
   return (
     <div className="raid">
       <div className="raid-canvas" ref={hostRef} />
+      {ctxPrompt && <div className="ctx-prompt">{ctxPrompt}</div>}
       <div className="portrait-hint">Turn your phone sideways: RAZKYN plays in landscape.</div>
       <div className={`vignette ${now - hurtAt < 260 ? "on" : inHaz ? "haz" : ""}`} />
       {pops.map((p) => <div key={p.id} className="popup">{p.text}</div>)}
       {!watch && alerts.length > 0 && (
-        <div className="trade-alert">⚠ {alerts.map((a) => `${a.bot ? "BOT" : "RAIDER"} ${a.s + 1} TRADING · ${a.d} tiles ${a.dir}`).join("  ·  ")}</div>
+        <div className="trade-alert">{alerts.map((a) => `${a.bot ? "BOT" : "RAIDER"} ${a.s + 1} TRADING · ${a.d} tiles ${a.dir}`).join("  ·  ")}</div>
       )}
 
       {/* top-left: me */}
@@ -445,8 +466,8 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
           <a className="brand" href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }} style={{ fontSize: 12 }}>RAZKYN</a>
           <span className="pill">{raid?.mode === 0 ? "MYSTERY" : "LIVE"}</span>
           {watch ? <span className="pill">WATCH · public only</span> : mySlot >= 0 ? <span className="pill live">RAIDER {mySlot + 1}</span> : null}
-          <button className="act mute" title={muted ? "Sound off" : "Sound on"} onClick={() => setMuted(sfx.toggle())}>{muted ? "🔇" : "🔊"}</button>
-          <button className="act mute" title={voice ? "THE WIRE voice on" : "THE WIRE voice off"} onClick={toggleVoice} style={{ opacity: voice ? 1 : 0.5 }}>🎙</button>
+          <button className="act mute" title={muted ? "Sound off" : "Sound on"} onClick={() => setMuted(sfx.toggle())}>{muted ? "SND OFF" : "SND"}</button>
+          <button className="act mute" title={voice ? "THE WIRE voice on" : "THE WIRE voice off"} onClick={toggleVoice} style={{ opacity: voice ? 1 : 0.5 }}>VOICE</button>
         </div>
         {watch && raidId && <Market raidId={raidId} pub={pub} />}
         {!watch && mySlot >= 0 && (
@@ -470,8 +491,8 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
         )}
       </div>
 
-      {/* top-right: clock, exits, districts */}
-      <div className="hud hud-tr">
+      {/* top-centre: clock and extraction state */}
+      <div className="hud hud-tc">
         <div className="hud-box">
           <div className="label" style={{ textAlign: "right" }}>{live ? "Raid ends in" : ended ? "Raid over" : "Waiting for start"}</div>
           <div className={`timer ${live && left < 30 ? "hot" : ""}`}>{live ? mmss(left) : "—"}</div>
@@ -479,6 +500,11 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
             {winOpen ? <span className="up">EXIT WINDOW {raid!.exitWindow} OPEN</span> : nextWin !== undefined && live ? `next exit window in ${mmss(nextWin - elapsed)}` : ""}
           </div>
         </div>
+      </div>
+
+      {/* top-right: minimap, districts, peek */}
+      <div className="hud hud-tr">
+        <Minimap pub={pub} me={!watch && mine?.rprv ? { x: mine.rprv.x, y: mine.rprv.y } : null} visible={mine?.view ? mine.view.entries.slice(0, mine.view.count) : []} mySlot={watch ? -1 : mySlot} names={DN} />
         <div className="districts">
           {[0, 1, 2].map((d) => {
             const ds = pub?.districts[d]; const b = changeBps(ds ?? null);
@@ -493,10 +519,10 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
         </div>
         {!watch && player && (
           <div className="hud-box peek-panel">
-            <button className="act" onClick={tryPeek}>🔒 Try to peek</button>
+            <button className="act" onClick={tryPeek}>TRY TO PEEK</button>
             {peek && (
               <div style={{ marginTop: 8, fontSize: 12 }}>
-                <span className="lock">🔒</span>
+                <span className="lock">ACCESS DENIED</span>
                 {peek.map((p) => <div key={p.target}><span className="dim">{p.target}:</span> <span className={p.ok ? "refused" : "amber"}>{p.result}</span></div>)}
               </div>
             )}
@@ -524,7 +550,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       {toast && toast.until > now && <div className="toast">{toast.text}</div>}
       {raid && (raid.eventKind ?? 0) > 0 && Number(raid.eventUntil?.toString() ?? 0) * 1000 > now && (
         <div className={`event-banner ${raid.eventKind === 1 ? "halt" : ""}`}>
-          ⚡ {MARKET_EVENTS[raid.eventKind!]}{raid.eventKind === 2 ? " · hazards trigger early" : ` · ${DN[raid.eventDistrict ?? 0]}`}{raid.eventKind === 1 ? " · terminals frozen" : raid.eventKind === 3 ? " · crates wake" : ""} · {Math.max(0, Math.ceil(Number(raid.eventUntil!.toString()) - now / 1000))}s
+          {MARKET_EVENTS[raid.eventKind!]}{raid.eventKind === 2 ? " · hazards trigger early" : ` · ${DN[raid.eventDistrict ?? 0]}`}{raid.eventKind === 1 ? " · terminals frozen" : raid.eventKind === 3 ? " · crates wake" : ""} · {Math.max(0, Math.ceil(Number(raid.eventUntil!.toString()) - now / 1000))}s
         </div>
       )}
       {!watch && rpub && !rpub.alive && !ended && <div className="toast" style={{ top: "40%" }}>KNOCKED OUT · your protected slot is safe · watching until the raid ends</div>}
@@ -535,7 +561,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
         <div className="overlay"><div className="card" style={{ maxWidth: 520 }}>
           <div className="result-title meh" style={{ fontSize: 34 }}>NO LIVE RAID</div>
           <p className="note">Nobody is raiding right now. Open one from the lobby (BOTs fill the empty seats), or look back at past raids.</p>
-          <div className="row"><button className="btn primary" onClick={() => navigate("/play")}>▶ OPEN A RAID</button><button className="btn" onClick={() => navigate("/history")}>☰ RAID HISTORY</button></div>
+          <div className="row"><button className="btn primary" onClick={() => navigate("/play")}>OPEN A RAID</button><button className="btn" onClick={() => navigate("/history")}>RAID HISTORY</button></div>
         </div></div>
       )}
       {noKey && !watch && (
