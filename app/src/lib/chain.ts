@@ -253,7 +253,10 @@ export const HAZARD_ROWS: Record<number, [number, number]> = { 1: [16, 23], 2: [
 export const VISION_TILES = 8;
 export const SHOOT_RANGE_TILES = 6;
 export const districtOfX = (xUnits: number) => DISTRICT_TILES.findIndex(([lo, hi]) => Math.floor(xUnits / UNIT) >= lo && Math.floor(xUnits / UNIT) <= hi);
-export const changeBps = (d: DistrictAcc | null) => (d ? Math.round(((Number(d.currentPrice.toString()) - Number(d.startPrice.toString())) / Number(d.startPrice.toString() || PRICE_ONE)) * 10_000) : 0);
+export const changeBps = (d: DistrictAcc | null) => {
+  const start = d ? Number(d.startPrice.toString()) : 0;
+  return d && start > 0 ? Math.round(((Number(d.currentPrice.toString()) - start) / start) * 10_000) : 0; // 0 before the raid starts
+};
 /** Backpack value in dUSD base units at current district prices (units × index / 10^6). */
 export const backpackValue = (bp: BN[] | undefined, ds: (DistrictAcc | null)[]) =>
   (bp ?? []).reduce((a, u, i) => a + (Number(u.toString()) * Number(ds[i]?.currentPrice.toString() ?? PRICE_ONE)) / PRICE_ONE, 0);

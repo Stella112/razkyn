@@ -448,7 +448,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
               <div key={d} className={`district-chip ${ds?.hazardLevel ? "haz" : ""} ${ds?.awake && b >= 200 ? "wake" : ""}`}>
                 <div className="label">{DISTRICTS[d]}</div>
                 <div className={`px ${b >= 0 ? "up" : "down"}`}>{pct(b)}</div>
-                <div className="dim" style={{ fontSize: 10 }}>{ds?.hazardLevel ? `HAZARD ${ds.hazardLevel}` : ds?.awake ? "crates awake" : "index " + (Number(ds?.currentPrice.toString() ?? PRICE_ONE) / 1e4).toFixed(2)}</div>
+                <div className="dim" style={{ fontSize: 10 }}>{ds?.hazardLevel ? `HAZARD ${ds.hazardLevel}` : ds?.awake ? "crates awake" : Number(ds?.currentPrice.toString() ?? 0) > 0 ? "index " + (Number(ds!.currentPrice.toString()) / 1e4).toFixed(2) : "opens at the drop"}</div>
               </div>
             );
           })}
@@ -487,6 +487,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       {!watch && rpub && !rpub.alive && !ended && <div className="toast" style={{ top: "40%" }}>KNOCKED OUT · your protected slot is safe · watching until the raid ends</div>}
       {!watch && rpub?.extracted && !ended && <div className="toast" style={{ top: "40%" }}>EXTRACTED · backpack frozen · settles at raid end</div>}
       {!raid && raidId && <div className="toast">Waiting for raid {raidId}…</div>}
+      {raid && raid.status < 2 && <div className="toast" style={{ top: "40%" }}>{watch ? "RAID DROPS SOON · place your bets on the left" : "GET READY · the city is being built"}</div>}
       {watch && noLive && !raidId && (
         <div className="overlay"><div className="card" style={{ maxWidth: 520 }}>
           <div className="result-title meh" style={{ fontSize: 34 }}>NO LIVE RAID</div>

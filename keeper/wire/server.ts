@@ -29,6 +29,15 @@ export type Lobby = {
   reportHash?: string;
 };
 
+/** Event title for an already-revealed Mystery day (data/mystery/private/events.json), for older reports. */
+function eventTitle(day: string): string | null {
+  try {
+    const f = join(REPO, "data", "mystery", "private", "events.json");
+    if (!existsSync(f)) return null;
+    return (JSON.parse(readFileSync(f, "utf8")) as { day: string; title: string }[]).find((e) => e.day === day)?.title ?? null;
+  } catch { return null; }
+}
+
 export class WireServer {
   private wires = new Map<string, Wire>();
   private books = new Map<string, BetBook>();
@@ -73,7 +82,7 @@ export class WireServer {
           try {
             const { report: r, hash } = JSON.parse(readFileSync(join(dir, f), "utf8"));
             return {
-              raidId: r.raid.id, mode: r.raid.mode, hash, day: r.mystery?.day ?? null, title: r.mystery?.event?.title ?? null,
+              raidId: r.raid.id, mode: r.raid.mode, hash, day: r.mystery?.day ?? null, title: r.mystery?.event?.title ?? (r.mystery?.day ? eventTitle(r.mystery.day) : null),
               raiders: (r.raiders as { slot: number; bot: boolean; wallet: string | null; extracted: boolean; alive: boolean | null; dusdPayout: string }[])
                 .filter((x) => x.wallet).map((x) => ({ slot: x.slot, bot: x.bot, wallet: x.wallet, extracted: x.extracted, alive: x.alive, dusd: x.dusdPayout })),
             };

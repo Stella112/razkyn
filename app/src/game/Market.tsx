@@ -51,7 +51,7 @@ export default function Market({ raidId, pub }: { raidId: string; pub: PublicSta
     try {
       const tx = await buildBetTx(w.publicKey, raidId, slot, side, amount, new PublicKey(book.keeperAta));
       const sim = await base.simulateTransaction(tx);
-      if (sim.value.err) throw new Error("The bet would fail on-chain. Check your wallet is on devnet with a little SOL.");
+      if (sim.value.err) throw new Error(/AccountForFee|insufficient|AccountNotFound/i.test(JSON.stringify(sim.value.err) + (sim.value.logs ?? []).join(" ")) ? "Your wallet has no devnet SOL for the fee. Get a little at faucet.solana.com (devnet)." : `The bet would fail on-chain (${JSON.stringify(sim.value.err).slice(0, 60)}).`);
       const sig = await w.signAndSend(tx);
       setMsg(`Bet placed: ${side === "Y" ? "EXTRACTS" : "DOESN'T"} on raider ${slot + 1} · ${sig.slice(0, 10)}…`);
       sfx.trade();
@@ -74,7 +74,7 @@ export default function Market({ raidId, pub }: { raidId: string; pub: PublicSta
       {open && (
         <>
           <div className="note" style={{ fontSize: 11, margin: "2px 0 6px" }}>
-            {book?.settled ? "Settled from the on-chain result." : canBet ? `Bets close in ${Math.max(0, Math.floor(closeIn))}s · free devnet play-money` : "Betting closed."}
+            {book?.settled ? "Settled from the on-chain result." : !canBet ? "Betting closed." : Number.isFinite(closeIn) ? `Bets close in ${Math.max(0, Math.floor(closeIn))}s · free devnet play-money` : "Betting open until 4:30 into the raid · free devnet play-money"}
           </div>
           {!w.publicKey ? (
             <div className="row" style={{ marginBottom: 6 }}><WalletMultiButton /></div>
@@ -84,6 +84,7 @@ export default function Market({ raidId, pub }: { raidId: string; pub: PublicSta
               <span className="note mono" style={{ fontSize: 11 }}>you: {bal ?? "…"} dPLAY{(bal ?? 0) < amount ? " (+100 free)" : ""}</span>
             </div>
           )}
+          {raid.raiders.every((r) => !r.joined) && <div className="note" style={{ fontSize: 11 }}>Raiders appear here as they join.</div>}
           <div className="mkt-rows">
             {raid.raiders.map((r, s) => {
               if (!r.joined) return null;

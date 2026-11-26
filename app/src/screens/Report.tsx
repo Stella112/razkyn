@@ -125,6 +125,25 @@ export default function Report({ raidId }: { raidId: string }) {
               </p>
             </div>
 
+            {r.spectators && (
+              <div className="card">
+                <h3>EXTRACTION MARKET · dPLAY PLAY-MONEY</h3>
+                <p className="note">{r.spectators.rules}</p>
+                <table className="t">
+                  <thead><tr><th>Raider</th><th>On extracts</th><th>On doesn&apos;t</th><th>Result</th></tr></thead>
+                  <tbody>
+                    {(r.spectators.pools as { slot: number; yes: number; no: number; count: number }[]).filter((p) => p.count > 0).map((p) => (
+                      <tr key={p.slot}><td className="mono">{p.slot + 1}</td><td className="mono">{p.yes}</td><td className="mono">{p.no}</td><td>{r.spectators.outcomes ? (r.spectators.outcomes[p.slot] ? <span className="up">extracted</span> : <span className="down">did not</span>) : "—"}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+                {(r.spectators.bets as unknown[]).length === 0 && <p className="note">No bets this raid.</p>}
+                {(r.spectators.payouts as { bettor: string; amount: number; reason: string; sig?: string }[]).map((p, i) => (
+                  <div key={i} className="mono" style={{ fontSize: 12 }}>{p.reason === "win" ? "won" : "refund"} {p.amount} dPLAY → {p.bettor.slice(0, 4)}…{p.bettor.slice(-4)} {p.sig && p.sig.length > 40 && <a href={explorerTx(p.sig)} target="_blank" rel="noreferrer">tx ↗</a>}</div>
+                ))}
+              </div>
+            )}
+
             <div className="grid2">
               <div className="card">
                 <h3>Onchain trail</h3>
