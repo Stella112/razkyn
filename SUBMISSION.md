@@ -11,6 +11,32 @@ Submit at https://build.magicblock.app/?stage=blitz#submit before **Fri 27 Nov 2
 | GitHub repo | _TODO_ |
 | Demo video | _TODO (2 min, see docs/demo-script.md)_ |
 
+## Pitch
+
+> In RAZKYN, a market crash changes the map while you're still carrying loot. You can rebalance at a terminal, but doing so reveals your position. Survive the raid and your extracted rewards settle to your Solana devnet wallet.
+
+Up to 8 raiders, 5 minutes, one city whose three districts follow a price tape (a real past crypto day in Mystery mode, or live oracle prices). Movement, combat, loot and fog of war run on MagicBlock's Private Ephemeral Rollup (TEE); spawns, crate contents, exits and the mystery day come from VRF; one wallet signature to join, then a raid-scoped session key signs every move with no popups and no fees; the raid commits back to Solana with a Magic Action and every raider is paid in transferable devnet game tokens.
+
+## Try it (60 seconds)
+
+1. Open https://razkyn.vercel.app and press **DEPLOY**, then **OPEN RAID** on Mystery Market (the game server opens a raid on devnet; empty seats become labelled BOTs).
+2. Connect Phantom or Solflare on **devnet** (or press **Use a dev wallet**). One signature claims 10 free devnet dUSD and stakes it.
+3. In the raid: WASD to move, E at a crate (2 s) or a terminal (trade, position exposed), click a raider to shoot, hold Space on an open exit. **Try to Peek** sends real reads of private state and shows the TEE refusing them.
+4. After the raid: the Mystery day is revealed and proven, payouts land in your wallet, and the report page checks its hash against the chain.
+
+Program ID (for the on-chain address field): `CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97`
+
+## Verify one raid end to end
+
+`npx tsx scripts/payout-proof.ts <raid_id>` reads only public chain data (no keys) and prints, for every human raider: the settlement (commit + Magic Action), the claim transaction, the wallet's dUSD / dTWR / dFAC / dHRB balances before and after it (from the transaction's own token balances), and a simulated second claim that the program refuses. Output for the two-wallet raid **1795728660174** (two independent devnet wallets in seats 1 and 2):
+
+| Wallet | Claim | dUSD before → after | Second claim |
+|---|---|---|---|
+| `4Stk…8iJr` (seat 1) | [`3jbABBfK…`](https://explorer.solana.com/tx/3jbABBfKpT7RHp8V93yRFBYvuvuTyrZv5jB9sK3Hu1uxHP6TXh3khEsMHopAueagHsTdWxw293FaPQk4mmL7uhcL?cluster=devnet) | 8.144396 → 16.247809 (+8.103413) | refused: Claim record already exists |
+| `FG8i…qwCW` (seat 2) | [`2c3L68yK…`](https://explorer.solana.com/tx/2c3L68yKkq5sphWqJ2DJEGqtUoGui3HcAcdwPKJVQhAUvFKUZu3pfp3iFbTjNmddcwhk2vGei4uhfX1GkaKBPx6V?cluster=devnet) | 0.000000 → 8.103408 (+8.103408) | refused: Claim record already exists |
+
+Settlement for that raid: commit + Magic Action [`4tsGGZoY…`](https://explorer.solana.com/tx/4tsGGZoYyME87iPVkBAyfF3yspLFFcToGcWMiZXkRYhXTgWoffRfvQ5M8hbtE51ALsjXsgLyXDNzEerSwWXtJ76s?cluster=devnet) · report hash posted [`d7dEkDhX…`](https://explorer.solana.com/tx/d7dEkDhXZNMhCieBVsA5xrbZDJ5WZu6VsBHtBdAvnp8wSAW8yq5XgPXE3rqeC66JUmZ2xCA4aEZnbwNrkThMizx?cluster=devnet) · report https://razkyn.vercel.app/report/1795728660174. Both seats were joined from separate wallets, but neither player moved in that raid (they were stranded and received the protected slot plus their pro-rata share). A recorded raid with two people playing is the demo video.
+
 ## Why MagicBlock
 
 **The problem.** Extraction games are huge, but their loot is worthless outside the game. Trading apps are real, but they feel like casinos. Fantasy stock games teach the market, but nothing you win is real.
@@ -36,7 +62,7 @@ Submit at https://build.magicblock.app/?stage=blitz#submit before **Fri 27 Nov 2
 | Commit + Magic Action | One settlement commit; per-raider claims that can't pay twice, with a recovery path anyone can trigger |
 | Raid keys | One wallet signature to join, then no popups |
 
-**Honest limits.** Devnet only. dTWR/dFAC/dHRB are devnet demo tokens, not shares. The keeper is the game operator and holds permission to private state (like a game server). THE WIRE never does.
+**Honest limits.** Devnet only. dUSD, dTWR, dFAC and dHRB are transferable devnet game tokens, not shares and not real money. The keeper is the game operator and holds permission to private state (like a game server). THE WIRE never does.
 
 ## Proof of integration (devnet)
 

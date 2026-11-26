@@ -4,7 +4,9 @@
 
 Eight raiders drop into a 64 × 40 map for five minutes. The map is the market: three districts — Tower, Factory and Harbor — each follow an asset's price tape. A rising district glows and wakes dormant crates; a falling one cracks its floor into hazard tiles. Sealed crates hold real (devnet) loot whose contents stay private inside a TEE until someone opens them. Trade at terminals (your position is public while you do), fight in the fog from behind cover, and stand on an open exit for five seconds to extract — your backpack settles to your wallet. An AI newsroom, **THE WIRE**, narrates every public move.
 
-> Devnet demo. dUSD, dTWR, dFAC, dHRB and dPLAY are devnet stand-in tokens, not shares and not real money. BOT raiders are labelled BOT everywhere.
+> Devnet demo. dUSD, dTWR, dFAC, dHRB and dPLAY are transferable devnet game tokens, not shares and not real money. BOT raiders are labelled BOT everywhere.
+
+**Quick start:** open https://razkyn.vercel.app → **DEPLOY** → **OPEN RAID** (Mystery Market) → connect a devnet wallet or press **Use a dev wallet** → join (one signature) → play. After the raid, verify any payout from chain data with `npx tsx scripts/payout-proof.ts <raid_id>`. Program: `CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97` (devnet).
 
 ## Why MagicBlock
 
