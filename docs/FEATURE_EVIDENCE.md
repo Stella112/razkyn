@@ -58,3 +58,8 @@ Screenshots are in `docs/screens/`. Devnet raids: 1795697137007 (Mystery, 3D cli
 | BOT styles: Sentinel, Drone, Heavy | Built | Chosen per browser; BOTs stay red-accented and labelled BOT |
 | Time of day: Sunny Day, Night, Storm (all three maps) | Built | Sky, sun / moon, fog, window lighting; Storm adds heavy slanted rain (outdoors) and lightning flashes |
 All cosmetic and saved in the browser (localStorage); nothing here touches rules, positions or payouts.
+
+## Shared avatars (2026-11-26)
+- Client signs `razkyn-avatar:<raid>:<slot>:<fields>` with the seat's raid key; keeper (`keeper/wire/avatars.ts`) checks the signature AND that the key equals `Raid.raiders[slot].raid_key` on the base layer, human seats only; `GET /avatars/:raid`.
+- Forgery checks against devnet raid 1795704493373 (`scripts/check-avatar-verify.ts`): invalid avatar → bad request; signature over other data → does not verify; valid signature with a non-seat key → "not the raid key for this seat"; BOT seat → "not a human seat"; nothing stored.
+- Positive path on devnet raid 1795706772752: browser published slot 0 (female, ponytail, red hair, red jacket); `GET /avatars/1795706772752` returned it; rendered in the live raid (`avatar-live-raid.jpg`). Players whose browsers did not publish still get the wallet-derived look.
