@@ -90,3 +90,5 @@ All cosmetic and saved in the browser (localStorage); nothing here touches rules
 | Spectator cameras, streamer overlay | Built | Watch mode camera bar (overview, districts, action cam, follow public raiders); `/overlay` |
 | Original 3D raid still playable / regressions | Built | 19 earlier MagicSVM tests pass; the raid ran end to end with settlement and claims |
 | Finding | — | Pick confirmation from this machine ~3–3.6 s, so 3 s KNOCKOUT locks are often missed |
+
+- Locks lengthened to 10 s / 8 s (DECISIONS #40). Devnet raid 1795716768943: 15/15 window picks accepted in time (2.9–3.8 s each), 0 missed; previous raid with 5 s / 3 s locks missed 5.
