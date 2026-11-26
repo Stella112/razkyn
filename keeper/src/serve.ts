@@ -4,14 +4,14 @@
 // BOTs, waits HUMAN_WAIT seconds for joins, runs it to settlement and the report, and goes back to
 // idle. One raid at a time, at most MAX_PER_HOUR per hour, and only with enough keeper SOL.
 //   tsx keeper/src/serve.ts
-// Env: RAZKYN_HUMAN_SLOTS (2), RAZKYN_HUMAN_WAIT (90), RAZKYN_MAX_PER_HOUR (4), RAZKYN_MIN_SOL (0.45), WIRE_PORT (8787)
+// Env: RAZKYN_HUMAN_SLOTS (2), RAZKYN_HUMAN_WAIT (150), RAZKYN_MAX_PER_HOUR (4), RAZKYN_MIN_SOL (0.45), WIRE_PORT (8787)
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { runRaid } from "./raid.ts";
 import { baseConn, loadKeypair, saveEvidence } from "../../scripts/spike-lib.ts";
 import { WireServer } from "../wire/server.ts";
 
 const HUMAN_SLOTS = Number(process.env.RAZKYN_HUMAN_SLOTS ?? 2);
-const HUMAN_WAIT = Number(process.env.RAZKYN_HUMAN_WAIT ?? 90);
+const HUMAN_WAIT = Number(process.env.RAZKYN_HUMAN_WAIT ?? 150);
 const MAX_PER_HOUR = Number(process.env.RAZKYN_MAX_PER_HOUR ?? 4);
 const MIN_SOL = Number(process.env.RAZKYN_MIN_SOL ?? 0.45); // one raid costs ~0.35 SOL in fees and rent
 

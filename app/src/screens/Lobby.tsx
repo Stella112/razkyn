@@ -6,6 +6,7 @@ import { base, buildJoinTx, dusdBalance, raidKeyFor, readRaidBase, readPublic, t
 import { explorerTx } from "../lib/config";
 import { getLobby, openRaid, type Lobby as LobbyT } from "../lib/keeper";
 import { useGameWallet } from "../lib/wallet";
+import { programError } from "../lib/errors";
 
 const PHASE: Record<LobbyT["phase"], string> = {
   idle: "No raid running",
@@ -15,6 +16,21 @@ const PHASE: Record<LobbyT["phase"], string> = {
   settling: "Settling on the base layer",
   done: "Raid finished",
 };
+
+/** Join is locked in the last seconds of the countdown (the keeper then fills seats with BOTs). */
+const JOIN_CUTOFF_MS = 8_000;
+
+/** Readable reason for a failed join dry-run (RazkynError codes, programs/razkyn/src/errors.rs). */
+function explainJoinFailure(err: unknown, logs: string[]): string {
+  const text = `${JSON.stringify(err)} ${logs.join(" ")}`;
+  if (/insufficient (funds|lamports)|0x1\b|AccountNotFound|attempt to debit/i.test(text)) return "Not enough devnet SOL in your wallet for the join fee. Get some at faucet.solana.com.";
+  const name = programError(text);
+  const known: Record<string, string> = {
+    SlotTaken: "That seat was just taken. Open a new raid.", AlreadyJoined: "This wallet is already in this raid.",
+    BadStatus: "The raid has already started. Open a new one.", FaucetCap: "Daily dUSD faucet limit reached for this wallet (100/day).",
+  };
+  return known[name] ?? `The join would fail on-chain (${name}).`;
+}
 
 export default function Lobby() {
   const w = useGameWallet();
@@ -75,18 +91,28 @@ export default function Lobby() {
   };
 
   const join = async () => {
-    if (!lobby || !w.publicKey || freeHuman === undefined) return;
-    setErr(""); setBusy("Building the join transaction (faucet 10 dUSD if needed + 10 dUSD stake into escrow)…");
+    if (!lobby || !w.publicKey) return;
+    setErr(""); setBusy("Checking your seat…");
     try {
+      // Re-read the seats right now: the keeper fills empty seats with BOTs when the countdown ends.
+      const fresh = await readRaidBase(lobby.raidId);
+      const seat = fresh ? lobby.humanSlots.find((s) => !fresh.raiders[s].joined) : undefined;
+      if (seat === undefined) throw new Error("All seats just filled. Open a new raid from the lobby.");
+      if (lobby.joinDeadline - Date.now() < JOIN_CUTOFF_MS) throw new Error("Too late: the join window is closing. Open a new raid in a moment.");
       const rk = raidKeyFor(lobby.raidId, true)!;
-      const tx = await buildJoinTx(w.publicKey, lobby.raidId, freeHuman, rk.publicKey);
-      setBusy("Sign in your wallet (base layer). This is the only signature until settlement.");
+      setBusy("Building the join (free 10 dUSD if needed + 10 dUSD stake)…");
+      const tx = await buildJoinTx(w.publicKey, lobby.raidId, seat, rk.publicKey);
+      // Dry-run it first: wallets report a failed transaction only as "Unexpected error".
+      const sim = await base.simulateTransaction(tx);
+      if (sim.value.err) throw new Error(explainJoinFailure(sim.value.err, sim.value.logs ?? []));
+      setBusy("Approve in your wallet. This is the only signature until the payout.");
       const sig = await w.signAndSend(tx);
       setJoinSig(sig);
       setBusy("");
     } catch (e) {
       setBusy("");
-      setErr(String((e as Error)?.message ?? e).slice(0, 240));
+      const msg = String((e as Error)?.message ?? e);
+      setErr(/unexpected error/i.test(msg) ? "Your wallet refused the transaction. Check it is on Solana devnet and has a little devnet SOL, then try again." : msg.slice(0, 240));
     }
   };
 
@@ -201,8 +227,8 @@ export default function Lobby() {
                     {lobby.phase === "live" && <button className="btn primary big" onClick={() => navigate(`/raid/${lobby.raidId}`)}>▶ ENTER THE RAID</button>}
                   </>
                 ) : lobby.phase === "lobby" ? (
-                  <button className="btn primary big" style={{ width: "100%" }} disabled={!w.publicKey || freeHuman === undefined || !!busy || (sol ?? 0) < 0.005} onClick={join}>
-                    {freeHuman === undefined ? "NO SEAT FREE" : "▶ JOIN · STAKE 10 dUSD"}
+                  <button className="btn primary big" style={{ width: "100%" }} disabled={!w.publicKey || freeHuman === undefined || !!busy || (sol ?? 0) < 0.005 || lobby.joinDeadline - now < JOIN_CUTOFF_MS} onClick={join}>
+                    {freeHuman === undefined ? "NO SEAT FREE" : lobby.joinDeadline - now < JOIN_CUTOFF_MS ? "JOIN WINDOW CLOSED" : "▶ JOIN · STAKE 10 dUSD"}
                   </button>
                 ) : (
                   <button className="btn cyan big" style={{ width: "100%" }} onClick={() => navigate(`/watch/${lobby.raidId}`)}>◉ WATCH THIS RAID</button>
