@@ -127,6 +127,21 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const prevVal = useRef<number | null>(null);
   const [voice, setVoice] = useState(() => { try { return window.localStorage.getItem("razkyn-voice") === "1"; } catch { return false; } });
   const voiceRef = useRef(voice); voiceRef.current = voice;
+  // Watch mode: explain the fog, and turn sound + THE WIRE voice on with the first click (browsers
+  // start audio only after a gesture). A saved voice preference is respected.
+  const [watchHint, setWatchHint] = useState(true);
+  useEffect(() => {
+    if (!watch) return;
+    const first = () => {
+      sfx.unlock();
+      let pref: string | null = null;
+      try { pref = window.localStorage.getItem("razkyn-voice"); } catch { /* storage blocked */ }
+      if (pref === null) setVoice(true);
+      setWatchHint(false);
+    };
+    window.addEventListener("pointerdown", first, { once: true });
+    return () => window.removeEventListener("pointerdown", first);
+  }, [watch]);
   const toggleVoice = () => setVoice((v) => { const n = !v; try { window.localStorage.setItem("razkyn-voice", n ? "1" : "0"); } catch { /* ignore */ } if (!n) window.speechSynthesis?.cancel(); return n; });
   const alerted = useRef<Set<number>>(new Set());
   const pop = (text: string) => { const id = Date.now() + Math.random(); setPops((p) => [...p, { id, text }]); setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1500); };
@@ -543,6 +558,12 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
           <button className="act mute" title={voice ? "THE WIRE voice on" : "THE WIRE voice off"} onClick={toggleVoice} style={{ opacity: voice ? 1 : 0.5 }}>VOICE</button>
           <button className="act mute help-btn" title="How to play (H)" onClick={() => setHelp(true)}>HELP</button>
         </div>
+        {watch && watchHint && (
+          <div className="hud-box watch-hint">
+            Raiders move inside a private fog (MagicBlock TEE): you see them only while they trade, when they are knocked out and when they extract.
+            Fights show as health drops and knockouts. <b>Click anywhere for sound and live commentary.</b>
+          </div>
+        )}
         {watch && raidId && <Market raidId={raidId} pub={pub} />}
         {!watch && mySlot >= 0 && (
           <>

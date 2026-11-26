@@ -51,6 +51,26 @@ export const tileBlocked = (tx: number, ty: number) => COVER_RECTS.some(([x0, y0
 export function nearCover(x: number, y: number) {
   return COVER_RECTS.some(([x0, y0, x1, y1]) => x >= x0 * 100 - COVER_CLEAR && x < (x1 + 1) * 100 + COVER_CLEAR && y >= y0 * 100 - COVER_CLEAR && y < (y1 + 1) * 100 + COVER_CLEAR);
 }
+/** Same sampling as util.rs line_clear (integer steps of 20 units along the longer axis). */
+export function lineClear(ax: number, ay: number, bx: number, by: number) {
+  const dx = bx - ax, dy = by - ay;
+  const n = Math.max(1, Math.floor(Math.max(Math.abs(dx), Math.abs(dy)) / 20));
+  for (let i = 0; i <= n; i++) if (tileBlocked(Math.floor((ax + Math.trunc((dx * i) / n)) / 100), Math.floor((ay + Math.trunc((dy * i) / n)) / 100))) return false;
+  return true;
+}
+
+// BOT combat (DECISIONS #43). A BOT reads only its OWN fog View (with its own raid key: the keeper is
+// not a View member), shoots the nearest raider it can see, in range and with a clear line, and the
+// program still checks range, cooldown, line of sight and cover. Human-fair pacing: a BOT reacts only
+// after seeing a target for REACTION_MS and fires about once a second (program limit: 500 ms).
+const REACTION_MS = 700;
+const FIRE_MIN_MS = 750;
+const FIRE_JITTER_MS = 550;
+const RANGE_UNITS = 600, GUNNER_RANGE_UNITS = 700, RANGE_MARGIN = 15;
+const CLASS_GUNNER = 3;
+const HUNT_CHANCE = 0.6; // a BOT that sees someone walks towards them instead of wandering
+const SIGHT_FRESH_MS = 2500;
+
 const districtOfX = (x: number) => DISTRICT_TILES.findIndex(([lo, hi]) => Math.floor(x / 100) >= lo && Math.floor(x / 100) <= hi);
 export function inBand(x: number, y: number, bands: Bands) {
   const d = districtOfX(x);
@@ -133,6 +153,10 @@ export class BotCrew {
   private claimed = new Set<number>();
   private opened = new Map<number, number>();
   private seed: number;
+  /** BOTs still playing (their gunner loop stops when the main loop ends). */
+  private active = new Set<number>();
+  /** Nearest raider each BOT last saw in its own View (for hunting). */
+  private sight = new Map<number, { x: number; y: number; at: number }>();
 
   /** `elapsed()` returns raid seconds on the TEE clock. */
   /** humans > 0: BOTs leave room for players (MAX_BOT_CRATES each, HUMAN_HEAD_START s before looting). */
@@ -154,7 +178,54 @@ export class BotCrew {
   }
 
   async run() {
-    await Promise.all(this.slots.map((s) => this.runOne(s).catch((e) => this.log(s, "error", { error: String(e).slice(0, 160) }))));
+    await Promise.all(this.slots.map((s) => {
+      this.active.add(s);
+      const main = this.runOne(s).catch((e) => this.log(s, "error", { error: String(e).slice(0, 160) })).finally(() => this.active.delete(s));
+      const gun = this.gunner(s).catch((e) => this.log(s, "gun_error", { error: String(e).slice(0, 160) }));
+      return Promise.all([main, gun]);
+    }));
+  }
+
+  /** Combat loop, alongside the main loop: see someone in your own View → aim, then fire. */
+  private async gunner(slot: number) {
+    const S = this.S;
+    if (this.humans > 0) await sleep(HUMAN_HEAD_START * 1000);
+    const classes = ((await S.readRaid()) as unknown as { classes?: number[] }).classes ?? [];
+    const range = (classes[slot] === CLASS_GUNNER ? GUNNER_RANGE_UNITS : RANGE_UNITS) - RANGE_MARGIN;
+    const seenSince = new Map<number, number>();
+    const engaged = new Set<number>();
+    const gone = new Set<number>(); // knocked out or extracted: the program refuses them (BadTarget)
+    let nextShot = 0, shots = 0, hits = 0, kos = 0;
+    while (this.active.has(slot)) {
+      await sleep(300);
+      const info = await S.raiders[slot].tee!.getAccountInfo(S.slot("view", slot)).catch(() => null);
+      if (!info) continue;
+      const v = S.T.coder.accounts.decode("view", info.data) as { count: number; entries: { slot: number; x: number; y: number }[] };
+      const now = Date.now();
+      const seen = v.entries.slice(0, v.count).filter((e) => e.slot !== slot && !gone.has(e.slot));
+      for (const k of [...seenSince.keys()]) if (!seen.some((e) => e.slot === k)) seenSince.delete(k);
+      for (const e of seen) if (!seenSince.has(e.slot)) seenSince.set(e.slot, now);
+      if (!seen.length) continue;
+      const me = await S.rprv(slot);
+      const byDist = [...seen].sort((a, b) => Math.hypot(a.x - me.x, a.y - me.y) - Math.hypot(b.x - me.x, b.y - me.y));
+      this.sight.set(slot, { x: byDist[0].x, y: byDist[0].y, at: now });
+      if (now < nextShot) continue;
+      const t = byDist.find((e) => now - seenSince.get(e.slot)! >= REACTION_MS && Math.hypot(e.x - me.x, e.y - me.y) <= range && lineClear(me.x, me.y, e.x, e.y));
+      if (!t) continue;
+      nextShot = now + FIRE_MIN_MS + Math.floor(this.rnd() * FIRE_JITTER_MS);
+      shots++;
+      try {
+        await S.sendFast(slot, await S.shootIx(slot, t.slot)); // preflight on the ER executes it and returns any error
+        hits++;
+        if (!engaged.has(t.slot)) { engaged.add(t.slot); this.log(slot, "engage", { target: t.slot, dist: Math.round(Math.hypot(t.x - me.x, t.y - me.y)) }); }
+        if (!(await S.rpub(t.slot)).alive) { kos++; gone.add(t.slot); this.log(slot, "knockout", { target: t.slot }); }
+      } catch (e) {
+        const msg = String(e);
+        if (/0x178d\b|BadTarget/.test(msg)) gone.add(t.slot); // BadTarget (6029): target already down or extracted
+        else if (/0x177[ab]\b|RaiderDead|RaiderExtracted/.test(msg)) break; // this BOT is down or out
+      }
+    }
+    if (shots) this.log(slot, "combat", { shots, hits, knockouts: kos });
   }
 
   /** Danger bands per district from the public District accounts. */
@@ -283,6 +354,17 @@ export class BotCrew {
   }
 
   private async wander(slot: number) {
+    // Hunt: close in on the raider this BOT last saw (stop ~4 tiles short, inside shooting range).
+    const s = this.sight.get(slot);
+    if (s && Date.now() - s.at < SIGHT_FRESH_MS && this.rnd() < HUNT_CHANCE) {
+      const me = await this.S.rprv(slot);
+      const d = Math.hypot(s.x - me.x, s.y - me.y);
+      if (d > 450) {
+        const k = (d - 400) / d;
+        const x = Math.round(me.x + (s.x - me.x) * k), y = Math.round(me.y + (s.y - me.y) * k);
+        if (await this.safeWalk(slot, x, y, 150)) { this.log(slot, "hunt", { to: [x, y] }); return; }
+      }
+    }
     for (let tries = 0; tries < 8; tries++) {
       // Short hops (≤ 12 tiles at walking pace ≈ 6 s) so the extraction clock is checked often.
       const me = await this.S.rprv(slot);

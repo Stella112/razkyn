@@ -24,6 +24,8 @@ function tone(freq: number, dur: number, type: OscillatorType = "square", vol = 
 
 export const sfx = {
   get muted() { return muted; },
+  /** Call inside a click handler: browsers only start audio after a user gesture. */
+  unlock() { ac(); },
   toggle() { muted = !muted; try { window.localStorage.setItem("razkyn-muted", muted ? "1" : "0"); } catch { /* ignore */ } return muted; },
   shot() { tone(880, 0.08, "sawtooth", 0.05, 220); },
   hit() { tone(140, 0.25, "square", 0.08, 60); },

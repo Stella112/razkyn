@@ -315,3 +315,5 @@ body { background: #0b0f12; letter-spacing: 0.005em; }
 .fps-chip { position: fixed; left: 50%; top: 6px; transform: translateX(-50%); z-index: 30; font: 11px ui-monospace, monospace; background: rgba(8,11,13,0.8); padding: 3px 8px; border: 1px solid rgba(200,210,209,0.25); pointer-events: none; }
 .settings-kv { align-items: center; row-gap: 14px; }
 .settings-keys > .mono { grid-column: 1; word-break: normal; overflow-wrap: normal; white-space: nowrap; letter-spacing: 0.02em; }
+
+.watch-hint { max-width: 380px; font-size: 13px; line-height: 1.45; color: var(--silver, #C8D2D1); border-left: 3px solid #45C9B2; margin-top: 8px; }
