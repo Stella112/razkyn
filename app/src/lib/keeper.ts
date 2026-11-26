@@ -2,14 +2,14 @@
 import { KEEPER_URL } from "./config";
 
 export type Lobby = {
-  raidId: string; raid: string; mode: "mystery" | "live"; slots: number; humanSlots: number[];
+  raidId: string; raid: string; mode: "mystery" | "live" | "live-markets"; slots: number; humanSlots: number[];
   phase: "idle" | "lobby" | "setup" | "live" | "settling" | "done"; joinDeadline: number; startTs?: number; reportHash?: string;
   last?: { raidId: string; reportHash?: string; error?: string };
   canOpen?: { ok: boolean; reason?: string };
 };
 
 /** Serve mode: ask the keeper to open a raid. */
-export async function openRaid(mode: "mystery" | "live"): Promise<{ ok: boolean; error?: string; raidId?: string }> {
+export async function openRaid(mode: "mystery" | "live" | "live-markets"): Promise<{ ok: boolean; error?: string; raidId?: string }> {
   try {
     const r = await fetch(`${KEEPER_URL}/lobby/open`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mode }) });
     return (await r.json()) as { ok: boolean; error?: string; raidId?: string };
@@ -61,7 +61,7 @@ export async function getBets(raidId: string): Promise<BetView | null> {
 }
 
 export type HistoryItem = {
-  raidId: string; mode: "mystery" | "live"; hash: string; day: string | null; title: string | null;
+  raidId: string; mode: "mystery" | "live" | "live-markets"; hash: string; day: string | null; title: string | null;
   raiders: { slot: number; bot: boolean; wallet: string; extracted: boolean; alive: boolean | null; dusd: string }[];
 };
 export async function getHistory(): Promise<HistoryItem[] | null> {

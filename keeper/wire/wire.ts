@@ -41,6 +41,7 @@ function describe(f: Fact): string {
     case "crate_opened": return `t=${f.t}s ${who(f.slot, f.bot)} opened ${f.drop ? "a dropped backpack" : "a crate"} in ${D(f.district)}`;
     case "kill": return `t=${f.t}s ${who(f.slot, f.bot)} knocked out${f.by != null ? ` by ${who(f.by, !!f.byBot)}` : ""}; backpack dropped as a crate`;
     case "extract": return `t=${f.t}s ${who(f.slot, f.bot)} extracted`;
+    case "market_event": return `t=${f.t}s IN-GAME EVENT ${["", "TRADING HALT: terminals in " + D(f.district) + " closed for 30 s", "RATE SHOCK: every district's hazard thresholds tighten for 30 s", "EARNINGS SURPRISE: " + D(f.district) + "'s dormant crates wake"][f.event]}`;
     case "raid_end": return `t=${f.t}s raid ended`;
   }
 }

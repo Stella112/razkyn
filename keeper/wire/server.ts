@@ -15,7 +15,7 @@ import type { BetBook } from "../src/bets.ts";
 export type Lobby = {
   raidId: string;
   raid: string;
-  mode: "mystery" | "live";
+  mode: "mystery" | "live" | "live-markets";
   slots: number;
   humanSlots: number[];
   /** idle: no raid, a player may open one (serve mode); lobby: waiting for players; setup: delegating/seeding; live; settling; done */
@@ -44,7 +44,7 @@ export class WireServer {
   private server: Server;
   lobby: Lobby | null = null;
   /** Serve mode only: open a raid on request. */
-  onOpen: ((mode: "mystery" | "live") => Promise<{ ok: boolean; error?: string; raidId?: string }>) | null = null;
+  onOpen: ((mode: "mystery" | "live" | "live-markets") => Promise<{ ok: boolean; error?: string; raidId?: string }>) | null = null;
 
   constructor(readonly port = Number(process.env.WIRE_PORT ?? 8787)) {
     this.server = createServer((req, res) => {
@@ -61,8 +61,8 @@ export class WireServer {
         let body = "";
         req.on("data", (c) => { body += c; if (body.length > 1000) req.destroy(); });
         req.on("end", async () => {
-          let mode: "mystery" | "live" = "mystery";
-          try { mode = JSON.parse(body || "{}").mode === "live" ? "live" : "mystery"; } catch { /* default */ }
+          let mode: "mystery" | "live" | "live-markets" = "mystery";
+          try { const m = JSON.parse(body || "{}").mode; mode = m === "live" || m === "live-markets" ? m : "mystery"; } catch { /* default */ }
           const r = await this.onOpen!(mode);
           json(r.ok ? 202 : 409, r);
         });

@@ -10,10 +10,10 @@ const pct = (bps: number) => `${bps >= 0 ? "+" : "−"}${(Math.abs(bps) / 100).t
 const D = (d: number) => DISTRICTS[d] ?? "District";
 
 /** Facts that are game-rule events (narrated as IN-GAME EVENT lines). */
-export const isEvent = (f: Fact) => f.kind === "hazard" || f.kind === "wake" || f.kind === "exit_open";
+export const isEvent = (f: Fact) => f.kind === "hazard" || f.kind === "wake" || f.kind === "exit_open" || f.kind === "market_event";
 
 const PRIORITY: Record<Fact["kind"], number> = {
-  kill: 9, extract: 8, exposed: 7, crate_opened: 5, hazard: 6, wake: 6, exit_open: 6, raid_end: 10, price: 1,
+  kill: 9, extract: 8, exposed: 7, crate_opened: 5, hazard: 6, wake: 6, exit_open: 6, market_event: 8, raid_end: 10, price: 1,
 };
 
 /** Pick the most newsworthy fact of a batch (ties: latest). */
@@ -47,6 +47,10 @@ export function templateLine(f: Fact): string {
       return f.by != null ? `${raiderName(f.by, !!f.byBot)} drops ${raiderName(f.slot, f.bot)}, backpack on the floor` : `${raiderName(f.slot, f.bot)} is down, backpack on the floor`;
     case "extract":
       return `${raiderName(f.slot, f.bot)} extracts, bag banked`;
+    case "market_event":
+      return f.event === 1 ? `TRADING HALT: ${D(f.district)} terminals frozen for 30s`
+        : f.event === 2 ? "RATE SHOCK: hazards trigger early across the map for 30s"
+        : `EARNINGS SURPRISE: ${D(f.district)} crates wake, loot unlocked`;
     case "raid_end":
       return "Raid over. Settlement is on its way to the base layer";
   }

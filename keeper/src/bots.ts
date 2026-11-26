@@ -254,7 +254,10 @@ export class BotCrew {
     const units = me.backpack[from];
     const k = this.S.raiders[slot].raidKey.publicKey;
     try {
-      const start = await this.S.T.methods.startTrade(slot, from, to, units).accountsPartial({ raid: this.S.raid, rprv: this.S.slot("rprv", slot), rpub: this.S.slot("rpub", slot), raidKey: k }).instruction();
+      const at = await this.S.rprv(slot);
+      const start = await this.S.T.methods.startTrade(slot, from, to, units).accountsPartial({
+        raid: this.S.raid, rprv: this.S.slot("rprv", slot), rpub: this.S.slot("rpub", slot), district: this.S.district(districtOfX(at.x)), raidKey: k,
+      }).instruction();
       await this.fast(slot, start);
       await sleep(3300);
       const finish = await this.S.T.methods.finishTrade(slot).accountsPartial({

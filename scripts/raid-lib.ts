@@ -20,7 +20,12 @@ export const VRF_PROGRAM_ID = new PublicKey("Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFP
 export const NUM_CRATES = 36;
 /** SOL/USD, BTC/USD, ETH/USD Pricing Oracle feeds (M0/S3, spikes/results/s3-oracle.json). */
 export const LIVE_FEEDS = ["ENYwebBThHzmzwPLAQvCucUTsjyfBSZdD9ViXksS4jPu", "71wtTRDY8Gxgw56bXFt2oc6qeAbTxzStdNiC425Z51sr", "5vaYr1hpv8yrSpu8w3K95x22byYxUJCCNCSYJtqVWPvG"].map((k) => new PublicKey(k));
+/** Live Markets (mode 2): NVDA, TSLA, gold (XAU) — constants.rs LIVE_MARKET_FEEDS; scripts/check-feeds.ts. */
+export const LIVE_MARKET_FEEDS = ["3AD13yFytFWiLQbcGsnEXDeWZ9GZezSx6Y3NqZRoJMaC", "8L7ccCxTBZaLsMMdhAod5fFnpdEWGSDPW4y1td7y3y8N", "9Eko45pM9kMQpz9N5d6Rcki8FMKUeyFb1tWhvixhBHBn"].map((k) => new PublicKey(k));
 export const DROP_BASE = 36;
+/** Raider classes (constants.rs CLASS_*). */
+export const CLASSES = ["RAIDER", "SCOUT", "TRADER", "GUNNER"] as const;
+export const districtOfX = (x: number) => (x < 2100 ? 0 : x < 4300 ? 1 : 2);
 export const TOKEN = TOKEN_2022_PROGRAM_ID;
 const STAKE = 10_000_000;
 
@@ -46,7 +51,7 @@ export class RaidSession {
   readonly sigs: Record<string, string | string[]> = {};
   raiders: Raider[] = [];
 
-  constructor(readonly raidId: anchor.BN, readonly mode: 0 | 1 = 1, readonly leafCount = 0, readonly dayRoot: number[] = Array(32).fill(0)) {
+  constructor(readonly raidId: anchor.BN, readonly mode: 0 | 1 | 2 = 1, readonly leafCount = 0, readonly dayRoot: number[] = Array(32).fill(0)) {
     this.idb = raidId.toArrayLike(Buffer, "le", 8);
   }
 
@@ -90,7 +95,7 @@ export class RaidSession {
     this.sigs.createCrates = crateSigs;
   }
 
-  async join(slot: number, wallet: Keypair, bot = false) {
+  async join(slot: number, wallet: Keypair, bot = false, cls = 0) {
     const raidKey = Keypair.generate();
     if ((await this.base.getBalance(wallet.publicKey)) < 10_000_000) {
       await sendBase(this.base, [SystemProgram.transfer({ fromPubkey: this.keeper.publicKey, toPubkey: wallet.publicKey, lamports: 20_000_000 })], [this.keeper]);
@@ -104,7 +109,7 @@ export class RaidSession {
         userAta: ata, user: wallet.publicKey, tokenProgram: TOKEN, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       }).instruction());
     }
-    ixs.push(await this.P.methods.joinRaid(slot, raidKey.publicKey).accountsPartial({
+    ixs.push(await this.P.methods.joinRaid(slot, raidKey.publicKey, cls).accountsPartial({
       config: this.config, raid: this.raid, rpub: this.slot("rpub", slot), rprv: this.slot("rprv", slot),
       walletAta: ata, escrowAuth: this.escrowAuth, escrow: this.escrow, dusdMint: DUSD, wallet: wallet.publicKey,
       keeper: bot ? this.keeper.publicKey : null, tokenProgram: TOKEN,
@@ -253,7 +258,8 @@ export class RaidSession {
   async tickIxs() {
     const d = { district0: this.district(0), district1: this.district(1), district2: this.district(2) };
     // Live mode passes the three Pricing Oracle feeds (programs/razkyn/src/constants.rs LIVE_FEEDS).
-    const feeds = this.mode === 1 ? { feed0: LIVE_FEEDS[0], feed1: LIVE_FEEDS[1], feed2: LIVE_FEEDS[2] } : { feed0: null, feed1: null, feed2: null };
+    const set = this.mode === 2 ? LIVE_MARKET_FEEDS : LIVE_FEEDS;
+    const feeds = this.mode !== 0 ? { feed0: set[0], feed1: set[1], feed2: set[2] } : { feed0: null, feed1: null, feed2: null };
     const tick = await this.T.methods.tick().accountsPartial({ raid: this.raid, secret: this.secret, ...d, ...feeds }).instruction();
     const fog = await this.T.methods.tickRaiders().accountsPartial({ raid: this.raid, ...d }).remainingAccounts(
       this.raiders.flatMap((_, s) => [

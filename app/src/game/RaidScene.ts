@@ -14,7 +14,8 @@ const COL = {
   white: 0xf2ecff, floor: 0x07051a,
 };
 const DCOL = [COL.cyan, COL.amber, COL.up]; // Tower, Factory, Harbor
-const DNAME = ["TOWER", "FACTORY", "HARBOR"];
+const DNAME_BY_MODE: Record<number, string[]> = { 2: ["NVDA TOWER", "TSLA FACTORY", "GOLD VAULT"] };
+const dname = (mode: number | undefined) => DNAME_BY_MODE[mode ?? 0] ?? ["TOWER", "FACTORY", "HARBOR"];
 const px = (u: number) => (u / UNIT) * T;
 
 export type Visible = { slot: number; x: number; y: number };
@@ -135,7 +136,7 @@ export class RaidScene extends Phaser.Scene {
       }
       // District border glow + big floor label.
       f.lineStyle(2, col, 0.75).strokeRect(x0 + 1, 1, w - 2, H - 2);
-      this.dLabels[d] = this.add.text(x0 + w / 2, H / 2, DNAME[d], { fontFamily: "Bungee", fontSize: "40px", color: "#ffffff", align: "center", lineSpacing: 6 })
+      this.dLabels[d] = this.add.text(x0 + w / 2, H / 2, dname(0)[d], { fontFamily: "Bungee", fontSize: "40px", color: "#ffffff", align: "center", lineSpacing: 6 })
         .setOrigin(0.5).setAlpha(0.08).setDepth(1);
     });
     // Corridors between districts.
@@ -199,6 +200,12 @@ export class RaidScene extends Phaser.Scene {
     g.fillStyle(color, alpha).fillPoints([a, b, c, d], true);
   }
 
+  /** Vision radius in tiles: 10 for a Scout (class 1), else 8. */
+  private vision() {
+    const cls = this.input_?.pub?.raid?.classes?.[this.input_.mySlot];
+    return cls === 1 ? 10 : VISION_TILES;
+  }
+
   update(time: number) {
     const inp = this.input_;
     const g = this.dyn, gl = this.glow, top = this.top;
@@ -208,6 +215,16 @@ export class RaidScene extends Phaser.Scene {
     const pulse = 0.5 + 0.5 * Math.sin(time / 260);
     const fast = 0.5 + 0.5 * Math.sin(time / 90);
 
+    // TRADING HALT: the district's terminals glow red while the halt runs.
+    const halt = raid.eventKind === 1 && Number(raid.eventUntil?.toString() ?? 0) * 1000 > Date.now() ? raid.eventDistrict : -1;
+    if (halt !== undefined && halt >= 0) {
+      for (const [tx, ty] of TERMINALS) {
+        const d = DISTRICT_TILES.findIndex(([lo, hi]) => tx >= lo && tx <= hi);
+        if (d !== halt) continue;
+        gl.fillStyle(COL.down, 0.25 + 0.2 * Math.sin(time / 150)).fillRoundedRect(tx * T - T, ty * T - T, 3 * T, 3 * T, 8);
+        gl.lineStyle(2, COL.down, 0.9).strokeRoundedRect(tx * T - T, ty * T - T, 3 * T, 3 * T, 8);
+      }
+    }
     // Districts: glow by direction, cracked hazard rows, embers.
     DISTRICT_TILES.forEach(([lo, hi], d) => {
       const dist = districts[d];
@@ -215,7 +232,7 @@ export class RaidScene extends Phaser.Scene {
       const x0 = lo * T, w = (hi - lo + 1) * T;
       if (bps > 30) gl.fillStyle(COL.up, Math.min(0.06, 0.01 + bps / 12000)).fillRect(x0, 0, w, H);
       if (bps < -30) gl.fillStyle(COL.down, Math.min(0.09, 0.015 - bps / 9000) * (0.7 + 0.3 * fast)).fillRect(x0, 0, w, H);
-      this.dLabels[d]?.setText(`${DNAME[d]}
+      this.dLabels[d]?.setText(`${dname(raid.mode)[d]}
 ${bps >= 0 ? "▲" : "▼"} ${(Math.abs(bps) / 100).toFixed(1)}%`).setColor(bps >= 0 ? "#3dffa0" : "#ff3b6b").setAlpha(0.09 + Math.min(0.12, Math.abs(bps) / 4000));
       const level = dist?.hazardLevel ?? 0;
       const rows = HAZARD_ROWS[level];
@@ -295,7 +312,7 @@ ${bps >= 0 ? "▲" : "▼"} ${(Math.abs(bps) / 100).toFixed(1)}%`).setColor(bps 
       this.trail.push({ x, y, a: 1 });
       if (this.trail.length > 18) this.trail.shift();
       this.trail.forEach((p, k) => gl.fillStyle(COL.cyan, (k / this.trail.length) * 0.25).fillCircle(p.x, p.y, 3 + k / 4));
-      gl.lineStyle(1, COL.cyan, 0.12).strokeCircle(x, y, VISION_TILES * T);
+      gl.lineStyle(1, COL.cyan, 0.12).strokeCircle(x, y, this.vision() * T);
       gl.fillStyle(COL.cyan, 0.25).fillCircle(x, y, 18);
       this.chevron(top, x, y, ang, 13, inp.me.alive ? 0xffffff : 0x555555);
       top.lineStyle(2, COL.cyan, 0.9).strokeCircle(x, y, 16 + 2 * pulse);
@@ -359,7 +376,7 @@ ${bps >= 0 ? "▲" : "▼"} ${(Math.abs(bps) / 100).toFixed(1)}%`).setColor(bps 
     this.fog.clear();
     if (!inp.watch && inp.me) {
       this.fog.fill(0x05020f, 0.88);
-      this.brush.setScale((VISION_TILES * T * 2.3) / 512);
+      this.brush.setScale((this.vision() * T * 2.3) / 512);
       this.fog.erase(this.brush, this.display.x, this.display.y);
     }
   }

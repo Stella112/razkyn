@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { navigate } from "../App";
-import { P, base, coder, DISTRICTS } from "../lib/chain";
+import { P, base, coder, decode, districtNames, type RaidAcc } from "../lib/chain";
 import { explorerAddr, explorerTx } from "../lib/config";
 import { canonical, getReport, hex, sha256, verifyMystery, type ReportFile } from "../lib/keeper";
 
@@ -28,6 +28,7 @@ export default function Report({ raidId }: { raidId: string }) {
   const [file, setFile] = useState<ReportFile | null | undefined>(undefined);
   const [check, setCheck] = useState<Check>(null);
   const [proof, setProof] = useState<{ ok: boolean; root: string; onchain: string } | null>(null);
+  const [planCheck, setPlanCheck] = useState<{ ok: boolean; onchain: string } | null>(null);
 
   useEffect(() => {
     const src = new URLSearchParams(window.location.search).get("src") ?? undefined; // test 13: a tampered copy
@@ -41,10 +42,19 @@ export default function Report({ raidId }: { raidId: string }) {
       const st = info ? (coder.decode("settlement", info.data) as { reportHash: number[]; reportPosted: boolean }) : null;
       const onchain = st?.reportPosted ? hex(Uint8Array.from(st.reportHash)) : "";
       setCheck({ recomputed, onchain, ok: !!onchain && onchain === recomputed });
+      // Market event plan (v2 raids): recompute sha256("razkyn-events" ‖ plan) and compare with Raid.event_plan_hash on-chain.
+      const ev = f.report.marketEvents as { planHex?: string } | undefined;
+      if (ev?.planHex) {
+        const raidAcc = decode<RaidAcc & { eventPlanHash?: number[] }>("raid", (await base.getAccountInfo(P.raid(raidId)))?.data);
+        const plan = Uint8Array.from((ev.planHex.match(/../g) ?? []).map((b) => parseInt(b, 16)));
+        const mine = hex(await sha256(new Uint8Array([...new TextEncoder().encode("razkyn-events"), ...plan])));
+        const onchainPlan = raidAcc?.eventPlanHash ? hex(Uint8Array.from(raidAcc.eventPlanHash)) : "";
+        setPlanCheck({ ok: !!onchainPlan && onchainPlan === mine, onchain: onchainPlan });
+      }
       const m = f.report.mystery;
       if (m) {
         const raidInfo = await base.getAccountInfo(P.raid(raidId));
-        const raid = raidInfo ? (coder.decode("raid", raidInfo.data) as { dayRoot: number[] }) : null;
+        const raid = decode<{ dayRoot: number[] }>("raid", raidInfo?.data); // v1 layout fallback for raids before the v2 upgrade
         const onRoot = raid ? hex(Uint8Array.from(raid.dayRoot)) : "";
         const v = await verifyMystery(m, onRoot);
         setProof({ ok: v.ok, root: v.root, onchain: onRoot });
@@ -53,6 +63,7 @@ export default function Report({ raidId }: { raidId: string }) {
   }, [raidId]);
 
   const r = file?.report;
+  const DN = districtNames(r?.mode === "live-markets" ? 2 : 0);
   return (
     <div className="page">
       <div className="topbar">
@@ -82,19 +93,28 @@ export default function Report({ raidId }: { raidId: string }) {
                     <span>Sources</span><span>{(r.mystery.sources ?? []).map((u: string) => <div key={u}><a href={u} target="_blank" rel="noreferrer" className="mono" style={{ fontSize: 12 }}>{u}</a></div>)}</span>
                   </>
                 )}
+                {r.marketEvents?.events && (
+                  <>
+                    <span>Market events</span>
+                    <span>
+                      {(r.marketEvents.events as { kind: string; district: string; atSecond: number }[]).map((e, i) => <div key={i}><b className="neon-a">{e.kind}</b> · {e.kind === "RATE SHOCK" ? "all districts" : e.district} · t = {e.atSecond} s</div>)}
+                      <div className="note" style={{ fontSize: 12 }}>Drawn from the VRF seed and committed by hash before the raid started. {planCheck ? (planCheck.ok ? <span className="verified">Plan hash ✓ vs Raid.event_plan_hash</span> : <span className="mismatch">Plan hash mismatch</span>) : "checking…"}</div>
+                    </span>
+                  </>
+                )}
                 <span>Program</span><span className="mono"><a href={explorerAddr(r.programId)} target="_blank" rel="noreferrer">{r.programId}</a></span>
                 <span>Raid PDA</span><span className="mono"><a href={explorerAddr(r.raid.pda)} target="_blank" rel="noreferrer">{r.raid.pda}</a></span>
               </div>
             </div>
 
             <div className="card">
-              <h3>Market · {r.mode === "mystery" || r.raid.mode === "mystery" ? "Mystery Market Day" : "Live"} · {r.pricePathSource ?? "price path"}</h3>
+              <h3>Market · {r.mode === "mystery" || r.raid.mode === "mystery" ? "Mystery Market Day" : r.mode === "live-markets" ? "Stocks & gold (NVDA · TSLA · XAU), live" : "Live"} · {r.pricePathSource ?? "price path"}</h3>
               <PricePath path={r.pricePath} />
               <div className="row note">
                 {(r.assets ?? []).map((a: { district: string; tracks: string }, i: number) => (
                   <span key={i}><span style={{ color: ["#22d37a", "#46d2ff", "#ffb22e"][i] }}>■</span> {a.district} → {a.tracks}</span>
                 ))}
-                <span>final index: {(r.results.finalPrices as string[]).map((p, i) => `${DISTRICTS[i]} ${(Number(p) / 1e4).toFixed(2)}`).join(" · ")}</span>
+                <span>final index: {(r.results.finalPrices as string[]).map((p, i) => `${DN[i]} ${(Number(p) / 1e4).toFixed(2)}`).join(" · ")}</span>
               </div>
             </div>
 
@@ -108,7 +128,7 @@ export default function Report({ raidId }: { raidId: string }) {
                     return (
                       <tr key={x.slot}>
                         <td className="mono">{x.slot + 1}</td>
-                        <td>{x.bot ? <span className="pill bot">BOT</span> : <span className="pill live">HUMAN</span>} <span className="mono dim">{x.wallet.slice(0, 4)}…</span></td>
+                        <td>{x.bot ? <span className="pill bot">BOT</span> : <span className="pill live">HUMAN</span>} <span className="mono dim">{x.wallet.slice(0, 4)}…</span>{r.classes?.[x.slot] && <span className="cls-tag" style={{ marginLeft: 6 }}>{r.classes[x.slot]}</span>}</td>
                         <td>{x.extracted ? <span className="up">extracted</span> : x.alive === false ? <span className="down">knocked out</span> : "no extraction"}</td>
                         <td className="mono">{x.kills}</td>
                         <td className="mono">{(Number(x.dusdPayout) / 1e6).toFixed(2)}</td>

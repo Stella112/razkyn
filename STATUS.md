@@ -304,13 +304,15 @@ TEST 10 PASS: no private value reached a prompt or an output
 ## M8 — ship (in progress)
 - Deployed: Vercel https://razkyn.vercel.app (report page verified there: hash ✓, Merkle ✓); keeper serve mode on the beam VPS as systemd `razkyn-keeper` (idle 128 MB, capped 600 MB, 127.0.0.1 only) behind HTTPS `https://razkyn.16-61-50-207.sslip.io` (edge-caddy site, DECISIONS #32). Public lobby reaches the keeper and shows "needs devnet SOL". Repo private: github.com/Stella112/razkyn.
 - 2026-11-26 additions (DECISIONS #33–34), all deployed: Extraction Market (raid 1795687416849: bets `57fWUkiu…` / `2zspqM2M…`, payout `5ag2uq2z…`, parimutuel correct); sourced Mystery reveal for all 23 days (22 with outlet links); WIRE events named VOLATILITY ALERT / MARKET CRASH / LIQUIDITY SURGE / EXTRACTION WATCH (test 10 still passes); trade alerts; crate ripping with RARE / JACKPOT tiers; voice narration toggle; extraction receipt; main menu; Raid History (`GET /reports`); join re-checks the seat and dry-runs before signing; join window 150 s; BOTs open at most 2 crates each and wait 15 s when a human is in. Player test (raid 1795688865968, dev wallet): joined, ripped crate #17 → "JACKPOT +2.05 dUSD", knocked out in Tower hazard, end screen KNOCKED OUT 7.20 dUSD + "BINANCE WALKS AWAY FROM FTX · 9 November 2022" (Verified ✓) + receipt (claim `2FZZBSfw…`, settlement `2fNTVjAK…`). VPS Live raid 1795642347439: 5,908/5,908 ticks, p95 376 ms, max gap 619 ms, 0 stalls → **test 12 passes from the VPS**.
+- **v2 (DECISIONS #35), on branch `v2`, not deployed:** program built (934,408 B) and MagicSVM 19/19; keeper (mode `live-markets`, BOT classes, `start_trade` district, market-event WIRE facts, event plan + hash check in the report) and client (Stocks & gold mode card, class picker, event banner, red halted terminals, TRADE INTERRUPTED, Scout vision / Gunner range, natural voice, v1 IDL fallback; checked: old raid 1795688865968 fails to decode with the v2 IDL and decodes with v1) typecheck and build. Needs the program upgrade first: the deployed v1 program rejects the new `join_raid`.
 - To do: SOL → first public raid on the VPS, test 8 re-run, live watch check, test 12 from the VPS; SUBMISSION links; demo video.
 
 ## Blocked
+- Program v2 upgrade: needs ~4.85 devnet SOL on the keeper/upgrade authority `GxoEJukA7Cr5n3FyLbwyMnGkopf84zyuCH5mtZbK6dAG` (has 2.62).
 - Keeper wallet `GxoEJukA7Cr5n3FyLbwyMnGkopf84zyuCH5mtZbK6dAG` has 0.046 devnet SOL: not enough for another raid (~0.35 SOL each). Needed for the test 8 re-run, a live watch-mode check and M8.
 
 ## Stubbed / not real yet
-- In-game events: no scripted event plan; WIRE EVENTS narrate rule-driven events (DECISIONS #26, pending). `event_plan_hash` stays zero.
+- In-game events: on the deployed v1 program there is no event plan and `event_plan_hash` stays zero. v2 (DECISIONS #35) adds VRF-planned market events committed by hash; not deployed yet.
 - THE WIRE model path: not run yet (needs `ANTHROPIC_API_KEY` in `.env`); demo lines are templates until then.
 - Spectator pools (`place_bet`, SpecPool, test 7): not built (deferred until after the client, DECISIONS #25).
 - `data/mystery/headlines.json` does not exist: debriefs quote no headlines and cite none. Adding it changes every leaf's `headlines_hash`, so the Merkle root must be rebuilt before the demo raids.

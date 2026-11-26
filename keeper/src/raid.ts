@@ -22,7 +22,8 @@ import type { WireServer } from "../wire/server.ts";
 const KEYS = process.env.RAZKYN_KEYS ?? join(homedir(), ".config", "razkyn");
 const DISTRICTS = ["Tower", "Factory", "Harbor"];
 
-export type RaidOptions = { mode: "mystery" | "live"; slots: number; humanSlots: number[]; humanWaitSecs: number; hz: number; log?: (s: string) => void; wireServer?: WireServer };
+export type RaidMode = "mystery" | "live" | "live-markets";
+export type RaidOptions = { mode: RaidMode; slots: number; humanSlots: number[]; humanWaitSecs: number; hz: number; log?: (s: string) => void; wireServer?: WireServer };
 
 /** Persistent BOT wallets (keys outside the repo); payouts return to them after each raid. */
 function botWallet(i: number): Keypair {
@@ -37,7 +38,7 @@ export async function runRaid(o: RaidOptions) {
   const lap = (s: string) => log(`[${((Date.now() - t0) / 1000).toFixed(1)}s] ${s}`);
   const mystery = o.mode === "mystery";
   const merkle = mystery ? JSON.parse(readFileSync(join(REPO, "data", "mystery", "merkle.json"), "utf8")) : null;
-  const S = new RaidSession(new anchor.BN(Date.now()), mystery ? 0 : 1, merkle?.leafCount ?? 0, merkle ? Array.from(Buffer.from(merkle.root, "hex")) : undefined);
+  const S = new RaidSession(new anchor.BN(Date.now()), mystery ? 0 : o.mode === "live-markets" ? 2 : 1, merkle?.leafCount ?? 0, merkle ? Array.from(Buffer.from(merkle.root, "hex")) : undefined);
 
   await S.createRaid(o.slots);
   lap(`raid ${S.raidId.toString()} ${S.raid.toBase58()} (${o.mode}) created`);
@@ -63,7 +64,7 @@ export async function runRaid(o: RaidOptions) {
   const raidNow = (await S.P.account.raid.fetch(S.raid)) as unknown as { raiders: { joined: boolean; wallet: PublicKey }[] };
   for (let s = 0; s < o.slots; s++) {
     if (raidNow.raiders[s].joined) { humans.push(s); S.raiders[s] = { wallet: { publicKey: raidNow.raiders[s].wallet } as Keypair, raidKey: Keypair.generate(), bot: false }; continue; }
-    await S.join(s, botWallet(s), true);
+    await S.join(s, botWallet(s), true, (Number(S.raidId.toString().slice(-4)) + s * 7) % 4); // BOTs get a class too
     botSlots.push(s);
   }
   lap(`joined: humans ${JSON.stringify(humans)}, BOTs ${JSON.stringify(botSlots)}`);
@@ -100,7 +101,7 @@ export async function runRaid(o: RaidOptions) {
   lap(`live (VRF ${vrfMs} ms${mystery ? `, mystery leaf ${(mysteryDay as { leafIndex: number }).leafIndex}` : ""})`);
 
   // THE WIRE: public facts only, read with a key that is never a permission member.
-  const wire = new Wire(o.mode);
+  const wire = new Wire(o.mode === "mystery" ? "mystery" : "live"); // Live Markets talks about price moves only, like Live
   const feed = new PublicFeed(S.raidId, (f) => wire.push(f));
   feed.assertNotMember([S.keeper.publicKey, ...S.raiders.flatMap((r) => (r ? [r.raidKey.publicKey, r.wallet.publicKey] : []))]);
   o.wireServer?.register(S.raidId.toString(), wire);
@@ -136,6 +137,25 @@ export async function runRaid(o: RaidOptions) {
     await sleep(2000);
   }
   const tick: TickStats = await ticker.stop();
+  // Market event plan (private in RaidSecret until the end; its hash was committed at the VRF callback).
+  let eventPlan: Record<string, unknown> = { note: "not read" };
+  let endRaidState: { classes?: number[] } | null = null;
+  try {
+    const sec = await S.teeK.getAccountInfo(S.secret);
+    const raidNow = (await S.readRaid()) as unknown as { eventPlanHash: number[]; classes: number[] };
+    endRaidState = raidNow;
+    if (sec) {
+      const ev = sec.data.subarray(sec.data.length - 8);
+      const { createHash } = await import("node:crypto");
+      const h = createHash("sha256").update(Buffer.concat([Buffer.from("razkyn-events"), ev])).digest("hex");
+      const KIND = ["", "TRADING HALT", "RATE SHOCK", "EARNINGS SURPRISE"];
+      eventPlan = {
+        events: [0, 1].map((i) => ({ kind: KIND[ev[4 * i]] ?? String(ev[4 * i]), district: DISTRICTS[ev[4 * i + 1]], atSecond: ev.readUInt16LE(4 * i + 2) })),
+        planHex: Buffer.from(ev).toString("hex"), committedHash: Buffer.from(raidNow.eventPlanHash).toString("hex"), recomputedHash: h,
+        verified: h === Buffer.from(raidNow.eventPlanHash).toString("hex"),
+      };
+    }
+  } catch (e) { eventPlan = { note: `could not read the plan: ${String(e).slice(0, 80)}` }; }
   await feed.poll().catch(() => {}); // final public state (deaths/extractions in the last second)
   await feed.stop();
   wire.stop();
@@ -201,7 +221,9 @@ export async function runRaid(o: RaidOptions) {
     network: "devnet",
     programId: S.raid ? S.P.programId.toBase58() : "",
     raid: { id: S.raidId.toString(), pda: S.raid.toBase58(), mode: o.mode },
-    assets: DISTRICTS.map((d, i) => ({ district: d, tracks: mystery ? ["SOLUSDT", "BTCUSDT", "ETHUSDT"][i] : ["SOL/USD", "BTC/USD", "ETH/USD"][i], note: mystery ? "revealed after the raid" : "Pricing Oracle on the TEE" })),
+    assets: DISTRICTS.map((d, i) => ({ district: d, tracks: mystery ? ["SOLUSDT", "BTCUSDT", "ETHUSDT"][i] : o.mode === "live-markets" ? ["Equity.US.NVDA/USD", "Equity.US.TSLA/USD", "Metal.XAU/USD"][i] : ["SOL/USD", "BTC/USD", "ETH/USD"][i], note: mystery ? "revealed after the raid" : "Pricing Oracle on the TEE" })),
+    classes: Array.from({ length: o.slots }, (_, s) => ["RAIDER", "SCOUT", "TRADER", "GUNNER"][(endRaidState?.classes?.[s] as number) ?? 0]),
+    marketEvents: eventPlan,
     // Mystery: the full path is the verified slice (all 300 steps, index ×10^4). Live: sampled
     // once per second by the keeper from the public District accounts.
     pricePath: mysterySteps

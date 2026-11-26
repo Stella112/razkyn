@@ -16,7 +16,7 @@ const wireServer = new WireServer();
 await wireServer.listen();
 console.log(`THE WIRE feed on http://localhost:${wireServer.port}/wire/<raidId>/stream`);
 const out = await runRaid({
-  mode: arg("--mode", "mystery") as "mystery" | "live",
+  mode: arg("--mode", "mystery") as "mystery" | "live" | "live-markets",
   slots,
   humanSlots: Array.from({ length: humans }, (_, i) => i),
   humanWaitSecs: Number(arg("--human-wait", "120")),

@@ -3,7 +3,7 @@ import * as anchor from "@coral-xyz/anchor";
 import type { Connection, Keypair } from "@solana/web3.js";
 import { navigate } from "../App";
 import {
-  DISTRICTS, EXITS, MAP_H, MAP_W, NUM_CRATES, P, PRICE_ONE, RaidPlayer, SHOOT_RANGE_TILES, TERMINALS, UNIT,
+  CLASSES, EXITS, MAP_H, MAP_W, MARKET_EVENTS, NUM_CRATES, P, PRICE_ONE, RaidPlayer, TERMINALS, UNIT, districtNames, rangeTiles,
   HAZARD_ROWS, backpackValue, changeBps, districtOfX, raidKeyFor, readMine, readPublic, readRaidBase, teeAuthed, teePublic,
   type PublicState, type RprvAcc, type ViewAcc,
 } from "../lib/chain";
@@ -33,6 +33,22 @@ function Sparkline({ data }: { data: number[] }) {
 }
 
 type Peek = { target: string; result: string; ok: boolean }[];
+
+/** TRADING HALT active on the district at x (raid v2 fields; absent on older raids). */
+const haltedHere = (r: { eventKind?: number; eventDistrict?: number; eventUntil?: { toString(): string } }, x: number) =>
+  r.eventKind === 1 && Number(r.eventUntil?.toString() ?? 0) * 1000 > Date.now() && r.eventDistrict === districtOfX(x);
+
+/** The most natural English voice the browser has (Edge/Chrome ship neural "Natural"/"Online"/Google voices). */
+let cachedVoice: SpeechSynthesisVoice | null | undefined;
+function newsVoice(): SpeechSynthesisVoice | null {
+  if (cachedVoice) return cachedVoice;
+  const all = typeof window !== "undefined" && "speechSynthesis" in window ? window.speechSynthesis.getVoices() : [];
+  if (!all.length) return null; // voices load asynchronously; try again on the next line
+  const en = all.filter((v) => /^en(-|_|$)/i.test(v.lang));
+  const rank = (v: SpeechSynthesisVoice) => (/natural/i.test(v.name) ? 4 : /neural|online/i.test(v.name) ? 3 : /google/i.test(v.name) ? 2 : /samantha|daniel|aria|guy|jenny/i.test(v.name) ? 1 : 0);
+  cachedVoice = [...en].sort((a, b) => rank(b) - rank(a))[0] ?? null;
+  return cachedVoice;
+}
 
 /** Eases a displayed number toward its target (rolling counter). */
 function useRolling(target: number) {
@@ -125,7 +141,9 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       if (voiceRef.current && (l.tag === "BREAKING" || l.tag === "IN-GAME EVENT") && "speechSynthesis" in window) {
         try {
           const u = new SpeechSynthesisUtterance(l.text.replace(/[▲▼]/g, ""));
-          u.rate = 1.08; u.pitch = 0.9; u.volume = 0.9;
+          const v = newsVoice();
+          if (v) u.voice = v;
+          u.rate = v && /natural|neural|online/i.test(v.name) ? 1.05 : 1.08; u.pitch = 0.95; u.volume = 0.95;
           window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
         } catch { /* no voice available */ }
       }
@@ -134,6 +152,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
 
   // Raid key + TEE token (players only).
   const raid = pub?.raid ?? null;
+  const DN = districtNames(raid?.mode);
   const kp = useMemo(() => (raidId && !watch ? raidKeyFor(raidId) : null), [raidId, watch]);
   const mySlot = raid && kp ? raid.raiders.findIndex((r) => r.joined && r.raidKey.equals(kp.publicKey)) : -1;
   useEffect(() => {
@@ -237,10 +256,22 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       await player.send(await startIx);
       setChannel({ label, start: Date.now(), ms });
       if (label.startsWith("Ripping")) sfx.open(); else sfx.trade();
-      await new Promise((r) => setTimeout(r, ms + 150));
+      const isTrade = label.startsWith("Trading");
+      const t0 = Date.now();
+      let seen = false;
+      while (Date.now() - t0 < ms + 150) {
+        await new Promise((r) => setTimeout(r, 100));
+        const k = mineRef.current?.rprv?.channelKind;
+        if (isTrade && k === 2) seen = true;
+        // Combat interrupts trades (program v2): the channel is gone before it finished.
+        if (isTrade && seen && k === 0) { say("TRADE INTERRUPTED: you took a hit, nothing swapped", 3000); sfx.deny(); setHurtAt(Date.now()); return; }
+      }
       await player.send(await finishIx());
       say(done);
-    } catch (e) { say(programError(e)); sfx.deny(); } finally { setChannel(null); }
+    } catch (e) {
+      const m = programError(e);
+      say(label.startsWith("Trading") && m.startsWith("Interrupted") ? "TRADE INTERRUPTED: you took a hit, nothing swapped" : m, 3000); sfx.deny();
+    } finally { setChannel(null); }
   };
 
   const onShootAt = (wx: number, wy: number) => {
@@ -253,7 +284,8 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     ];
     const hit = candidates.filter((c) => dist(c.x, c.y, wx, wy) < 180).sort((a, b) => dist(a.x, a.y, wx, wy) - dist(b.x, b.y, wx, wy))[0];
     if (!hit) return;
-    if (dist(hit.x, hit.y, me.x, me.y) > SHOOT_RANGE_TILES * UNIT) { say("Out of range (6 tiles)"); return; }
+    const range = rangeTiles(pubRef.current?.raid?.classes?.[player.slot]);
+    if (dist(hit.x, hit.y, me.x, me.y) > range * UNIT) { say(`Out of range (${range} tiles)`); return; }
     sceneRef.current()?.flash(me, hit);
     sfx.shot();
     player.shootIx(hit.slot).then((ix) => player.send(ix)).catch((e) => say(programError(e)));
@@ -263,7 +295,10 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     if (!canAct || !player || channel) return;
     const me = myPos(); const p = pubRef.current;
     if (!me || !p?.raid) return;
-    if (TERMINALS.some((t) => { const c = center(t); return dist(c.x, c.y, me.x, me.y) <= UNIT; })) { setTrade(true); return; }
+    if (TERMINALS.some((t) => { const c = center(t); return dist(c.x, c.y, me.x, me.y) <= UNIT; })) {
+      if (haltedHere(p.raid, me.x)) { say("TRADING HALT: this district's terminals are frozen", 2500); sfx.deny(); return; }
+      setTrade(true); return;
+    }
     // Nearest crate within 1 tile (sealed, or a public drop crate).
     let best = -1, bd = Infinity;
     p.raid.cratePos.forEach((c, i) => { if (i < NUM_CRATES && !(p.crates[i]?.state === 1)) { const d = dist(c.x, c.y, me.x, me.y); if (d < bd) { bd = d; best = i; } } });
@@ -300,7 +335,10 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     setTrade(false);
     const units = mine?.rprv?.backpack[from];
     if (!player || !units || units.isZero()) { say("Nothing to trade in that asset"); return; }
-    await runChannel("Trading: your position is public", 3000, player.startTradeIx(from, to, units), () => player.finishTradeIx(), "Trade filled at the current price");
+    const me = mineRef.current?.rprv;
+    if (!me) return;
+    const ms = pubRef.current?.raid?.classes?.[player.slot] === 2 ? 2000 : 3000; // Trader: 2 s
+    await runChannel("Trading: your position is public", ms, player.startTradeIx(from, to, units, districtOfX(me.x)), () => player.finishTradeIx(), "Trade filled at the current price");
   };
 
   /** "Try to peek": real reads of private accounts with MY token. The TEE returns nothing. */
@@ -424,7 +462,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
                 <Sparkline data={values.current} />
               </div>
               <div className="dim" style={{ fontSize: 11 }}>
-                {mine?.rprv?.backpack.map((u, i) => `${DISTRICTS[i][0]} ${(Number(u.toString()) / 1e6).toFixed(2)}`).join(" · ") ?? ""}
+                {mine?.rprv?.backpack.map((u, i) => `${DN[i].split(" ")[0]} ${(Number(u.toString()) / 1e6).toFixed(2)}`).join(" · ") ?? ""}
               </div>
               <div className="label" style={{ marginTop: 6 }}>Protected slot <span style={{ color: "var(--text)" }}>4.00 dUSD</span></div>
             </div>
@@ -446,7 +484,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
             const ds = pub?.districts[d]; const b = changeBps(ds ?? null);
             return (
               <div key={d} className={`district-chip ${ds?.hazardLevel ? "haz" : ""} ${ds?.awake && b >= 200 ? "wake" : ""}`}>
-                <div className="label">{DISTRICTS[d]}</div>
+                <div className="label">{DN[d]}</div>
                 <div className={`px ${b >= 0 ? "up" : "down"}`}>{pct(b)}</div>
                 <div className="dim" style={{ fontSize: 10 }}>{ds?.hazardLevel ? `HAZARD ${ds.hazardLevel}` : ds?.awake ? "crates awake" : Number(ds?.currentPrice.toString() ?? 0) > 0 ? "index " + (Number(ds!.currentPrice.toString()) / 1e4).toFixed(2) : "opens at the drop"}</div>
               </div>
@@ -484,6 +522,11 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       )}
       {trading && !channel && <div className="toast" style={{ top: "28%" }}>TRADING: your position is visible to everyone</div>}
       {toast && toast.until > now && <div className="toast">{toast.text}</div>}
+      {raid && (raid.eventKind ?? 0) > 0 && Number(raid.eventUntil?.toString() ?? 0) * 1000 > now && (
+        <div className={`event-banner ${raid.eventKind === 1 ? "halt" : ""}`}>
+          ⚡ {MARKET_EVENTS[raid.eventKind!]}{raid.eventKind === 2 ? " · hazards trigger early" : ` · ${DN[raid.eventDistrict ?? 0]}`}{raid.eventKind === 1 ? " · terminals frozen" : raid.eventKind === 3 ? " · crates wake" : ""} · {Math.max(0, Math.ceil(Number(raid.eventUntil!.toString()) - now / 1000))}s
+        </div>
+      )}
       {!watch && rpub && !rpub.alive && !ended && <div className="toast" style={{ top: "40%" }}>KNOCKED OUT · your protected slot is safe · watching until the raid ends</div>}
       {!watch && rpub?.extracted && !ended && <div className="toast" style={{ top: "40%" }}>EXTRACTED · backpack frozen · settles at raid end</div>}
       {!raid && raidId && <div className="toast">Waiting for raid {raidId}…</div>}
@@ -507,9 +550,9 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
             <p className="note">Takes 3 s. Your position is public while it runs.</p>
             {[0, 1, 2].map((from) => (
               <div key={from} className="row" style={{ marginBottom: 8 }}>
-                <span className="mono" style={{ width: 150 }}>{DISTRICTS[from]} {(Number(mine.rprv!.backpack[from].toString()) / 1e6).toFixed(2)}</span>
+                <span className="mono" style={{ width: 150 }}>{DN[from]} {(Number(mine.rprv!.backpack[from].toString()) / 1e6).toFixed(2)}</span>
                 {[0, 1, 2].filter((t) => t !== from).map((to) => (
-                  <button key={to} className="btn" disabled={mine.rprv!.backpack[from].isZero()} onClick={() => doTrade(from, to)}>→ {DISTRICTS[to]}</button>
+                  <button key={to} className="btn" disabled={mine.rprv!.backpack[from].isZero()} onClick={() => doTrade(from, to)}>→ {DN[to]}</button>
                 ))}
               </div>
             ))}

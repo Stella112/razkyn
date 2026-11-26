@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { navigate } from "../App";
-import { base, buildJoinTx, dusdBalance, raidKeyFor, readRaidBase, readPublic, teePublic, type RaidAcc } from "../lib/chain";
+import { CLASSES, base, buildJoinTx, dusdBalance, raidKeyFor, readRaidBase, readPublic, teePublic, type RaidAcc } from "../lib/chain";
 import { explorerTx } from "../lib/config";
 import { getLobby, openRaid, type Lobby as LobbyT } from "../lib/keeper";
 import { useGameWallet } from "../lib/wallet";
@@ -42,6 +42,7 @@ export default function Lobby() {
   const [err, setErr] = useState("");
   const [joinSig, setJoinSig] = useState("");
   const [now, setNow] = useState(Date.now());
+  const [cls, setCls] = useState(0);
 
   useEffect(() => {
     let stop = false;
@@ -82,7 +83,7 @@ export default function Lobby() {
   }, [lobby, mySlot]);
 
   const [opening, setOpening] = useState(false);
-  const open = async (mode: "mystery" | "live") => {
+  const open = async (mode: "mystery" | "live" | "live-markets") => {
     setErr(""); setOpening(true);
     const r = await openRaid(mode);
     setOpening(false);
@@ -101,7 +102,7 @@ export default function Lobby() {
       if (lobby.joinDeadline - Date.now() < JOIN_CUTOFF_MS) throw new Error("Too late: the join window is closing. Open a new raid in a moment.");
       const rk = raidKeyFor(lobby.raidId, true)!;
       setBusy("Building the join (free 10 dUSD if needed + 10 dUSD stake)…");
-      const tx = await buildJoinTx(w.publicKey, lobby.raidId, seat, rk.publicKey);
+      const tx = await buildJoinTx(w.publicKey, lobby.raidId, seat, rk.publicKey, cls);
       // Dry-run it first: wallets report a failed transaction only as "Unexpected error".
       const sim = await base.simulateTransaction(tx);
       if (sim.value.err) throw new Error(explainJoinFailure(sim.value.err, sim.value.logs ?? []));
@@ -152,9 +153,15 @@ export default function Lobby() {
               </button>
               <button className="mode-card live" disabled={opening || lobby.canOpen?.ok === false} onClick={() => open("live")}>
                 <span className="glyph">📡</span>
-                <div className="title neon-c">LIVE MARKET</div>
+                <div className="title neon-c">LIVE CRYPTO</div>
                 <p>Tower, Factory and Harbor track SOL, BTC and ETH right now through MagicBlock&apos;s price oracle. The map moves with the real market.</p>
                 <div className="go neon-c">OPEN RAID ▸</div>
+              </button>
+              <button className="mode-card gold" disabled={opening || lobby.canOpen?.ok === false} onClick={() => open("live-markets")}>
+                <span className="glyph">🏦</span>
+                <div className="title neon-a">STOCKS &amp; GOLD</div>
+                <p>NVDA Tower, TSLA Factory and the Gold Vault track Nvidia, Tesla and gold live from the oracle. Stocks only move in US market hours; gold trades nearly 24/5.</p>
+                <div className="go neon-a">OPEN RAID ▸</div>
               </button>
             </div>
             {opening && <div className="banner">⏳ Creating your raid on devnet…</div>}
@@ -176,7 +183,7 @@ export default function Lobby() {
             <div className="card">
               <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
-                  <h3>{lobby.mode === "mystery" ? "🌀 MYSTERY MARKET RAID" : "📡 LIVE MARKET RAID"}</h3>
+                  <h3>{lobby.mode === "mystery" ? "🌀 MYSTERY MARKET RAID" : lobby.mode === "live-markets" ? "🏦 STOCKS & GOLD RAID · NVDA · TSLA · GOLD" : "📡 LIVE CRYPTO RAID"}</h3>
                   <div className="note mono">raid {lobby.raidId}</div>
                 </div>
                 {lobby.phase === "lobby" ? (
@@ -197,6 +204,7 @@ export default function Lobby() {
                       <div className="num">#{s + 1}</div>
                       <div className="who">{r?.joined ? (me ? "YOU" : r.isBot ? "🤖 BOT" : short(r.wallet)) : lobby.humanSlots.includes(s) ? "open seat" : "BOT soon"}</div>
                       {r?.joined && <span className={`pill ${me ? "live" : r.isBot ? "bot" : ""}`} style={{ alignSelf: "flex-start" }}>{me ? "you" : r.isBot ? "bot" : "human"}</span>}
+                      {r?.joined && raid?.classes && <span className="cls-tag">{CLASSES[raid.classes[s]]?.tag ?? ""}</span>}
                     </div>
                   );
                 })}
@@ -227,9 +235,19 @@ export default function Lobby() {
                     {lobby.phase === "live" && <button className="btn primary big" onClick={() => navigate(`/raid/${lobby.raidId}`)}>▶ ENTER THE RAID</button>}
                   </>
                 ) : lobby.phase === "lobby" ? (
+                  <>
+                  <div className="label" style={{ marginBottom: 6 }}>Pick your class</div>
+                  <div className="classes">
+                    {CLASSES.map((c, i) => (
+                      <button key={c.tag} className={`class-card ${cls === i ? "on" : ""}`} onClick={() => setCls(i)} disabled={!!busy}>
+                        <b>{c.name}</b><span>{c.perk}</span>
+                      </button>
+                    ))}
+                  </div>
                   <button className="btn primary big" style={{ width: "100%" }} disabled={!w.publicKey || freeHuman === undefined || !!busy || (sol ?? 0) < 0.005 || lobby.joinDeadline - now < JOIN_CUTOFF_MS} onClick={join}>
-                    {freeHuman === undefined ? "NO SEAT FREE" : lobby.joinDeadline - now < JOIN_CUTOFF_MS ? "JOIN WINDOW CLOSED" : "▶ JOIN · STAKE 10 dUSD"}
+                    {freeHuman === undefined ? "NO SEAT FREE" : lobby.joinDeadline - now < JOIN_CUTOFF_MS ? "JOIN WINDOW CLOSED" : `▶ JOIN AS ${CLASSES[cls].tag} · STAKE 10 dUSD`}
                   </button>
+                  </>
                 ) : (
                   <button className="btn cyan big" style={{ width: "100%" }} onClick={() => navigate(`/watch/${lobby.raidId}`)}>◉ WATCH THIS RAID</button>
                 )}

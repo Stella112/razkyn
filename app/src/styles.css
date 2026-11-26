@@ -126,8 +126,8 @@ button { font: inherit; cursor: pointer; }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* ---------- lobby ---------- */
-.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 720px) { .modes { grid-template-columns: 1fr; } }
+.modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 900px) { .modes { grid-template-columns: 1fr; } }
 .mode-card { position: relative; text-align: left; border-radius: 18px; padding: 22px; border: 1px solid var(--line2); background: linear-gradient(160deg, rgba(255, 43, 214, 0.16), rgba(16, 11, 44, 0.9) 55%); color: var(--text); transition: transform 0.12s, box-shadow 0.2s; overflow: hidden; }
 .mode-card.live { background: linear-gradient(160deg, rgba(34, 242, 255, 0.16), rgba(16, 11, 44, 0.9) 55%); }
 .mode-card:hover:not(:disabled) { transform: translateY(-3px); box-shadow: var(--glow-m); }
@@ -272,3 +272,16 @@ table.t th { color: var(--dim); font-weight: 600; font-size: 11px; letter-spacin
 .chip.no { border-color: var(--down); color: var(--down); }
 .chip:disabled { opacity: 0.4; }
 @media (max-height: 480px) { .market { width: 260px; max-height: calc(100vh - 110px); } }
+
+/* v2: Live Markets card, class picker */
+.mode-card.gold { border-color: rgba(255, 196, 0, 0.45); }
+.mode-card.gold:hover:not(:disabled) { box-shadow: 0 0 28px rgba(255, 196, 0, 0.35); }
+.classes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+.class-card { text-align: left; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 8px 10px; color: inherit; cursor: pointer; font: inherit; display: flex; flex-direction: column; gap: 3px; }
+.class-card b { font-family: "Bungee", sans-serif; font-weight: 400; letter-spacing: 1px; font-size: 13px; }
+.class-card span { font-size: 12px; opacity: 0.75; line-height: 1.3; }
+.class-card.on { border-color: var(--cyan, #22e7ff); box-shadow: 0 0 14px rgba(34, 231, 255, 0.35); }
+.cls-tag { font-family: "JetBrains Mono", monospace; font-size: 10px; opacity: 0.7; letter-spacing: 1px; }
+.event-banner { position: absolute; top: 58px; left: 50%; transform: translateX(-50%); z-index: 6; padding: 6px 14px; border-radius: 8px; font-family: "Bungee", sans-serif; letter-spacing: 1px; font-size: 14px; background: rgba(20, 6, 30, 0.85); border: 1px solid #ffc400; color: #ffc400; box-shadow: 0 0 22px rgba(255, 196, 0, 0.35); pointer-events: none; white-space: nowrap; }
+.event-banner.halt { border-color: #ff3b6b; color: #ff3b6b; box-shadow: 0 0 22px rgba(255, 59, 107, 0.4); }
+@media (max-width: 560px) { .event-banner { font-size: 11px; top: 50px; } }

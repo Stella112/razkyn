@@ -27,7 +27,10 @@ export type Fact =
   | { kind: "crate_opened"; t: number; slot: number; bot: boolean; district: number; drop: boolean }
   | { kind: "kill"; t: number; slot: number; bot: boolean; by: number | null; byBot: boolean | null }
   | { kind: "extract"; t: number; slot: number; bot: boolean }
+  | { kind: "market_event"; t: number; event: number; district: number }
   | { kind: "raid_end"; t: number };
+/** Market events (constants.rs EVENT_*), public on Raid once fired. */
+export const MARKET_EVENTS = ["", "TRADING HALT", "RATE SHOCK", "EARNINGS SURPRISE"] as const;
 
 const int = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.trunc(v) : 0);
 const bool = (v: unknown) => v === true;
@@ -47,6 +50,7 @@ export function sanitizeFact(f: unknown): Fact | null {
     case "crate_opened": return { kind: "crate_opened", t, slot: slotOf(o.slot), bot: bool(o.bot), district: dist(o.district), drop: bool(o.drop) };
     case "kill": return { kind: "kill", t, slot: slotOf(o.slot), bot: bool(o.bot), by: o.by == null ? null : slotOf(o.by), byBot: o.byBot == null ? null : bool(o.byBot) };
     case "extract": return { kind: "extract", t, slot: slotOf(o.slot), bot: bool(o.bot) };
+    case "market_event": return { kind: "market_event", t, event: Math.min(3, Math.max(1, int(o.event))), district: dist(o.district) };
     case "raid_end": return { kind: "raid_end", t };
     default: return null;
   }
@@ -73,7 +77,7 @@ export class PublicFeed {
   private loop: Promise<void> | null = null;
   private prev = {
     hazard: [0, 0, 0], awake: [false, false, false], window: 0, exposed: [] as boolean[], alive: [] as boolean[],
-    extracted: [] as boolean[], kills: [] as number[], opened: new Set<number>(), started: false, ended: false,
+    extracted: [] as boolean[], kills: [] as number[], opened: new Set<number>(), started: false, ended: false, eventsFired: 0,
   };
   private priceHist: number[][] = [[], [], []]; // bps per second
   private startTs = 0;
@@ -151,6 +155,11 @@ export class PublicFeed {
       if (dd.awake && !P.awake[d]) this.emit({ kind: "wake", t, district: d });
       P.awake[d] = !!dd.awake;
     }
+
+    // Market events: `eventsFired` gains a bit when the program fires one (play.rs tick).
+    const fired = Number(raid.eventsFired ?? 0);
+    if (fired > P.eventsFired && Number(raid.eventKind ?? 0) > 0) this.emit({ kind: "market_event", t, event: Number(raid.eventKind), district: Number(raid.eventDistrict) });
+    P.eventsFired = Math.max(P.eventsFired, fired);
 
     // Exit windows (public schedule on Raid).
     const win = Number(raid.exitWindow);

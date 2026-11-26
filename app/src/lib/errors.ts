@@ -5,13 +5,14 @@ const NAMES = [
   "BadAccount", "TooManyMembers", "BadMint", "BadMode", "CrateNotOpenable", "CrateDormant", "OutOfRange", "NoChannel", "ChannelNotDone", "BadTarget",
   "Cooldown", "CratesNotPlaced", "BadChunk", "SliceNotLoaded", "BadProof", "SliceNotVerified", "NotAtTerminal", "Trading", "BadTrade", "InsufficientUnits",
   "BadFeed", "ExitClosed", "NotEnded", "AlreadyComputed", "Conservation", "NotSettled", "AlreadySettled", "AlreadyClaimed", "TooEarly", "NotCommitted",
-  "ForcedFailure",
+  "ForcedFailure", "TradingHalted", "BadClass",
 ];
 const FRIENDLY: Record<string, string> = {
   OutOfRange: "Out of range", Cooldown: "Weapon cooling down", CrateDormant: "Dormant crate: its district must rise 2% first",
   CrateNotOpenable: "Already opened", NotAtTerminal: "Stand on a terminal", Trading: "Finish your trade first", ExitClosed: "That exit is closed",
   RaiderDead: "You are down", RaiderExtracted: "You already extracted", RaidOver: "Raid over", ChannelNotDone: "Hold on, still channelling",
-  InsufficientUnits: "Nothing to trade", BadTarget: "No valid target", FaucetCap: "Faucet cap reached (100 dUSD per day)",
+  InsufficientUnits: "Nothing to trade", TradingHalted: "TRADING HALT: this district's terminals are frozen",
+  NoChannel: "Interrupted: the channel was cancelled", BadTarget: "No valid target", FaucetCap: "Faucet cap reached (100 dUSD per day)",
 };
 export function programError(e: unknown): string {
   const s = String((e as Error)?.message ?? e);

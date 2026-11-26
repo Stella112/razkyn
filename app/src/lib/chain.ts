@@ -15,6 +15,7 @@ import {
 import nacl from "tweetnacl";
 import { Buffer } from "buffer";
 import idlJson from "./razkyn.json";
+import idlV1Json from "./razkyn.v1.json"; // program v1 layout: decodes raids created before the v2 upgrade
 import devnet from "./devnet.json";
 import { BASE_RPC, TEE_RPC } from "./config";
 
@@ -34,6 +35,7 @@ export const teePublic = new Connection(TEE_RPC, "confirmed");
 
 const coderProgram = new anchor.Program(idl, { connection: base } as unknown as anchor.Provider);
 export const coder = coderProgram.coder.accounts;
+const coderV1 = new anchor.Program(idlV1Json as anchor.Idl, { connection: base } as unknown as anchor.Provider).coder.accounts;
 
 const pda = (...seeds: (Buffer | Uint8Array)[]) => PublicKey.findProgramAddressSync(seeds, PID)[0];
 const le8 = (id: string) => new anchor.BN(id).toArrayLike(Buffer, "le", 8);
@@ -58,6 +60,8 @@ export type RaidAcc = {
   raidId: BN; mode: number; status: number; joinedCount: number; startTs: BN; endTs: BN; tickNo: BN; marketStep: number;
   cratePos: { x: number; y: number }[]; exitWindow: number; openExits: number[]; raiders: RaiderSlot[]; dayRoot: number[]; settled: boolean;
   vrfState: number;
+  /** v2 fields (absent on raids created before the upgrade). */
+  classes?: number[]; eventKind?: number; eventDistrict?: number; eventUntil?: BN; eventsFired?: number;
 };
 export type DistrictAcc = { index: number; hazardLevel: number; startPrice: BN; currentPrice: BN; history: BN[]; histLen: number; histPos: number; awake: boolean };
 export type RpubAcc = { slot: number; hp: number; alive: boolean; extracted: boolean; exposed: boolean; isBot: boolean; kills: number; pubX: number; pubY: number };
@@ -67,7 +71,8 @@ export type CrateAcc = { idx: number; district: number; dormant: boolean; placed
 
 export const decode = <T>(name: string, data: Buffer | null | undefined): T | null => {
   if (!data) return null;
-  try { return coder.decode(name, data) as T; } catch { return null; }
+  try { return coder.decode(name, data) as T; } catch { /* older layout */ }
+  try { return coderV1.decode(name, data) as T; } catch { return null; }
 };
 
 /** Everything public about a raid, in one getMultipleAccountsInfo through `conn`. */
@@ -174,8 +179,11 @@ export class RaidPlayer {
       raidKey: this.raidKey.publicKey, permissionProgram: PERMISSION_PROGRAM_ID, ephemeralVault: EPHEMERAL_VAULT_ID, magicProgram: MAGIC_PROGRAM_ID,
     }).instruction();
   }
-  startTradeIx(from: number, to: number, units: anchor.BN) {
-    return this.m.startTrade(this.slot, from, to, units).accountsPartial({ raid: P.raid(this.id), rprv: this.acc("rprv"), rpub: this.acc("rpub"), raidKey: this.raidKey.publicKey }).instruction();
+  /** `district`: the district the terminal stands in (the program checks it and refuses during a TRADING HALT). */
+  startTradeIx(from: number, to: number, units: anchor.BN, district: number) {
+    return this.m.startTrade(this.slot, from, to, units).accountsPartial({
+      raid: P.raid(this.id), rprv: this.acc("rprv"), rpub: this.acc("rpub"), district: P.slot("district", this.id, district), raidKey: this.raidKey.publicKey,
+    }).instruction();
   }
   finishTradeIx() {
     return this.m.finishTrade(this.slot).accountsPartial({
@@ -195,8 +203,8 @@ export class RaidPlayer {
 }
 
 // ---------------- lobby (wallet signs on the base layer) ----------------
-/** faucet_dusd (if the wallet holds < 10 dUSD) + join_raid(slot, raid key). */
-export async function buildJoinTx(wallet: PublicKey, id: string, slot: number, raidKey: PublicKey): Promise<Transaction> {
+/** faucet_dusd (if the wallet holds < 10 dUSD) + join_raid(slot, raid key, class). */
+export async function buildJoinTx(wallet: PublicKey, id: string, slot: number, raidKey: PublicKey, cls = 0): Promise<Transaction> {
   const prog = coderProgram;
   const ata = walletAta(wallet);
   const bal = await base.getTokenAccountBalance(ata).then((b) => Number(b.value.amount)).catch(() => 0);
@@ -207,7 +215,7 @@ export async function buildJoinTx(wallet: PublicKey, id: string, slot: number, r
       tokenProgram: TOKEN, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     }).instruction());
   }
-  tx.add(await prog.methods.joinRaid(slot, raidKey).accountsPartial({
+  tx.add(await prog.methods.joinRaid(slot, raidKey, cls).accountsPartial({
     config: P.config(), raid: P.raid(id), rpub: P.slot("rpub", id, slot), rprv: P.slot("rprv", id, slot), walletAta: ata,
     escrowAuth: P.escrowAuth(id), escrow: escrowAta(id), dusdMint: DUSD, wallet, keeper: null as unknown as PublicKey, tokenProgram: TOKEN,
   }).instruction());
@@ -247,6 +255,19 @@ export async function dusdBalance(wallet: PublicKey) {
 export const MAP_W = 64, MAP_H = 40, UNIT = 100;
 export const DISTRICT_TILES: [number, number][] = [[0, 20], [22, 42], [44, 63]];
 export const DISTRICTS = ["Tower", "Factory", "Harbor"];
+/** District names per raid mode (0 Mystery, 1 Live crypto, 2 Live Markets: NVDA, TSLA, gold). */
+export const districtNames = (mode: number | undefined) => (mode === 2 ? ["NVDA Tower", "TSLA Factory", "Gold Vault"] : DISTRICTS);
+export const MODE_TRACKS: Record<number, string[]> = { 1: ["SOL", "BTC", "ETH"], 2: ["NVDA", "TSLA", "XAU"] };
+/** Raider classes (constants.rs CLASS_*). */
+export const CLASSES = [
+  { name: "Raider", tag: "RAIDER", perk: "Balanced. No perk, no weakness." },
+  { name: "Scout", tag: "SCOUT", perk: "Sees 10 tiles through the fog instead of 8." },
+  { name: "Trader", tag: "TRADER", perk: "Trades in 2 s instead of 3: less time exposed." },
+  { name: "Gunner", tag: "GUNNER", perk: "Range 7 tiles and shoots every 400 ms." },
+] as const;
+export const visionTiles = (cls: number | undefined) => (cls === 1 ? 10 : 8);
+export const rangeTiles = (cls: number | undefined) => (cls === 3 ? 7 : 6);
+export const MARKET_EVENTS = ["", "TRADING HALT", "RATE SHOCK", "EARNINGS SURPRISE"];
 export const EXITS: [number, number][] = [[1, 20], [32, 1], [32, 38], [62, 20]];
 export const TERMINALS: [number, number][] = [[5, 12], [15, 28], [27, 12], [37, 28], [49, 12], [59, 28]];
 export const HAZARD_ROWS: Record<number, [number, number]> = { 1: [16, 23], 2: [12, 27] };
