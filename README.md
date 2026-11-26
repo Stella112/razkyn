@@ -16,6 +16,16 @@ Eight raiders drop into a 64 × 40 map for five minutes. The map is the market: 
 
 Payouts (Option A): an extracted raider gets the protected slot plus their backpack, minted as dTWR/dFAC/dHRB backed in a reserve; a knocked-out raider gets the protected slot and their backpack drops as a crate; unextracted loot goes back to everyone pro rata by stake. `sum(payouts) + ops == sum(stakes)` is asserted in the program.
 
+## Features
+
+- **Main menu**: Enter Raid · Mystery Market Day · Watch Live · Raid History.
+- **Lobby**: open a Mystery or Live raid; you get a seat, a second human can take the other, labelled BOTs fill the rest. One wallet signature (free dUSD + stake).
+- **In the raid**: three districts react to their asset (rising = glow and dormant crates wake; falling = cracked floors that drain HP). Sealed crates are ripped open with a 2 s channel; loot lands with a rarity burst (RARE, JACKPOT) and a floating "+dUSD". The backpack value rolls with the market. **Trade alerts** warn you when a raider within 12 tiles is trading (their position is public while they do). Fog of war, shooting, hazards, extraction beacons, synth sound effects and optional **voice narration** of THE WIRE.
+- **Try to Peek**: real TEE reads of a sealed crate, another raider and the raid secret, refused.
+- **End screen**: EXTRACTED / KNOCKED OUT / STRANDED, payout, an **extraction receipt** (your claim and the settlement transactions), the Mystery reveal ("YOU JUST SURVIVED THE GLOBAL SELLOFF · 5 August 2024" with a sourced summary and outlet links, price data verified against the on-chain Merkle root) and THE WIRE's debrief.
+- **Extraction Market** (watch mode): bet free devnet dPLAY play-money on "raider N extracts / doesn't". Bets are real devnet transfers with a memo; the keeper settles each raider's pool parimutuel from the committed result and lists the payout transactions in the report (DECISIONS #33).
+- **Market Raid Report** and **Raid History**: every raid's report, hash-checked against the chain.
+
 ## MagicBlock stack
 
 | Piece | How RAZKYN uses it | Where |
@@ -71,11 +81,12 @@ Devnet: program `CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97`; mints in `config
 
 - The VRF callback signature cannot be listed: devnet-tee hides signatures of transactions that write private accounts. The report shows the request signatures.
 - No scripted in-game event plan: THE WIRE's IN-GAME EVENT lines narrate the rule-driven events (hazards, waking crates, exit windows).
-- Spectator betting (dPLAY pools) is not built; watch mode is read-only.
-- The raid's mode and BOT fill are chosen when the keeper starts the raid, not in the lobby.
+- The Extraction Market is settled by the keeper (a bet is a dPLAY transfer to the keeper's account with a memo), not by an on-chain pool program; it is play-money only and every payout is a devnet transaction in the report.
+- Districts track SOL, BTC and ETH only. Stock or gold districts (NVDA, TSLA, gold) would need equity price feeds that MagicBlock's oracle does not offer, plus a program upgrade; Mystery days are crypto days from Binance public data.
+- Not built: combat interrupting a trade, trading-halt or rate-shock events, characters and equipment (they need new on-chain rules).
+- Mystery day context (title, summary, links) is added after the raid from public reporting; it is not part of the committed Merkle leaf (the price data is).
 - About 45% of pipelined moves are rejected by the speed check under network jitter, so effective speed is below the 6 tiles/s cap.
 - 10 Hz ticks from a machine far from the Singapore TEE showed occasional gaps just over 1 s; the keeper should run close to the TEE.
-- `headlines.json` is empty, so debriefs quote no headlines.
 - THE WIRE's model path (`claude-sonnet-5-5`) has not been exercised on devnet yet; every line in the recorded raids is a template line.
 
 See `STATUS.md` (what is done, with evidence), `DECISIONS.md` (every deviation from the spec) and `CLAUDE.md` (the build spec).

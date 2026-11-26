@@ -526,7 +526,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
             {!report && <p className="dim">Settling on-chain and paying everyone out… (about a minute)</p>}
             {report && (
               <>
-                {report.report.mystery && <Reveal m={report.report.mystery} watch={watch} proof={reveal} />}
+                {report.report.mystery && <Reveal m={report.report.mystery} watch={watch} survived={outcome.c === "win"} proof={reveal} />}
                 {!watch && myResult && (
                   <div className="kv" style={{ margin: "12px 0" }}>
                     <span>Outcome</span><span>{myResult.extracted ? <span className="up">Extracted</span> : myResult.alive === false ? <span className="down">Knocked out</span> : "Did not extract"}</span>
@@ -566,11 +566,11 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
 
 type MysteryEvent = { title: string; summary: string; sources: { url: string; outlet: string }[]; note?: string } | null;
 /** Cinematic Mystery Market Day reveal: the real day, sourced context, and the proof check. */
-function Reveal({ m, watch, proof }: { m: { day: string; event?: MysteryEvent }; watch: boolean; proof: { ok: boolean } | null }) {
+function Reveal({ m, watch, survived, proof }: { m: { day: string; event?: MysteryEvent }; watch: boolean; survived: boolean; proof: { ok: boolean } | null }) {
   const date = new Date(`${m.day}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   return (
     <div className="reveal">
-      <div className="label">{watch ? "the tape was" : "you just survived"}</div>
+      <div className="label">{watch ? "the tape was" : survived ? "you just survived" : "you just raided"}</div>
       <div className="reveal-title">{m.event?.title ?? "A REAL MARKET DAY"}</div>
       <div className="reveal-date">{date} · Tower = SOL · Factory = BTC · Harbor = ETH</div>
       {m.event?.summary && <p className="reveal-sum">{m.event.summary}</p>}

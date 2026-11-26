@@ -1,6 +1,6 @@
 # STATUS.md
 
-_Last updated: 2026-11-25 — Deployed: client https://razkyn.vercel.app, keeper (serve mode) on the beam VPS at https://razkyn.16-61-50-207.sslip.io, idle until a player opens a raid. Blocked on keeper SOL for raids._
+_Last updated: 2026-11-26 — Pitch features built on top of the spec: Extraction Market, cinematic sourced reveal, trade alerts, crate ripping with rarity, voice, receipt, main menu, Raid History. Player test on devnet passed. Test 8 re-run in progress._
 
 ## Done
 - §4.1 setup: MagicBlock dev skill v0.5.1 (commit `88f6719`, 2026-11-24) installed; references read. `vendor/` cloned (examples `3376663`, starter-kits, SDK tag `v0.18.0`).
@@ -303,6 +303,7 @@ TEST 10 PASS: no private value reached a prompt or an output
 
 ## M8 — ship (in progress)
 - Deployed: Vercel https://razkyn.vercel.app (report page verified there: hash ✓, Merkle ✓); keeper serve mode on the beam VPS as systemd `razkyn-keeper` (idle 128 MB, capped 600 MB, 127.0.0.1 only) behind HTTPS `https://razkyn.16-61-50-207.sslip.io` (edge-caddy site, DECISIONS #32). Public lobby reaches the keeper and shows "needs devnet SOL". Repo private: github.com/Stella112/razkyn.
+- 2026-11-26 additions (DECISIONS #33–34), all deployed: Extraction Market (raid 1795687416849: bets `57fWUkiu…` / `2zspqM2M…`, payout `5ag2uq2z…`, parimutuel correct); sourced Mystery reveal for all 23 days (22 with outlet links); WIRE events named VOLATILITY ALERT / MARKET CRASH / LIQUIDITY SURGE / EXTRACTION WATCH (test 10 still passes); trade alerts; crate ripping with RARE / JACKPOT tiers; voice narration toggle; extraction receipt; main menu; Raid History (`GET /reports`); join re-checks the seat and dry-runs before signing; join window 150 s; BOTs open at most 2 crates each and wait 15 s when a human is in. Player test (raid 1795688865968, dev wallet): joined, ripped crate #17 → "JACKPOT +2.05 dUSD", knocked out in Tower hazard, end screen KNOCKED OUT 7.20 dUSD + "BINANCE WALKS AWAY FROM FTX · 9 November 2022" (Verified ✓) + receipt (claim `2FZZBSfw…`, settlement `2fNTVjAK…`). VPS Live raid 1795642347439: 5,908/5,908 ticks, p95 376 ms, max gap 619 ms, 0 stalls → **test 12 passes from the VPS**.
 - To do: SOL → first public raid on the VPS, test 8 re-run, live watch check, test 12 from the VPS; SUBMISSION links; demo video.
 
 ## Blocked
