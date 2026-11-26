@@ -63,3 +63,11 @@ All cosmetic and saved in the browser (localStorage); nothing here touches rules
 - Client signs `razkyn-avatar:<raid>:<slot>:<fields>` with the seat's raid key; keeper (`keeper/wire/avatars.ts`) checks the signature AND that the key equals `Raid.raiders[slot].raid_key` on the base layer, human seats only; `GET /avatars/:raid`.
 - Forgery checks against devnet raid 1795704493373 (`scripts/check-avatar-verify.ts`): invalid avatar → bad request; signature over other data → does not verify; valid signature with a non-seat key → "not the raid key for this seat"; BOT seat → "not a human seat"; nothing stored.
 - Positive path on devnet raid 1795706772752: browser published slot 0 (female, ponytail, red hair, red jacket); `GET /avatars/1795706772752` returned it; rendered in the live raid (`avatar-live-raid.jpg`). Players whose browsers did not publish still get the wallet-derived look.
+
+## RAZKYN LIVE picks (keeper-run, DECISIONS #38) — devnet raid 1795708594203
+- Two independent spectator clients: the browser dev wallet `dJnD…` (watch page) and `scripts/spectator-bot.ts` (`9Ba7…`, own keypair, funded by the keeper).
+- Lock by chain clock, both directions: C:4 block 1795709056 < lock 1795709061 → accepted; D:8 block 1795709058 < lock 1795709059 → accepted; D:7 block 1795709032 ≥ lock 1795709029 → LATE, refunded (5 late picks in total, all refunded).
+- Live resolution from public facts: C1 → HARBOR (a district crack inside its watched minute); KNOCKOUT windows → NO (no knockouts). THE WIRE: "LIVE PICK: Harbor cracked first · 0% of spectators called it", "… nobody went down in that 30 s · 100% of spectators called it, paid 1.0×".
+- Settlement: 18 bets, staked 145 dPLAY, paid 145 dPLAY (wins 40 + refunds 105) in one transaction `3wZnifqY…`; leaderboard dJnD 4/9 correct, best streak 3. Report hash posted `3y1CthsR…`.
+- UI: `live-picks-watch.jpg` (cards with countdown, LOCKED stamp, share per choice, EXTRACTS rows below).
+- Finding: the 3 s / 5 s locks are tight for base-layer transactions with a wallet popup (confirmation ~1–2 s); a dev wallet or quick approval is needed.

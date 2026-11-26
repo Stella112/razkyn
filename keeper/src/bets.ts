@@ -114,7 +114,7 @@ export class BetBook {
       const winning = on.filter((b) => b.choice === outcome).reduce((a, b) => a + b.amount, 0);
       const r: Result = { outcome, resolvedTs: now, total, winning, pct: on.length ? Math.round((on.filter((b) => b.choice === outcome).length / on.length) * 100) : 0, mult: winning ? Math.round((total / winning) * 10) / 10 : 0 };
       this.results.set(key, r);
-      this.onResult({ kind: "pick_result", t: Math.max(0, now - this.startTs), pick: w.type === "C" ? 0 : 1, window: w.window, outcome, pct: r.pct, mult10: Math.round(r.mult * 10), bets: on.length } as Fact);
+      if (on.length) this.onResult({ kind: "pick_result", t: Math.max(0, now - this.startTs), pick: w.type === "C" ? 0 : 1, window: w.window, outcome, pct: r.pct, mult10: Math.round(r.mult * 10), bets: on.length } as Fact);
     }
   }
 
