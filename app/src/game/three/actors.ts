@@ -51,6 +51,9 @@ export class Operator {
     this.root.add(this.body);
     this.body.position.y = 0.92; // hips
     const pelvis = box(0.36, 0.18, 0.22, cloth); this.body.add(pelvis);
+    // Long coat flaps (front / back) that swing with the stride: a clearer silhouette at a distance.
+    const coat = mat(0x20272c, 0.8, 0.1);
+    for (const [g, z] of [[this.coatF, 0.12], [this.coatB, -0.13]] as const) { g.position.set(0, 0.02, z); const p = box(0.4, 0.5, 0.03, coat); p.position.y = -0.25; g.add(p); this.body.add(g); }
     // Torso (yaws toward aim).
     this.torso.position.y = 0.08;
     this.body.add(this.torso);
@@ -104,6 +107,8 @@ export class Operator {
     this.setClass(0);
   }
 
+  private coatF = new THREE.Group();
+  private coatB = new THREE.Group();
   private gear!: { scout: THREE.Object3D[]; trader: THREE.Object3D[]; gunner: THREE.Object3D[] };
   private cls = -1;
   /** 0 Raider, 1 Scout, 2 Trader, 3 Gunner (constants.rs CLASS_*). Visible gear only; rules live on-chain. */
@@ -148,6 +153,8 @@ export class Operator {
     this.arms[1].lower.rotation.x = -0.35;
     this.arms[0].pivot.rotation.set(-1.15 + this.recoil * 0.2, 0, 0.45);
     this.arms[0].lower.rotation.x = -0.75;
+    this.coatF.rotation.x = -0.06 - Math.abs(s) * 0.3 * run;
+    this.coatB.rotation.x = 0.1 + Math.abs(c) * 0.35 * run;
     // Downed: fall onto the back.
     this.body.rotation.x = -this.down * 1.45;
     this.root.visible = this.lift < 0.97;
@@ -243,6 +250,8 @@ export class ExitModel {
   private beamMat = new THREE.MeshBasicMaterial({ color: PAL.teal, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
   readonly light = new THREE.PointLight(PAL.teal, 0, 9, 1.4);
   open = false;
+  /** 0..1: fades the beam when it stands between the camera and the player. */
+  fade = 1;
   constructor() {
     const pylon = mat(0x2b3338, 0.5, 0.7);
     for (let k = 0; k < 3; k++) {
@@ -259,7 +268,7 @@ export class ExitModel {
   update(t: number) {
     const pulse = 0.5 + 0.5 * Math.sin(t / 260);
     this.ringMat.color.setHex(this.open ? PAL.teal : 0x3b4247);
-    this.beamMat.opacity = this.open ? 0.12 + 0.08 * pulse : 0;
+    this.beamMat.opacity = (this.open ? 0.12 + 0.08 * pulse : 0) * this.fade;
     this.light.intensity = this.open ? 14 + 6 * pulse : 0;
     this.ring.scale.setScalar(this.open ? 1 + 0.08 * pulse : 1);
     this.ring.rotation.z = t / 900;

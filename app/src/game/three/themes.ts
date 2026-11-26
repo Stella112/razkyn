@@ -23,7 +23,7 @@ export const setTheme = (t: Theme) => { try { window.localStorage.setItem("razky
 /** Sky, fog, light and weather per theme. */
 export const LOOK: Record<Theme, { bg: number; fog: number; fogD: number; sky: number; ground: number; hemi: number; moon: number; moonI: number; rain: boolean; outer: number }> = {
   street: { bg: 0x0a0e12, fog: 0x0c1216, fogD: 0.0085, sky: 0x5f7482, ground: 0x161b20, hemi: 2.3, moon: 0xc6d4e0, moonI: 2.4, rain: true, outer: 0x0d1013 },
-  mall: { bg: 0x100d0b, fog: 0x14110e, fogD: 0.006, sky: 0x8a7b68, ground: 0x1c1813, hemi: 2.3, moon: 0xf0dcc0, moonI: 1.8, rain: false, outer: 0x17130f },
+  mall: { bg: 0x100d0b, fog: 0x14110e, fogD: 0.006, sky: 0x9a8a74, ground: 0x2a241c, hemi: 3.0, moon: 0xf0dcc0, moonI: 1.8, rain: false, outer: 0x17130f },
   farm: { bg: 0x1a2230, fog: 0x1f2735, fogD: 0.0075, sky: 0x8090a8, ground: 0x241c14, hemi: 2.1, moon: 0xffc89a, moonI: 2.2, rain: false, outer: 0x1d1a12 },
 };
 

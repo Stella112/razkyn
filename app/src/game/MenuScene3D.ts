@@ -45,7 +45,7 @@ export function startMenuScene(parent: HTMLElement, theme: Theme = "street") {
   const camera = new THREE.PerspectiveCamera(34, 1, 0.5, 400);
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.6, 0.5, 0.8);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.75, 0.55, 0.66);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 

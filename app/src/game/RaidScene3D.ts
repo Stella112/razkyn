@@ -28,6 +28,8 @@ export type SceneInput = {
 const DNAME_BY_MODE: Record<number, string[]> = { 2: ["NVDA TOWER", "TSLA FACTORY", "GOLD VAULT"] };
 const dname = (mode: number | undefined) => DNAME_BY_MODE[mode ?? 0] ?? ["TOWER", "FACTORY", "HARBOR"];
 const w = (u: number) => u / UNIT; // on-chain units → world units (tiles)
+/** Camera yaw: the view looks diagonally across the market (south-east → north-west), like an isometric action game. */
+const YAW = 0.5;
 
 /** Text sprite (labels, pop-ups). */
 function textSprite(text: string, color: string, size = 1) {
@@ -146,7 +148,7 @@ export class RaidScene {
     // Post: bloom on emissive lights only (high threshold), then tone mapping / sRGB output.
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.5, 0.82);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.62, 0.5, 0.72);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
 
@@ -207,7 +209,10 @@ export class RaidScene {
     if (this.keys.has("s") || this.keys.has("arrowdown")) y += 1;
     x += this.stick.x; y += this.stick.y;
     const n = Math.hypot(x, y);
-    return n < 0.2 ? null : { x: x / n, y: y / n };
+    if (n < 0.2) return null;
+    // Screen-relative input → map axes (the camera looks diagonally across the map).
+    const ix = x / n, iy = y / n, cy = Math.cos(YAW), sy = Math.sin(YAW);
+    return { x: cy * ix + sy * iy, y: -sy * ix + cy * iy };
   }
 
   // ------------------------------------------------------------ effects (called from React)
@@ -287,7 +292,7 @@ export class RaidScene {
       const ring = new THREE.Mesh(new THREE.RingGeometry(0.7, 0.85, 40), new THREE.MeshBasicMaterial({ color: PAL.teal, transparent: true, opacity: 0, toneMapped: false, depthWrite: false }));
       ring.rotation.x = -Math.PI / 2; ring.position.y = 0.04;
       op.root.add(ring);
-      if (look === "me") { const lamp = new THREE.PointLight(0xdfeee9, 9, 7, 1.6); lamp.position.set(0, 2.2, 0.6); op.root.add(lamp); } // shoulder lamp
+      if (look === "me") { const lamp = new THREE.PointLight(0xdfeee9, 5, 7, 1.6); lamp.position.set(0, 1.5, 0.9); op.root.add(lamp); } // shoulder lamp
       this.scene.add(op.root);
       v = { op, label, labelKey: "", pos: new THREE.Vector3(), target: new THREE.Vector3(), seen: false, exposedRing: ring };
       this.raiders.set(slot, v);
@@ -354,7 +359,13 @@ export class RaidScene {
       });
       // Exits.
       const open = raid.exitWindow ? raid.openExits.filter((e) => e !== 255) : [];
-      this.exits.forEach((e, i) => { e.open = open.includes(i); e.update(t); });
+      this.exits.forEach((e, i) => {
+        e.open = open.includes(i);
+        // Occlusion: a beam near the camera (between it and the player) fades out.
+        const d = Math.hypot(e.root.position.x - this.camera.position.x, e.root.position.z - this.camera.position.z);
+        e.fade = THREE.MathUtils.clamp((d - 4) / 8, 0.08, 1);
+        e.update(t);
+      });
       // Crates (positions public; contents sealed until opened).
       raid.cratePos.forEach((p, i) => {
         if (i >= NUM_CRATES) return;
@@ -457,12 +468,12 @@ export class RaidScene {
     this.camInit = true;
     this.camTarget.lerp(target, snap ? 1 : 1 - Math.exp(-dt * (focus ? 6 : 2)));
     const dist = watch || !focus ? 3.0 : this.zoom;
-    const off = new THREE.Vector3(0, 8.6 * dist, 10.8 * dist); // ~38° down, close like a street-level action game
+    const off = new THREE.Vector3(Math.sin(YAW) * 10.8 * dist, 8.6 * dist, Math.cos(YAW) * 10.8 * dist); // ~38° down, diagonal three-quarter view
     const want = this.camTarget.clone().add(off);
     this.camera.position.lerp(want, snap ? 1 : 1 - Math.exp(-dt * 8));
     this.shake *= Math.exp(-dt * 9);
     if (this.shake > 0.01) this.camera.position.add(new THREE.Vector3((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake, 0));
-    this.camera.lookAt(this.camTarget.x, 0.9, this.camTarget.z - 1.0);
+    this.camera.lookAt(this.camTarget.x - Math.sin(YAW), 0.9, this.camTarget.z - Math.cos(YAW));
 
     // Effects.
     this.tracers = this.tracers.filter((tr) => { if (tr.until > t) { (tr.m.material as THREE.MeshBasicMaterial).opacity = (tr.until - t) / 110; return true; } this.scene.remove(tr.m); tr.m.geometry.dispose(); return false; });

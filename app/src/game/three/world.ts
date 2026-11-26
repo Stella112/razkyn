@@ -256,7 +256,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer, theme: Theme = "street
   const floorTex = floorTexture(theme);
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(MAP_W, MAP_H),
-    patchFow(new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.5, metalness: 0.18, envMapIntensity: 1.0 }), 0.62),
+    patchFow(new THREE.MeshStandardMaterial({ map: floorTex, roughness: theme === "farm" ? 0.92 : theme === "mall" ? 0.4 : 0.32, metalness: theme === "farm" ? 0 : 0.3, envMapIntensity: theme === "farm" ? 0.3 : 1.25 }), 0.62),
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.set(MAP_W / 2, 0, MAP_H / 2);
@@ -484,6 +484,20 @@ export function buildWorld(renderer: THREE.WebGLRenderer, theme: Theme = "street
     }
     if (water) (water.material as THREE.MeshStandardMaterial).roughness = 0.1 + 0.04 * Math.sin(t / 900);
   };
+
+  // Real reflections: capture the finished city from above the market and use it as the environment,
+  // so wet floors and metal reflect the actual signs, windows and lights.
+  try {
+    const rt = new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType });
+    const cc = new THREE.CubeCamera(0.5, 300, rt);
+    cc.position.set(MAP_W / 2, 3.5, MAP_H / 2);
+    rain.visible = false;
+    cc.update(renderer, scene);
+    rain.visible = L.rain;
+    const pm = new THREE.PMREMGenerator(renderer);
+    scene.environment = pm.fromCubemap(rt.texture).texture;
+    pm.dispose(); rt.dispose();
+  } catch { /* keep the simple environment */ }
 
   return { scene, floor, districtLights, signs, hazards, embers, rain, steam, water, tick };
 }

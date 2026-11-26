@@ -106,6 +106,26 @@ export function dressCity(scene: THREE.Scene) {
   const steam = new THREE.Points(sg, new THREE.PointsMaterial({ map: steamTex, color: 0x9aa8b0, size: 1.4, transparent: true, opacity: 0.14, depthWrite: false }));
   scene.add(steam);
 
+  // Neon blade signs sticking out of the north wall (original words), with the colour they throw on the floor.
+  const BLADES: [string, string][] = [["BUY", "#45C9B2"], ["SELL", "#E4514E"], ["LONG", "#D9AC65"], ["SHORT", "#E4514E"], ["HODL", "#45C9B2"], ["BAGS", "#D9AC65"], ["ALPHA", "#C8D2D1"], ["DUMP", "#E4514E"], ["PUMP", "#45C9B2"], ["FOMO", "#D9AC65"]];
+  BLADES.forEach(([word, col], i) => {
+    const cv = document.createElement("canvas"); cv.width = 64; cv.height = 256;
+    const c = cv.getContext("2d")!;
+    c.fillStyle = "#0b0f12"; c.fillRect(0, 0, 64, 256); c.strokeStyle = col; c.lineWidth = 4; c.strokeRect(3, 3, 58, 250);
+    c.fillStyle = col; c.font = `800 ${Math.min(46, 220 / word.length)}px "Barlow Condensed", "Arial Narrow", sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
+    [...word].forEach((ch, k) => c.fillText(ch, 32, 128 + (k - (word.length - 1) / 2) * (220 / word.length)));
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+    const blade = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 2.4), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, side: THREE.DoubleSide }));
+    blade.position.set(3 + i * 6.4, 3.0 + (i % 3) * 0.35, -0.2); blade.rotation.y = Math.PI / 2;
+    scene.add(blade);
+  });
+  for (const [x, col] of [[10, PAL.teal], [32, PAL.red], [54, PAL.amber]] as const) { const l = new THREE.PointLight(col, 12, 10, 1.4); l.position.set(x, 2.6, 0.6); scene.add(l); }
+  // Light shafts under the street lamps (cheap additive cones).
+  const shaftMat = new THREE.MeshBasicMaterial({ color: 0xf3d9a6, transparent: true, opacity: 0.05, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+  const shafts: THREE.BufferGeometry[] = [];
+  for (let x = 4; x < MAP_W; x += 12) { const g = new THREE.ConeGeometry(2.2, 5, 20, 1, true); g.translate(x, 2.5, -1.4); shafts.push(g); }
+  scene.add(new THREE.Mesh(mergeGeometries(shafts), shaftMat));
+
   // Overhead lantern cables across the market (high above head height: thin, never block a view).
   const cableMat = new THREE.MeshStandardMaterial({ color: 0x15191c, roughness: 0.6, metalness: 0.4 });
   const bulbs: THREE.BufferGeometry[] = [], cables: THREE.BufferGeometry[] = [];
