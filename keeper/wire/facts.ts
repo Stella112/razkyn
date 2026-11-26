@@ -12,7 +12,11 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { idl, PID } from "../../scripts/raid-lib.ts";
 import { teeConn, sleep } from "../../scripts/spike-lib.ts";
 
-export const DISTRICTS = ["Tower", "Factory", "Harbor"] as const;
+/** District display names for the current raid (serve mode runs one raid at a time). */
+export const DISTRICTS: string[] = ["Tower", "Factory", "Harbor"];
+export function setDistrictNames(mode: "mystery" | "live" | "live-markets") {
+  DISTRICTS.splice(0, 3, ...(mode === "live-markets" ? ["NVDA Tower", "TSLA Factory", "Gold Vault"] : ["Tower", "Factory", "Harbor"]));
+}
 const NUM_CRATES = 36;
 const DROP_BASE = 36;
 const STATUS_LIVE = 2;
@@ -152,7 +156,9 @@ export class PublicFeed {
       const level = Number(dd.hazardLevel);
       if (level > P.hazard[d]) this.emit({ kind: "hazard", t, district: d, level });
       P.hazard[d] = level;
-      if (dd.awake && !P.awake[d]) this.emit({ kind: "wake", t, district: d });
+      // An EARNINGS SURPRISE also wakes crates; that is reported as the event, not as a +2% move.
+      const earnings = Number(raid.eventKind ?? 0) === 3 && Number(raid.eventDistrict) === d;
+      if (dd.awake && !P.awake[d] && !earnings) this.emit({ kind: "wake", t, district: d });
       P.awake[d] = !!dd.awake;
     }
 

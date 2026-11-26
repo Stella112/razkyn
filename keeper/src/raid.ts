@@ -20,7 +20,7 @@ import { Wire, loadHeadlines, type WireLine } from "../wire/wire.ts";
 import type { WireServer } from "../wire/server.ts";
 
 const KEYS = process.env.RAZKYN_KEYS ?? join(homedir(), ".config", "razkyn");
-const DISTRICTS = ["Tower", "Factory", "Harbor"];
+import { DISTRICTS, setDistrictNames } from "../wire/facts.ts";
 
 export type RaidMode = "mystery" | "live" | "live-markets";
 export type RaidOptions = { mode: RaidMode; slots: number; humanSlots: number[]; humanWaitSecs: number; hz: number; log?: (s: string) => void; wireServer?: WireServer };
@@ -37,6 +37,7 @@ export async function runRaid(o: RaidOptions) {
   const t0 = Date.now();
   const lap = (s: string) => log(`[${((Date.now() - t0) / 1000).toFixed(1)}s] ${s}`);
   const mystery = o.mode === "mystery";
+  setDistrictNames(o.mode); // THE WIRE and the report name districts per mode
   const merkle = mystery ? JSON.parse(readFileSync(join(REPO, "data", "mystery", "merkle.json"), "utf8")) : null;
   const S = new RaidSession(new anchor.BN(Date.now()), mystery ? 0 : o.mode === "live-markets" ? 2 : 1, merkle?.leafCount ?? 0, merkle ? Array.from(Buffer.from(merkle.root, "hex")) : undefined);
 
