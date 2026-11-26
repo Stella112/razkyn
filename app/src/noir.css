@@ -110,7 +110,7 @@ body { background: #0b0f12; letter-spacing: 0.005em; }
 .lock { font-family: var(--display); font-weight: 800; letter-spacing: 0.14em; color: var(--down); filter: none; font-size: 14px; margin-right: 6px; }
 .phase-steps > div.on { background: var(--amber) !important; box-shadow: none !important; }
 .phase-steps > div { background: rgba(200, 210, 209, 0.12) !important; border-radius: 0 !important; }
-@media (max-width: 900px) { .minimap canvas { width: 128px !important; height: 80px !important; } .districts { display: none; } }
+@media (max-width: 900px) { .minimap:not(.big) canvas { width: 128px !important; height: 80px !important; } .districts { display: none; } }
 
 .op-preview { height: 230px; margin: -6px 0 6px; background: radial-gradient(ellipse at 50% 85%, rgba(217,172,101,0.12), transparent 60%); }
 
@@ -298,7 +298,7 @@ body { background: #0b0f12; letter-spacing: 0.005em; }
 .ic-bar > div { height: 100%; background: #45c9b2; }
 .inv-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; flex-wrap: wrap; }
 .bigmap { background: rgba(8, 11, 13, 0.96); border: 1px solid rgba(200, 210, 209, 0.25); padding: 14px; max-width: 96vw; max-height: 92vh; overflow: auto; }
-.minimap.big canvas { max-width: calc(96vw - 30px); height: auto !important; }
+.minimap.big canvas { max-width: calc(96vw - 30px); max-height: calc(92vh - 110px); width: auto !important; height: auto !important; aspect-ratio: 64 / 40; }
 .map-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 11px; margin-top: 8px; opacity: 0.85; }
 .map-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
 .settle-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }

@@ -653,6 +653,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
               <span><i style={{ background: "#D9AC65" }} />sealed crate · raider in your vision</span>
               <span><i style={{ background: "#E4514E" }} />BOT in vision · red district = hazard</span>
               <span><i style={{ background: "#45C9B2" }} />terminal · open exit · trading raider</span>
+              <span><i style={{ background: "rgba(200,210,209,0.42)" }} />cover block (no walking or shooting through)</span>
             </div>
           </div>
         </div>

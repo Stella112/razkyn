@@ -16,7 +16,7 @@ const COLOURS: [string, string, string][] = [
   ["#45C9B2", "TEAL", "You · a rising district · terminals · open exits · a raider who is trading (exposed)"],
   ["#D9AC65", "AMBER", "Loot · sealed crates · other human raiders · your main actions"],
   ["#E4514E", "RED", "Danger · a falling district · cracked floor that hurts · trading halt · BOT raiders · damage"],
-  ["#5C666C", "GREY", "Dormant crate (wakes when its district is up 2%) or an already-opened crate"],
+  ["#5C666C", "GREY", "Cover block (amber cap; nobody walks or shoots through it) · dormant crate (wakes when its district is up 2%) · an already-opened crate"],
   ["#C8D2D1", "SILVER", "Neutral information"],
 ];
 const CONTROLS: [string, string][] = [

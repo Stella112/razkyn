@@ -11,7 +11,7 @@ _Last updated: Thu 26 Nov 2026. Evidence for every "Built" line is in `STATUS.md
 | 3D city, three-quarter camera, Street / Mall / Farm maps, Day / Night / Storm | ✅ | Three.js scene |
 | Districts: NVDA Tower / TSLA Factory / SOL Harbor | ✅ | Live Markets mode (DECISIONS #41). Live crypto mode uses SOL / BTC / ETH; Mystery days are crypto days |
 | Interiors, vertical levels, bridges, vaults | ❌ | Flat playfield with buildings around the edge |
-| Collision, cover, line of sight | ❌ | Would need a program change; not done before the freeze |
+| Collision, cover, line of sight | ✅ | 13 cover blocks enforced by the program (moves and shots); MagicSVM `m7_cover.rs` 4/4; devnet raid 1795726083712 (DECISIONS #42) |
 | Characters | 🟡 | Male / female humans with customisation and 3 BOT styles, built from simple shapes; not rigged models |
 | Controls: WASD, aim and fire, E, hold Space, Tab inventory, M map, H help | ✅ | |
 | Reload, sprint, dodge, weapon switch, ammo | ❌ | One weapon; four classes change its stats |
