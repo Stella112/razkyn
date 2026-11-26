@@ -42,22 +42,24 @@ Submit at https://build.magicblock.app/?stage=blitz#submit before **Fri 27 Nov 2
 
 Program: `CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97` — https://explorer.solana.com/address/CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97?cluster=devnet
 
-Ops treasury (fee vault): the keeper's dUSD ATA receives 0.5 dUSD per raider per raid (`finalize_raid`). _TODO: paste the ATA address._
+Ops treasury (fee vault): the keeper's dUSD account [`3gA9REuLgMoe2RTFPucfH2YQbcqFqYyFsfuCxZAwUYbM`](https://explorer.solana.com/address/3gA9REuLgMoe2RTFPucfH2YQbcqFqYyFsfuCxZAwUYbM?cluster=devnet) receives 0.5 dUSD per raider per raid in `finalize_raid` (raid 1795718682996: `ops=4000000` in the program log).
+
+All proofs below are from one fresh full raid, **1795718682996** (Mystery, 1 human + 7 BOTs, 26 Nov 2026, after the 20% protected-slot upgrade `3Wx9wGvT…`). Report: https://razkyn.vercel.app/report/1795718682996
 
 | Proof | Raid | Signature / link |
 |---|---|---|
-| (a) Delegation to the TEE validator | M2 run `CXSon4Rb…` | `2PwwZgtK…` _TODO: full signature + link from spikes/results/m2-devnet.json_ |
-| (b) TEE gameplay tx | — | TEE txs are readable only with a TEE token; list a move/open signature as text. _TODO_ |
-| (c) VRF | raid 1795628725761 | request (TEE) `3Z2J4mY6…` from the report; the callback signature is hidden by devnet-tee (README, limitations) |
-| (d) Commit + Magic Action | raid 1795628725761 | base commit `9s25P1fS…` → settled via `finalize_raid` _TODO: full link_ |
-| (e) Claim | raid 1795628725761 | 8 claim txs in `/report/1795628725761` _TODO: one full link_ |
-| Report hash on-chain | raid 1795628725761 | `post_report_hash` `1tjfAjNT…`, page shows "Verified ✓" |
+| (a) Delegation to the TEE validator | 1795718682996 | [`3jFMd4D87A…`](https://explorer.solana.com/tx/3jFMd4D87AgVoqDsbPBbDrrTdSAb7KPsTHjP3rWBBaUPvVRNRjD1mcN5GLC5fpjFoVDqf2u3ufpnYbEZM17mwrF?cluster=devnet) (`DelegatePda` × 2, validator `MTEWGuqx…`) |
+| (b) TEE transaction | 1795718682996 | `end_raid` on devnet-tee: `4YwKSJZZbkhfP8RtnyZktrK6CS4J1dqYeZPxiKVPgtcacRavt4VvMpa7sx9aUHqbeen8ZQr3Jx1hkUNZoPnG7tLC` (TEE transactions are readable only with a TEE token, so listed as text) |
+| (c) VRF | 1795718682996 | request (TEE) `2zP4RK9S7r3pXLmrKm7pckQ4mJfs2S7Kpcv9iuxQc9rDt9s1X6Zhb3WyifMotE3URXFkYDekvGGY1AZ7xKmsNADi`; the callback signature is hidden by devnet-tee (README, limitations) |
+| (d) Commit + Magic Action | 1795718682996 | [`5h5j3x6E3G…`](https://explorer.solana.com/tx/5h5j3x6E3Gfb9wujCmN2xJQavuYC1xSxU3PE2S2KQieVh4ym65czeC1AoVtoYopJX5pk4A73BCXKVaqAXfxyhmhj?cluster=devnet): commit → `FinalizeRaid` → "settled raid 1795718682996 via 1" → undelegate |
+| (e) Claim | 1795718682996 | [`2fmRq5PyL4…`](https://explorer.solana.com/tx/2fmRq5PyL4cUbxreapR5yDAj2vyxEUjw3SZvAtyChab64L55EXjD3sHBdvc9DQH4rWEvQdn5FzSbkvzwEaC6vzDT?cluster=devnet) (the human seat: 6.61 dUSD = 2.00 protected + pro-rata share); all 8 in the report |
+| Report hash on-chain | 1795718682996 | `post_report_hash` [`39Dso3T3ib…`](https://explorer.solana.com/tx/39Dso3T3ibb1YnxT4V6iXuivpko99HjwEYiitYmydaRBYr88d9TaVLhtu9U7uE6SLJu28JKMBUTPRrzrCfQ9JbS7?cluster=devnet) · report sha256 `b5df2791…` |
 
 ## Checklist
 
 - [ ] Playable site deployed and pointing at a running keeper (Singapore region)
 - [ ] Repo public, README complete, no secrets (`.env`, keys) in history
 - [ ] Demo video uploaded
-- [ ] Explorer links above filled in from a fresh full raid
+- [x] Explorer links above filled in from a fresh full raid (1795718682996)
 - [ ] STATUS.md: all §9 tests with evidence; nothing in "Stubbed" that the demo uses
 - [ ] Do not claim "world's first"; say "market-driven extraction game"
