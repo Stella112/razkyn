@@ -8,7 +8,7 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   ComputeBudgetProgram, Connection, Keypair, PublicKey, Transaction, TransactionInstruction,
 } from "@solana/web3.js";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, createTransferCheckedInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import {
   EPHEMERAL_VAULT_ID, MAGIC_PROGRAM_ID, PERMISSION_PROGRAM_ID, getAuthToken, permissionPdaFromAccount,
 } from "@magicblock-labs/ephemeral-rollups-sdk";
@@ -216,7 +216,29 @@ export async function buildJoinTx(wallet: PublicKey, id: string, slot: number, r
   return tx;
 }
 
-/** faucet_play: free dPLAY for spectators (betting itself is deferred, DECISIONS #25). */
+// ---------------- Extraction Market (spectators, dPLAY play-money; keeper/src/bets.ts) ----------------
+export const PLAY = new PublicKey(devnet.mints.play);
+export const MEMO_PROGRAM = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+export async function playBalance(wallet: PublicKey) {
+  return base.getTokenAccountBalance(walletAta(wallet, PLAY)).then((b) => Number(b.value.amount)).catch(() => 0);
+}
+/** One bet = free dPLAY from the faucet if needed + a dPLAY transfer to the keeper + a memo naming raid, raider and side. */
+export async function buildBetTx(wallet: PublicKey, raidId: string, slot: number, side: "Y" | "N", amount: number, keeperAta: PublicKey): Promise<Transaction> {
+  const ata = walletAta(wallet, PLAY);
+  const tx = new Transaction();
+  if ((await playBalance(wallet)) < amount) {
+    tx.add(await coderProgram.methods.faucetPlay(new anchor.BN(Math.max(100, amount))).accountsPartial({
+      config: P.config(), ledger: P.faucet(wallet), mintAuth: P.mintAuth(), mint: PLAY, userAta: ata, user: wallet,
+      tokenProgram: TOKEN, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    }).instruction());
+  }
+  tx.add(createTransferCheckedInstruction(ata, PLAY, keeperAta, wallet, BigInt(amount), 0, [], TOKEN));
+  tx.add(new TransactionInstruction({ programId: MEMO_PROGRAM, keys: [{ pubkey: wallet, isSigner: true, isWritable: false }], data: Buffer.from(`razkyn-bet:${raidId}:${slot}:${side}`, "utf8") }));
+  tx.feePayer = wallet;
+  tx.recentBlockhash = (await base.getLatestBlockhash()).blockhash;
+  return tx;
+}
+
 export async function dusdBalance(wallet: PublicKey) {
   return base.getTokenAccountBalance(walletAta(wallet)).then((b) => Number(b.value.amount)).catch(() => 0);
 }

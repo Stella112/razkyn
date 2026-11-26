@@ -10,6 +10,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { REPO } from "../../scripts/spike-lib.ts";
 import type { Wire, WireLine } from "./wire.ts";
+import type { BetBook } from "../src/bets.ts";
 
 export type Lobby = {
   raidId: string;
@@ -30,6 +31,7 @@ export type Lobby = {
 
 export class WireServer {
   private wires = new Map<string, Wire>();
+  private books = new Map<string, BetBook>();
   private server: Server;
   lobby: Lobby | null = null;
   /** Serve mode only: open a raid on request. */
@@ -56,6 +58,12 @@ export class WireServer {
           json(r.ok ? 202 : 409, r);
         });
         return;
+      }
+      // Extraction Market: pools, bets and payouts for a raid.
+      const bm = /^\/bets\/(\d+)\/?$/.exec(url);
+      if (bm && req.method === "GET") {
+        const b = this.books.get(bm[1]);
+        return b ? json(200, b.view()) : json(404, { error: "no market for this raid" });
       }
       // Raid history: newest first, a short public summary of each published report.
       if (url === "/reports" && req.method === "GET") {
@@ -93,6 +101,7 @@ export class WireServer {
   }
 
   register(raidId: string, wire: Wire) { this.wires.set(raidId, wire); }
+  registerBets(raidId: string, book: BetBook) { this.books.set(raidId, book); }
   setLobby(l: Lobby | null) { this.lobby = l; }
   patchLobby(p: Partial<Lobby>) { if (this.lobby) this.lobby = { ...this.lobby, ...p }; }
   /** WIRE_HOST=127.0.0.1 on a server behind a reverse proxy (default: all interfaces, for local dev). */

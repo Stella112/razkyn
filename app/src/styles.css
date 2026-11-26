@@ -258,3 +258,16 @@ table.t th { color: var(--dim); font-weight: 600; font-size: 11px; letter-spacin
 .menu-m { border-color: rgba(255, 43, 214, 0.6); color: var(--magenta); text-shadow: var(--glow-m); }
 .menu-c { border-color: rgba(34, 242, 255, 0.6); color: var(--cyan); text-shadow: var(--glow-c); }
 .receipt { margin: 10px 0 14px; padding: 10px 14px; border-radius: 12px; border: 1px dashed var(--acid); background: rgba(182, 255, 59, 0.05); }
+
+.market { width: 330px; max-height: calc(100vh - 140px); overflow-y: auto; }
+.mkt-rows { display: flex; flex-direction: column; gap: 6px; }
+.mkt-row { display: flex; align-items: center; gap: 8px; }
+.mkt-bar { position: relative; flex: 1; height: 22px; border-radius: 6px; background: rgba(255, 59, 107, 0.25); overflow: hidden; border: 1px solid var(--line2); }
+.mkt-bar > div { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, rgba(182, 255, 59, 0.55), rgba(61, 255, 160, 0.35)); }
+.mkt-bar > span { position: relative; font-size: 11px; padding-left: 6px; line-height: 22px; color: #fff; }
+.chip { font-family: var(--mono); font-size: 12px; padding: 4px 9px; border-radius: 8px; border: 1px solid var(--line2); background: rgba(12, 8, 34, 0.85); color: var(--text); }
+.chip.on { border-color: var(--acid); color: var(--acid); box-shadow: var(--glow-a); }
+.chip.yes { border-color: var(--acid); color: var(--acid); }
+.chip.no { border-color: var(--down); color: var(--down); }
+.chip:disabled { opacity: 0.4; }
+@media (max-height: 480px) { .market { width: 260px; max-height: calc(100vh - 110px); } }

@@ -11,6 +11,7 @@ import { programError } from "../lib/errors";
 import { explorerTx } from "../lib/config";
 import { getLobby, getReport, subscribeWire, verifyMystery, hex, type ReportFile, type WireLine } from "../lib/keeper";
 import { startGame, type RaidScene } from "../game/RaidScene";
+import Market from "../game/Market";
 import { sfx } from "../lib/sfx";
 
 const RAID_SECS = 300;
@@ -65,6 +66,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const [reveal, setReveal] = useState<{ ok: boolean; root: string; onchainRoot: string } | null>(null);
   const [now, setNow] = useState(Date.now());
   const [noKey, setNoKey] = useState(false);
+  const [noLive, setNoLive] = useState(false);
   const pending = useRef({ dx: 0, dy: 0 });
   const values = useRef<number[]>([]);
   const [hurtAt, setHurtAt] = useState(0);
@@ -86,7 +88,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   // Watch with no id: follow the keeper's current raid.
   useEffect(() => {
     if (raidId) return;
-    getLobby().then((l) => { if (l) setRaidId(l.raidId); });
+    getLobby().then((l) => { if (l && l.raidId && l.phase !== "idle") setRaidId(l.raidId); else setNoLive(true); });
   }, [raidId]);
 
   // Phaser.
@@ -408,6 +410,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
           <button className="act mute" title={muted ? "Sound off" : "Sound on"} onClick={() => setMuted(sfx.toggle())}>{muted ? "🔇" : "🔊"}</button>
           <button className="act mute" title={voice ? "THE WIRE voice on" : "THE WIRE voice off"} onClick={toggleVoice} style={{ opacity: voice ? 1 : 0.5 }}>🎙</button>
         </div>
+        {watch && raidId && <Market raidId={raidId} pub={pub} />}
         {!watch && mySlot >= 0 && (
           <>
             <div className="hud-box hp">
@@ -484,6 +487,13 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       {!watch && rpub && !rpub.alive && !ended && <div className="toast" style={{ top: "40%" }}>KNOCKED OUT · your protected slot is safe · watching until the raid ends</div>}
       {!watch && rpub?.extracted && !ended && <div className="toast" style={{ top: "40%" }}>EXTRACTED · backpack frozen · settles at raid end</div>}
       {!raid && raidId && <div className="toast">Waiting for raid {raidId}…</div>}
+      {watch && noLive && !raidId && (
+        <div className="overlay"><div className="card" style={{ maxWidth: 520 }}>
+          <div className="result-title meh" style={{ fontSize: 34 }}>NO LIVE RAID</div>
+          <p className="note">Nobody is raiding right now. Open one from the lobby (BOTs fill the empty seats), or look back at past raids.</p>
+          <div className="row"><button className="btn primary" onClick={() => navigate("/play")}>▶ OPEN A RAID</button><button className="btn" onClick={() => navigate("/history")}>☰ RAID HISTORY</button></div>
+        </div></div>
+      )}
       {noKey && !watch && (
         <div className="overlay"><div className="card"><h3>Not your raid key</h3><p className="note">This browser has no raid key for raid {raidId}. Join from the lobby, or watch it.</p><div className="row"><button className="btn" onClick={() => navigate("/play")}>Lobby</button><button className="btn" onClick={() => navigate(`/watch/${raidId}`)}>Watch</button></div></div></div>
       )}

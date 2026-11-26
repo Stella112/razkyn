@@ -47,6 +47,19 @@ export function subscribeWire(raidId: string, onLine: (l: WireLine) => void): ()
 
 export type ReportFile = { report: Record<string, any>; hash: string; postReportSig: string }; // eslint-disable-line @typescript-eslint/no-explicit-any
 
+export type BetView = {
+  raidId: string; closeTs: number; open: boolean; keeperAta: string; mint: string; settled: boolean; outcomes: boolean[] | null;
+  pools: { slot: number; yes: number; no: number; count: number }[];
+  bets: { sig: string; bettor: string; slot: number; side: "Y" | "N"; amount: number; late: boolean }[];
+  payouts: { bettor: string; amount: number; reason: "win" | "refund"; sig?: string }[];
+};
+export async function getBets(raidId: string): Promise<BetView | null> {
+  try {
+    const r = await fetch(`${KEEPER_URL}/bets/${raidId}`, { cache: "no-store" });
+    return r.ok ? ((await r.json()) as BetView) : null;
+  } catch { return null; }
+}
+
 export type HistoryItem = {
   raidId: string; mode: "mystery" | "live"; hash: string; day: string | null; title: string | null;
   raiders: { slot: number; bot: boolean; wallet: string; extracted: boolean; alive: boolean | null; dusd: string }[];

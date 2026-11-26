@@ -14,6 +14,7 @@ import { BotCrew } from "./bots.ts";
 import { Ticker, type TickStats } from "./ticker.ts";
 import { publishReport } from "./report.ts";
 import { claimAll } from "./claimer.ts";
+import { BetBook, BET_CLOSE_SECS } from "./bets.ts";
 import { PublicFeed } from "../wire/facts.ts";
 import { Wire, loadHeadlines, type WireLine } from "../wire/wire.ts";
 import type { WireServer } from "../wire/server.ts";
@@ -40,6 +41,12 @@ export async function runRaid(o: RaidOptions) {
 
   await S.createRaid(o.slots);
   lap(`raid ${S.raidId.toString()} ${S.raid.toBase58()} (${o.mode}) created`);
+  // Extraction Market: spectators can bet dPLAY from now until 270 s into the raid.
+  const book = new BetBook(S, S.raidId.toString(), Math.floor(Date.now() / 1000) + 3600);
+  await book.ensureAta().catch((e) => lap(`bet book: keeper dPLAY account not ready (${String(e).slice(0, 80)})`));
+  o.wireServer?.registerBets(S.raidId.toString(), book);
+  let betPolling = true;
+  const betPoller = (async () => { while (betPolling) { await book.poll().catch(() => {}); await sleep(4000); } })();
   o.wireServer?.setLobby({ raidId: S.raidId.toString(), raid: S.raid.toBase58(), mode: o.mode, slots: o.slots, humanSlots: o.humanSlots, phase: "lobby", joinDeadline: Date.now() + o.humanWaitSecs * 1000 });
 
   // Humans join from the client (join_raid); wait for their slots, then fill the rest with BOTs.
@@ -88,6 +95,7 @@ export async function runRaid(o: RaidOptions) {
   const startTs = Number(((await S.readRaid()) as unknown as { startTs: anchor.BN }).startTs.toString());
   const offset = ((await S.teeK.getBlockTime(await S.teeK.getSlot())) ?? Date.now() / 1000) - Date.now() / 1000;
   const elapsed = () => Date.now() / 1000 + offset - startTs;
+  (book as { closeTs: number }).closeTs = startTs + BET_CLOSE_SECS;
   o.wireServer?.patchLobby({ phase: "live", startTs });
   lap(`live (VRF ${vrfMs} ms${mystery ? `, mystery leaf ${(mysteryDay as { leafIndex: number }).leafIndex}` : ""})`);
 
@@ -159,6 +167,12 @@ export async function runRaid(o: RaidOptions) {
   const rpubs = await Promise.all(Array.from({ length: o.slots }, (_, s) => S.T.account.raiderPublic.fetch(S.slot("rpub", s)).catch(() => null)));
   lap("claims done");
 
+  // Extraction Market payouts from the committed result (Results on the base layer).
+  betPolling = false;
+  await betPoller;
+  const betPayouts = await book.settle(res.raiders.map((r) => !!r.extracted)).catch((e) => { lap(`bet settlement failed: ${String(e).slice(0, 120)}`); return []; });
+  lap(`extraction market: ${book.bets.length} bets, ${betPayouts.length} payouts`);
+
   // Reveal (Mystery) happens with end_raid; then one WIRE DEBRIEF per raider from public data.
   wire.revealed = true;
   const headlines = mysteryDay ? loadHeadlines(String(mysteryDay.day)) : [];
@@ -206,6 +220,7 @@ export async function runRaid(o: RaidOptions) {
     settlement: { endRaid: endSig, baseCommit, settledVia: st.settledVia, settleStuck: stuckSig },
     claims,
     tick: { ...tick, mode: tickMode, hz: o.hz },
+    spectators: { ...book.view(), rules: "dPLAY play-money (devnet). Parimutuel per raider: the winning side splits that raider's pool pro rata; no winners or late bets are refunded. Bets count until raid start + 270 s." },
     wire: { model: "claude-sonnet-5-5", stats: wireStats, live: wire.lines.filter((l) => l.tag !== "DEBRIEF"), debriefs, headlinesCited: debriefs.flatMap((d) => d.headlines ?? []) },
   };
   const pub = await publishReport(S, report);
