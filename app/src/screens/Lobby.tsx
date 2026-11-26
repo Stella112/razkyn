@@ -4,7 +4,7 @@ import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { navigate } from "../App";
 import { CLASSES, base, buildJoinTx, dusdBalance, raidKeyFor, readRaidBase, readPublic, teePublic, type RaidAcc } from "../lib/chain";
 import { explorerTx } from "../lib/config";
-import { getLobby, openRaid, type Lobby as LobbyT, getProfiles, loadHandle, publishProfile, saveHandle, validHandle, type Profile } from "../lib/keeper";
+import { getLobby, openRaid, requestJoinGas, type Lobby as LobbyT, getProfiles, loadHandle, publishProfile, saveHandle, validHandle, type Profile } from "../lib/keeper";
 import { useGameWallet } from "../lib/wallet";
 import OperatorPreview from "../game/OperatorPreview";
 import Customize from "./Customize";
@@ -22,6 +22,8 @@ const PHASE: Record<LobbyT["phase"], string> = {
 
 /** Join is locked in the last seconds of the countdown (the keeper then fills seats with BOTs). */
 const JOIN_CUTOFF_MS = 8_000;
+/** Below this the join (fees + token-account rent) can fail; matches FUND_BELOW_SOL in keeper/src/serve.ts. */
+const JOIN_GAS_LAMPORTS = 0.003 * LAMPORTS_PER_SOL;
 
 /** Readable reason for a failed join dry-run (RazkynError codes, programs/razkyn/src/errors.rs). */
 function explainJoinFailure(err: unknown, logs: string[]): string {
@@ -117,6 +119,13 @@ export default function Lobby() {
     if (!lobby || !w.publicKey) return;
     setErr(""); setBusy("Checking your seat…");
     try {
+      // A fresh devnet wallet has no SOL for the join fee: the game server sends a little, once.
+      if ((await base.getBalance(w.publicKey).catch(() => 0)) < JOIN_GAS_LAMPORTS) {
+        setBusy("Getting devnet SOL for the join fee (free, from the game server)…");
+        const g = await requestJoinGas(w.publicKey.toBase58());
+        if (!g.ok) throw new Error(`Your wallet needs a little devnet SOL for the join fee (${g.error ?? "game server refused"}). Get some at faucet.solana.com.`);
+        for (let i = 0; i < 30 && (await base.getBalance(w.publicKey).catch(() => 0)) < JOIN_GAS_LAMPORTS; i++) await new Promise((r) => setTimeout(r, 1000));
+      }
       const rk = raidKeyFor(lobby.raidId, true)!;
       const lost = new Set<number>();
       let sig = "";

@@ -51,6 +51,8 @@ export class WireServer {
   lobby: Lobby | null = null;
   /** Serve mode only: open a raid on request. */
   onOpen: ((mode: "mystery" | "live" | "live-markets") => Promise<{ ok: boolean; error?: string; raidId?: string }>) | null = null;
+  /** Serve mode only: send a little devnet SOL to a player's empty wallet so they can pay the join fee. */
+  onFund: ((wallet: string) => Promise<{ ok: boolean; error?: string; sig?: string }>) | null = null;
 
   constructor(readonly port = Number(process.env.WIRE_PORT ?? 8787)) {
     this.server = createServer((req, res) => {
@@ -71,6 +73,19 @@ export class WireServer {
           try { const m = JSON.parse(body || "{}").mode; mode = m === "live" || m === "live-markets" ? m : "mystery"; } catch { /* default */ }
           const r = await this.onOpen!(mode);
           json(r.ok ? 202 : 409, r);
+        });
+        return;
+      }
+      // Join-fee gas for a fresh devnet wallet ({"wallet":"<base58>"}); limits live in serve.ts.
+      if (url === "/fund" && req.method === "POST") {
+        if (!this.onFund) return json(404, { error: "funding is not offered by this keeper" });
+        let body = "";
+        req.on("data", (c) => { body += c; if (body.length > 300) req.destroy(); });
+        req.on("end", async () => {
+          let wallet = "";
+          try { wallet = String(JSON.parse(body || "{}").wallet ?? ""); } catch { return json(400, { error: "bad json" }); }
+          const r = await this.onFund!(wallet).catch((e) => ({ ok: false, error: String(e).slice(0, 120) }));
+          json(r.ok ? 200 : 409, r);
         });
         return;
       }

@@ -5,9 +5,9 @@
 // idle. One raid at a time, at most MAX_PER_HOUR per hour, and only with enough keeper SOL.
 //   tsx keeper/src/serve.ts
 // Env: RAZKYN_HUMAN_SLOTS (2), RAZKYN_HUMAN_WAIT (150), RAZKYN_MAX_PER_HOUR (4), RAZKYN_MIN_SOL (0.45), WIRE_PORT (8787)
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
 import { runRaid } from "./raid.ts";
-import { baseConn, loadKeypair, saveEvidence } from "../../scripts/spike-lib.ts";
+import { baseConn, loadKeypair, saveEvidence, sendBase } from "../../scripts/spike-lib.ts";
 import { WireServer } from "../wire/server.ts";
 
 const HUMAN_SLOTS = Number(process.env.RAZKYN_HUMAN_SLOTS ?? 2);
@@ -70,6 +70,38 @@ server.onOpen = async (mode) => {
   // Wait until runRaid has created the raid (lobby phase) so the reply carries its id.
   for (let i = 0; i < 120 && !(server.lobby?.phase === "lobby" && server.lobby.raidId); i++) await new Promise((r) => setTimeout(r, 500));
   return { ok: true, raidId: server.lobby?.raidId };
+};
+
+// Join-fee gas for judges and new players (devnet only, DECISIONS #44): a wallet with almost no SOL
+// gets FUND_SOL once, only while a raid lobby is open, at most FUND_MAX_PER_HOUR per hour, and never
+// if it would leave the keeper short of what the next raid needs.
+const FUND_SOL = Number(process.env.RAZKYN_FUND_SOL ?? 0.01);
+const FUND_BELOW_SOL = 0.003; // the join costs ~0.002 SOL in fees and token-account rent
+const FUND_MAX_PER_HOUR = Number(process.env.RAZKYN_FUND_MAX_PER_HOUR ?? 20);
+const funded = new Set<string>();
+const fundTimes: number[] = [];
+server.onFund = async (w) => {
+  let wallet: PublicKey;
+  try { wallet = new PublicKey(w); } catch { return { ok: false, error: "not a wallet address" }; }
+  if (server.lobby?.phase !== "lobby") return { ok: false, error: "funding is offered only while a raid is open for joining" };
+  if (funded.has(wallet.toBase58())) return { ok: false, error: "this wallet was already funded" };
+  const hourAgo = Date.now() - 3_600_000;
+  while (fundTimes.length && fundTimes[0] < hourAgo) fundTimes.shift();
+  if (fundTimes.length >= FUND_MAX_PER_HOUR) return { ok: false, error: "funding limit reached for this hour; use faucet.solana.com" };
+  const have = (await base.getBalance(wallet)) / LAMPORTS_PER_SOL;
+  if (have >= FUND_BELOW_SOL) return { ok: false, error: `wallet already has ${have.toFixed(4)} SOL` };
+  const mine = (await base.getBalance(keeper.publicKey)) / LAMPORTS_PER_SOL;
+  if (mine - FUND_SOL < MIN_SOL + 0.2) return { ok: false, error: "the game server is low on devnet SOL; use faucet.solana.com" };
+  funded.add(wallet.toBase58());
+  fundTimes.push(Date.now());
+  try {
+    const sig = await sendBase(base, [SystemProgram.transfer({ fromPubkey: keeper.publicKey, toPubkey: wallet, lamports: Math.round(FUND_SOL * LAMPORTS_PER_SOL) })], [keeper]);
+    log(`funded ${wallet.toBase58()} with ${FUND_SOL} SOL: ${sig}`);
+    return { ok: true, sig };
+  } catch (e) {
+    funded.delete(wallet.toBase58());
+    return { ok: false, error: `transfer failed: ${String(e).slice(0, 80)}` };
+  }
 };
 
 await server.listen();

@@ -17,6 +17,16 @@ export async function openRaid(mode: "mystery" | "live" | "live-markets"): Promi
     return { ok: false, error: `keeper unreachable: ${String(e).slice(0, 80)}` };
   }
 }
+/** Ask the game server for the join-fee SOL (devnet; once per wallet, only while a lobby is open). */
+export async function requestJoinGas(wallet: string): Promise<{ ok: boolean; error?: string; sig?: string }> {
+  try {
+    const r = await fetch(`${KEEPER_URL}/fund`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ wallet }) });
+    return await r.json();
+  } catch {
+    return { ok: false, error: "game server unreachable" };
+  }
+}
+
 export type WireLine = {
   t: number; tag: "LIVE" | "BREAKING" | "IN-GAME EVENT" | "DEBRIEF"; text: string; source: "llm" | "template";
   slot?: number; headlines?: { title: string; url: string; ts: string }[];
