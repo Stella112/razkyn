@@ -3,6 +3,7 @@
 // the scene only renders authoritative state it is given and reports input (move intent, aim/click
 // position in map units, E, Space). Nothing here decides an outcome.
 import * as THREE from "three";
+import { loadQuality } from "../lib/prefs";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
@@ -112,13 +113,14 @@ export class RaidScene {
   private raf = 0;
   private last = performance.now();
   private frameMs: number[] = [];
-  private lowPower = false;
+  private quality = loadQuality();
+  private lowPower = this.quality === "low";
   private disposed = false;
   private ro: ResizeObserver;
 
   constructor(private parent: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    this.renderer.setPixelRatio(this.lowPower ? 1 : Math.min(window.devicePixelRatio, 1.5));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.3;
@@ -340,7 +342,7 @@ export class RaidScene {
 
   /** Adaptive quality: if frames average > 25 ms over 4 s, drop bloom and pixel ratio. */
   private adapt() {
-    if (this.lowPower || this.frameMs.length < 240) return;
+    if (this.lowPower || this.quality === "high" || this.frameMs.length < 240) return;
     const avg = this.frameMs.reduce((a, b) => a + b, 0) / this.frameMs.length;
     if (avg > 25) { this.lowPower = true; this.renderer.setPixelRatio(1); this.resize(); }
   }

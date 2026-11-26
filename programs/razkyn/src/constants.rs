@@ -58,8 +58,8 @@ pub const NO_EXIT: u8 = 255;
 // ---------- economy (dUSD base units, 6 decimals) ----------
 pub const DUSD_DECIMALS: u8 = 6;
 pub const STAKE: u64 = 10_000_000; // 10 dUSD
-pub const PROTECTED: u64 = 4_000_000; // 40%
-pub const LOOT_POOL: u64 = 5_500_000; // 55%
+pub const PROTECTED: u64 = 2_000_000; // 20% (DECISIONS #41)
+pub const LOOT_POOL: u64 = 7_500_000; // 75% (DECISIONS #41)
 pub const OPS_FEE: u64 = 500_000; // 5%
 pub const FAUCET_DUSD_DAILY_CAP: u64 = 100_000_000; // 100 dUSD / wallet / day
 pub const SECS_PER_DAY: i64 = 86_400;
@@ -152,12 +152,12 @@ pub const RESERVE_SEED: &[u8] = b"reserve";
 pub const SETTLE_STUCK_SECS: i64 = 120;
 
 // ---------- v2 (2026-11-26): Live Markets, classes, market events (DECISIONS #35) ----------
-/// Live Markets mode (mode 2): NVDA / TSLA / gold (XAU) from the MagicBlock Pricing Oracle on the
-/// TEE. Lazer ids 1314, 1435, 346; PDAs read live on devnet-tee 2026-11-26 (scripts/check-feeds.ts).
+/// Live Markets mode (mode 2): NVDA / TSLA / SOL (DECISIONS #41; was gold) from the MagicBlock Pricing Oracle on the
+/// TEE. Lazer ids 1314, 1435 and the SOL/USD feed; PDAs read live on devnet-tee 2026-11-26 (scripts/check-feeds.ts).
 pub const LIVE_MARKET_FEEDS: [anchor_lang::prelude::Pubkey; NUM_DISTRICTS] = [
     anchor_lang::prelude::pubkey!("3AD13yFytFWiLQbcGsnEXDeWZ9GZezSx6Y3NqZRoJMaC"), // Equity.US.NVDA/USD (Tower)
     anchor_lang::prelude::pubkey!("8L7ccCxTBZaLsMMdhAod5fFnpdEWGSDPW4y1td7y3y8N"), // Equity.US.TSLA/USD (Factory)
-    anchor_lang::prelude::pubkey!("9Eko45pM9kMQpz9N5d6Rcki8FMKUeyFb1tWhvixhBHBn"), // Metal.XAU/USD (Harbor / Gold Vault)
+    anchor_lang::prelude::pubkey!("ENYwebBThHzmzwPLAQvCucUTsjyfBSZdD9ViXksS4jPu"), // SOL/USD (Harbor)
 ];
 /// Raider classes, chosen at join (stored in Raid.classes).
 pub const CLASS_RAIDER: u8 = 0;

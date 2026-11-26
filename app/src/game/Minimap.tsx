@@ -4,10 +4,11 @@
 import { useEffect, useRef } from "react";
 import { DISTRICT_TILES, EXITS, MAP_H, MAP_W, NUM_CRATES, TERMINALS, UNIT, type PublicState } from "../lib/chain";
 
-const S = 3; // px per tile
-export default function Minimap({ pub, me, visible, mySlot, names }: {
+export default function Minimap({ pub, me, visible, mySlot, names, scale = 3, big = false }: {
   pub: PublicState | null; me: { x: number; y: number } | null; visible: { slot: number; x: number; y: number }[]; mySlot: number; names: string[];
+  /** px per tile (3 = HUD minimap; the M full map passes a larger one). */ scale?: number; big?: boolean;
 }) {
+  const S = scale;
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current?.getContext("2d");
@@ -37,9 +38,10 @@ export default function Minimap({ pub, me, visible, mySlot, names }: {
       if (i >= NUM_CRATES || (p.x === 0 && p.y === 0)) return;
       const openedC = pub?.crates[i]?.state === 1;
       c.fillStyle = openedC ? "rgba(200,210,209,0.2)" : "#D9AC65";
-      c.fillRect((p.x / UNIT) * S - 1, (p.y / UNIT) * S - 1, 2, 2);
+      const cs = Math.max(2, S * 0.7); c.fillRect((p.x / UNIT) * S - cs / 2, (p.y / UNIT) * S - cs / 2, cs, cs);
     });
-    const dot = (x: number, y: number, col: string, r = 2.2) => { c.fillStyle = col; c.beginPath(); c.arc((x / UNIT) * S, (y / UNIT) * S, r, 0, Math.PI * 2); c.fill(); };
+    const k = S / 3; // dots grow with the map
+    const dot = (x: number, y: number, col: string, r = 2.2) => { c.fillStyle = col; c.beginPath(); c.arc((x / UNIT) * S, (y / UNIT) * S, r * Math.max(1, k * 0.6), 0, Math.PI * 2); c.fill(); };
     pub?.rpubs.forEach((r, s) => {
       if (!r || s === mySlot || !raid?.raiders[s]?.joined) return;
       if (r.exposed && r.alive) dot(r.pubX, r.pubY, "#45C9B2", 2.6);
@@ -54,7 +56,7 @@ export default function Minimap({ pub, me, visible, mySlot, names }: {
     c.strokeStyle = "rgba(200,210,209,0.3)"; c.lineWidth = 1; c.strokeRect(0.5, 0.5, W - 1, H - 1);
   });
   return (
-    <div className="minimap">
+    <div className={`minimap ${big ? "big" : ""}`}>
       <canvas ref={ref} style={{ width: MAP_W * S, height: MAP_H * S, display: "block" }} />
       <div className="mm-names">{names.map((n, i) => <span key={i}>{n}</span>)}</div>
     </div>

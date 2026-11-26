@@ -4,7 +4,7 @@ import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { navigate } from "../App";
 import { CLASSES, base, buildJoinTx, dusdBalance, raidKeyFor, readRaidBase, readPublic, teePublic, type RaidAcc } from "../lib/chain";
 import { explorerTx } from "../lib/config";
-import { getLobby, openRaid, type Lobby as LobbyT } from "../lib/keeper";
+import { getLobby, openRaid, type Lobby as LobbyT, getProfiles, loadHandle, publishProfile, saveHandle, validHandle, type Profile } from "../lib/keeper";
 import { useGameWallet } from "../lib/wallet";
 import OperatorPreview from "../game/OperatorPreview";
 import Customize from "./Customize";
@@ -48,6 +48,9 @@ export default function Lobby() {
   const [cls, setCls] = useState(0);
   const [avatar, setAvatar] = useState(loadAvatar());
   const [custom, setCustom] = useState(false);
+  const [profiles, setProfiles] = useState<Record<number, Profile>>({});
+  const [handle, setHandle] = useState(loadHandle());
+  const [profErr, setProfErr] = useState("");
 
   useEffect(() => {
     let stop = false;
@@ -59,6 +62,8 @@ export default function Lobby() {
         // Before delegation the base copy is current; after it, the TEE copy is (public, no token).
         const r = l.phase === "lobby" ? await readRaidBase(l.raidId) : (await readPublic(teePublic, l.raidId)).raid ?? (await readRaidBase(l.raidId));
         if (!stop) setRaid(r);
+        const p = await getProfiles(l.raidId);
+        if (!stop) setProfiles(p);
       }
     };
     tick();
@@ -81,6 +86,18 @@ export default function Lobby() {
   const mySlot = raid && w.publicKey ? raid.raiders.findIndex((r) => r.joined && r.wallet.equals(w.publicKey!)) : -1;
   const freeHuman = lobby && raid ? lobby.humanSlots.find((s) => !raid.raiders[s].joined) : undefined;
   const secsLeft = lobby ? Math.max(0, Math.round((lobby.joinDeadline - now) / 1000)) : 0;
+
+  const myReady = mySlot >= 0 && !!profiles[mySlot]?.ready;
+  const sendProfile = async (ready: boolean) => {
+    if (!lobby || mySlot < 0) return;
+    const rk = raidKeyFor(lobby.raidId);
+    if (!rk) { setProfErr("No raid key in this browser for this seat."); return; }
+    const h = handle.trim() || `Raider ${mySlot + 1}`;
+    if (!validHandle(h)) { setProfErr("Handle: 1–16 letters, digits, space, _ or - (and not starting with BOT)."); return; }
+    saveHandle(h); setProfErr("");
+    const e = await publishProfile(lobby.raidId, mySlot, rk, h, ready);
+    if (e) setProfErr(e); else setProfiles(await getProfiles(lobby.raidId));
+  };
 
   // Joined and the raid is live: go play.
   useEffect(() => {
@@ -164,8 +181,8 @@ export default function Lobby() {
               </button>
               <button className="mode-card gold" disabled={opening || lobby.canOpen?.ok === false} onClick={() => open("live-markets")}>
                 
-                <div className="title neon-a">STOCKS &amp; GOLD</div>
-                <p>NVDA Tower, TSLA Factory and the Gold Vault track Nvidia, Tesla and gold live from the oracle. Stocks only move in US market hours; gold trades nearly 24/5.</p>
+                <div className="title neon-a">NVDA · TSLA · SOL</div>
+                <p>NVDA Tower, TSLA Factory and SOL Harbor track Nvidia, Tesla and Solana live from the oracle. The stocks only move in US market hours; SOL trades 24/7.</p>
                 <div className="go neon-a">OPEN RAID ▸</div>
               </button>
             </div>
@@ -188,7 +205,7 @@ export default function Lobby() {
             <div className="card">
               <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
-                  <h3>{lobby.mode === "mystery" ? "MYSTERY MARKET RAID" : lobby.mode === "live-markets" ? "STOCKS & GOLD RAID · NVDA · TSLA · GOLD" : "LIVE CRYPTO RAID"}</h3>
+                  <h3>{lobby.mode === "mystery" ? "MYSTERY MARKET RAID" : lobby.mode === "live-markets" ? "LIVE MARKETS RAID · NVDA · TSLA · SOL" : "LIVE CRYPTO RAID"}</h3>
                   <div className="note mono">raid {lobby.raidId}</div>
                 </div>
                 {lobby.phase === "lobby" ? (
@@ -207,14 +224,15 @@ export default function Lobby() {
                   return (
                     <div key={s} className={`slot ${cls}`}>
                       <div className="num">#{s + 1}</div>
-                      <div className="who">{r?.joined ? (me ? "YOU" : r.isBot ? "BOT" : short(r.wallet)) : lobby.humanSlots.includes(s) ? "open seat" : "BOT soon"}</div>
+                      <div className="who">{r?.joined ? (r.isBot ? "BOT" : profiles[s]?.handle ? `${profiles[s].handle}${me ? " (you)" : ""}` : me ? "YOU" : short(r.wallet)) : lobby.humanSlots.includes(s) ? "open seat" : "BOT soon"}</div>
                       {r?.joined && <span className={`pill ${me ? "live" : r.isBot ? "bot" : ""}`} style={{ alignSelf: "flex-start" }}>{me ? "you" : r.isBot ? "bot" : "human"}</span>}
                       {r?.joined && raid?.classes && <span className="cls-tag">{CLASSES[raid.classes[s]]?.tag ?? ""}</span>}
+                      {r?.joined && !r.isBot && lobby.phase === "lobby" && <span className={`pill ${profiles[s]?.ready ? "live" : "warn"}`} style={{ alignSelf: "flex-start" }}>{profiles[s]?.ready ? "READY" : "not ready"}</span>}
                     </div>
                   );
                 })}
               </div>
-              <p className="note" style={{ marginTop: 14 }}>Entry 10 dUSD → <b className="neon-a">4.0 always yours</b> · 5.5 into the loot crates · 0.5 fee.</p>
+              <p className="note" style={{ marginTop: 14 }}>Entry 10 dUSD → <b className="neon-a">2.0 always yours</b> · 7.5 into the loot crates · 0.5 fee.</p>
             </div>
 
             <div className="card">
@@ -237,6 +255,17 @@ export default function Lobby() {
                   <>
                     <div className="result-title win" style={{ fontSize: 30 }}>YOU&apos;RE IN · #{mySlot + 1}</div>
                     <p className="note">{lobby.phase === "live" ? "Dropping in…" : "Stay on this page: you drop in automatically when the raid goes live."}</p>
+                    {lobby.phase === "lobby" && (
+                      <div className="ready-box">
+                        <div className="label" style={{ marginBottom: 6 }}>Your handle (shown to the other raiders)</div>
+                        <div className="row" style={{ gap: 8 }}>
+                          <input className="handle-in" maxLength={16} value={handle} placeholder={`Raider ${mySlot + 1}`} onChange={(e) => setHandle(e.target.value)} />
+                          <button className={`btn ${myReady ? "" : "primary"}`} onClick={() => void sendProfile(!myReady)}>{myReady ? "NOT READY" : "READY"}</button>
+                        </div>
+                        <p className="note" style={{ fontSize: 12, marginTop: 6 }}>When every joined player is READY the raid drops early; empty seats become BOTs. Signed with your raid key, no wallet popup.</p>
+                        {profErr && <div className="err">{profErr}</div>}
+                      </div>
+                    )}
                     {lobby.phase === "live" && <button className="btn primary big" onClick={() => navigate(`/raid/${lobby.raidId}`)}>ENTER THE RAID</button>}
                   </>
                 ) : lobby.phase === "lobby" ? (

@@ -19,9 +19,10 @@ const ITEMS: { label: string; sub: string; to: string; primary?: boolean }[] = [
   { label: "TRAINING GROUND", sub: "Learn the controls offline · nothing touches the chain", to: "/training" },
   { label: "WATCH LIVE", sub: "Spectate the current raid · public state only", to: "/watch" },
   { label: "RAID HISTORY", sub: "Every settled raid, verified on-chain", to: "/history" },
+  { label: "SETTINGS", sub: "Sound, voice, graphics, FPS counter, handle, controls", to: "/settings" },
 ];
 
-const MODE: Record<string, string> = { mystery: "MYSTERY MARKET DAY", live: "LIVE CRYPTO", "live-markets": "STOCKS & GOLD" };
+const MODE: Record<string, string> = { mystery: "MYSTERY MARKET DAY", live: "LIVE CRYPTO", "live-markets": "NVDA · TSLA · SOL" };
 const mmss = (s: number) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.floor(Math.max(0, s) % 60)).padStart(2, "0")}`;
 
 /** What is happening on the server right now, and the last settled raid. Real data only. */

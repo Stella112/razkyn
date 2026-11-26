@@ -5,6 +5,8 @@
 //   GET /wire/:raidId/stream   -> THE WIRE as Server-Sent Events, one `data:` JSON line per WireLine
 //   POST /avatar               -> a player sets their cosmetic avatar, signed with the seat raid key (avatars.ts)
 //   GET /avatars/:raidId       -> verified avatars by slot
+//   POST /profile              -> a player sets their lobby handle + READY, signed with the seat raid key
+//   GET /profiles/:raidId      -> verified handles + ready flags by slot
 // THE WIRE lines are public by construction (public facts + post-filter); reports are published
 // after settlement; the lobby holds only public ids.
 import { createServer, type Server } from "node:http";
@@ -84,6 +86,19 @@ export class WireServer {
         });
         return;
       }
+      if (url === "/profile" && req.method === "POST") {
+        let body = "";
+        req.on("data", (c) => { body += c; if (body.length > 1000) req.destroy(); });
+        req.on("end", async () => {
+          let parsed: Record<string, unknown> = {};
+          try { parsed = JSON.parse(body || "{}"); } catch { return json(400, { error: "bad json" }); }
+          const err = await this.avatars.submitProfile(parsed).catch((e) => `error: ${String(e).slice(0, 80)}`);
+          json(err ? 400 : 200, err ? { error: err } : { ok: true });
+        });
+        return;
+      }
+      const pf = /^\/profiles\/(\d+)\/?$/.exec(url);
+      if (pf && req.method === "GET") return json(200, this.avatars.getProfiles(pf[1]));
       const av = /^\/avatars\/(\d+)\/?$/.exec(url);
       if (av && req.method === "GET") return json(200, this.avatars.get(av[1]));
       // Extraction Market: pools, bets and payouts for a raid.
@@ -127,6 +142,10 @@ export class WireServer {
     });
   }
 
+  /** Lobby: every joined human seat pressed READY (the keeper may drop early). */
+  allReady(raidId: string, joinedHumanSlots: number[]) { return this.avatars.allReady(raidId, joinedHumanSlots); }
+  /** Player-chosen handles by slot (public). */
+  handles(raidId: string): Record<string, string> { return Object.fromEntries(Object.entries(this.avatars.getProfiles(raidId)).map(([s, p]) => [s, p.handle])); }
   register(raidId: string, wire: Wire) { this.wires.set(raidId, wire); }
   registerBets(raidId: string, book: BetBook) { this.books.set(raidId, book); }
   setLobby(l: Lobby | null) { this.lobby = l; }

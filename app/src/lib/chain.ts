@@ -262,9 +262,9 @@ export async function dusdBalance(wallet: PublicKey) {
 export const MAP_W = 64, MAP_H = 40, UNIT = 100;
 export const DISTRICT_TILES: [number, number][] = [[0, 20], [22, 42], [44, 63]];
 export const DISTRICTS = ["Tower", "Factory", "Harbor"];
-/** District names per raid mode (0 Mystery, 1 Live crypto, 2 Live Markets: NVDA, TSLA, gold). */
-export const districtNames = (mode: number | undefined) => (mode === 2 ? ["NVDA Tower", "TSLA Factory", "Gold Vault"] : DISTRICTS);
-export const MODE_TRACKS: Record<number, string[]> = { 1: ["SOL", "BTC", "ETH"], 2: ["NVDA", "TSLA", "XAU"] };
+/** District names per raid mode (0 Mystery, 1 Live crypto, 2 Live Markets: NVDA, TSLA, SOL). */
+export const districtNames = (mode: number | undefined) => (mode === 2 ? ["NVDA Tower", "TSLA Factory", "SOL Harbor"] : DISTRICTS);
+export const MODE_TRACKS: Record<number, string[]> = { 1: ["SOL", "BTC", "ETH"], 2: ["NVDA", "TSLA", "SOL"] };
 /** Raider classes (constants.rs CLASS_*). */
 export const CLASSES = [
   { name: "Raider", tag: "RAIDER", perk: "Balanced. No perk, no weakness." },

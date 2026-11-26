@@ -20,8 +20,8 @@ export const VRF_PROGRAM_ID = new PublicKey("Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFP
 export const NUM_CRATES = 36;
 /** SOL/USD, BTC/USD, ETH/USD Pricing Oracle feeds (M0/S3, spikes/results/s3-oracle.json). */
 export const LIVE_FEEDS = ["ENYwebBThHzmzwPLAQvCucUTsjyfBSZdD9ViXksS4jPu", "71wtTRDY8Gxgw56bXFt2oc6qeAbTxzStdNiC425Z51sr", "5vaYr1hpv8yrSpu8w3K95x22byYxUJCCNCSYJtqVWPvG"].map((k) => new PublicKey(k));
-/** Live Markets (mode 2): NVDA, TSLA, gold (XAU) — constants.rs LIVE_MARKET_FEEDS; scripts/check-feeds.ts. */
-export const LIVE_MARKET_FEEDS = ["3AD13yFytFWiLQbcGsnEXDeWZ9GZezSx6Y3NqZRoJMaC", "8L7ccCxTBZaLsMMdhAod5fFnpdEWGSDPW4y1td7y3y8N", "9Eko45pM9kMQpz9N5d6Rcki8FMKUeyFb1tWhvixhBHBn"].map((k) => new PublicKey(k));
+/** Live Markets (mode 2): NVDA, TSLA, SOL — constants.rs LIVE_MARKET_FEEDS; scripts/check-feeds.ts. */
+export const LIVE_MARKET_FEEDS = ["3AD13yFytFWiLQbcGsnEXDeWZ9GZezSx6Y3NqZRoJMaC", "8L7ccCxTBZaLsMMdhAod5fFnpdEWGSDPW4y1td7y3y8N", "ENYwebBThHzmzwPLAQvCucUTsjyfBSZdD9ViXksS4jPu"].map((k) => new PublicKey(k));
 export const DROP_BASE = 36;
 /** Raider classes (constants.rs CLASS_*). */
 export const CLASSES = ["RAIDER", "SCOUT", "TRADER", "GUNNER"] as const;

@@ -35,7 +35,7 @@ Eight raiders drop into a 64 × 40 map for five minutes. The map is the market: 
 
 ## How to play
 
-1. **Lobby** (`/play`): connect Phantom or Solflare (or the labelled devnet dev wallet). One signature fauceted 10 dUSD if needed and stakes it: 4.0 protected slot, 5.5 loot pool, 0.5 ops.
+1. **Lobby** (`/play`): connect Phantom or Solflare (or the labelled devnet dev wallet). One signature fauceted 10 dUSD if needed and stakes it: 2.0 protected slot (20%), 7.5 loot pool, 0.5 ops (DECISIONS #41).
 2. **Drop**: a raid-scoped key (a burner in your browser) signs every in-raid move on the TEE. No wallet popups, no gas; the raid key can never move tokens.
 3. **Move** WASD (touch stick on phones) · **open a crate / trade** E · **shoot** click a raider in range (6 tiles, 34 damage, 500 ms cooldown) · **extract** hold Space on an open exit (windows at 120 s, 210 s and 270 s, 30 s each).
 4. **Try to peek** sends real reads of a sealed crate, another raider's private state and the raid secret over the TEE with your own token, and shows the refusal.
@@ -109,7 +109,7 @@ Devnet: program `CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97`; mints in `config
 - The VRF callback signature cannot be listed: devnet-tee hides signatures of transactions that write private accounts. The report shows the request signatures.
 - No scripted in-game event plan: THE WIRE's IN-GAME EVENT lines narrate the rule-driven events (hazards, waking crates, exit windows).
 - The Extraction Market is settled by the keeper (a bet is a dPLAY transfer to the keeper's account with a memo), not by an on-chain pool program; it is play-money only and every payout is a devnet transaction in the report.
-- Districts track SOL, BTC and ETH only. Stock or gold districts (NVDA, TSLA, gold) would need equity price feeds that MagicBlock's oracle does not offer, plus a program upgrade; Mystery days are crypto days from Binance public data.
+- Live crypto districts track SOL, BTC and ETH; Live Markets districts track NVDA, TSLA and SOL from the Pricing Oracle on the TEE (the stocks only move in US market hours). Mystery days are crypto days from Binance public data (no free stock history source).
 - Not built: combat interrupting a trade, trading-halt or rate-shock events, characters and equipment (they need new on-chain rules).
 - Mystery day context (title, summary, links) is added after the raid from public reporting; it is not part of the committed Merkle leaf (the price data is).
 - About 45% of pipelined moves are rejected by the speed check under network jitter, so effective speed is below the 6 tiles/s cap.

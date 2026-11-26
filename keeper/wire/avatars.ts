@@ -46,13 +46,8 @@ export class AvatarBook {
     let key: PublicKey, sig: Uint8Array;
     try { key = new PublicKey(String(body.pubkey)); sig = Uint8Array.from(Buffer.from(String(body.sig), "base64")); } catch { return "bad key or signature encoding"; }
     if (sig.length !== 64 || !nacl.sign.detached.verify(avatarMessage(raidId, slot, avatar), sig, key.toBytes())) return "signature does not verify";
-    const raidPda = PublicKey.findProgramAddressSync([Buffer.from("raid"), new anchor.BN(raidId).toArrayLike(Buffer, "le", 8)], PID)[0];
-    const info = await baseConn().getAccountInfo(raidPda);
-    if (!info) return "unknown raid";
-    let seat: RaidSeat | undefined;
-    try { seat = (this.coder.decode("raid", info.data) as { raiders: RaidSeat[] }).raiders[slot]; } catch { return "raid account not readable"; }
-    if (!seat?.joined || seat.isBot) return "not a human seat";
-    if (!seat.raidKey.equals(key)) return "not the raid key for this seat";
+    const seatErr = await this.checkSeat(raidId, slot, key);
+    if (seatErr) return seatErr;
     if (!this.byRaid.has(raidId)) {
       this.byRaid.set(raidId, new Map());
       while (this.byRaid.size > 20) this.byRaid.delete(this.byRaid.keys().next().value!); // keep recent raids only
@@ -60,4 +55,53 @@ export class AvatarBook {
     this.byRaid.get(raidId)!.set(slot, avatar);
     return null;
   }
+
+  /** The seat must be a joined human seat whose on-chain raid key is `key`. */
+  private async checkSeat(raidId: string, slot: number, key: PublicKey): Promise<string | null> {
+    const raidPda = PublicKey.findProgramAddressSync([Buffer.from("raid"), new anchor.BN(raidId).toArrayLike(Buffer, "le", 8)], PID)[0];
+    const info = await baseConn().getAccountInfo(raidPda);
+    if (!info) return "unknown raid";
+    let seat: RaidSeat | undefined;
+    try { seat = (this.coder.decode("raid", info.data) as { raiders: RaidSeat[] }).raiders[slot]; } catch { return "raid account not readable"; }
+    if (!seat?.joined || seat.isBot) return "not a human seat";
+    if (!seat.raidKey.equals(key)) return "not the raid key for this seat";
+    return null;
+  }
+
+  // ---- lobby profiles: a display handle and a READY flag (cosmetic / lobby timing only) ----
+  private profiles = new Map<string, Map<number, Profile>>();
+  getProfiles(raidId: string) { return Object.fromEntries(this.profiles.get(raidId) ?? []); }
+  /** True when at least one human seat is ready and every listed joined seat is ready. */
+  allReady(raidId: string, joinedHumanSlots: number[]) {
+    const m = this.profiles.get(raidId);
+    return !!m && joinedHumanSlots.length > 0 && joinedHumanSlots.every((s) => m.get(s)?.ready);
+  }
+  async submitProfile(body: { raidId?: unknown; slot?: unknown; handle?: unknown; ready?: unknown; pubkey?: unknown; sig?: unknown }): Promise<string | null> {
+    const raidId = typeof body.raidId === "string" && /^\d{1,20}$/.test(body.raidId) ? body.raidId : null;
+    const slot = typeof body.slot === "number" && Number.isInteger(body.slot) && body.slot >= 0 && body.slot < 8 ? body.slot : null;
+    const handle = sanitizeHandle(body.handle);
+    const ready = body.ready === true;
+    if (raidId === null || slot === null || handle === null) return "bad request";
+    let key: PublicKey, sig: Uint8Array;
+    try { key = new PublicKey(String(body.pubkey)); sig = Uint8Array.from(Buffer.from(String(body.sig), "base64")); } catch { return "bad key or signature encoding"; }
+    if (sig.length !== 64 || !nacl.sign.detached.verify(profileMessage(raidId, slot, handle, ready), sig, key.toBytes())) return "signature does not verify";
+    const seatErr = await this.checkSeat(raidId, slot, key);
+    if (seatErr) return seatErr;
+    if (!this.profiles.has(raidId)) {
+      this.profiles.set(raidId, new Map());
+      while (this.profiles.size > 20) this.profiles.delete(this.profiles.keys().next().value!);
+    }
+    this.profiles.get(raidId)!.set(slot, { handle, ready });
+    return null;
+  }
 }
+
+export type Profile = { handle: string; ready: boolean };
+/** Handles: 1–16 letters, digits, space, _ or -; shown with a PLAYER label, never as a BOT. */
+export function sanitizeHandle(h: unknown): string | null {
+  if (typeof h !== "string") return null;
+  const t = h.trim();
+  return /^[A-Za-z0-9 _-]{1,16}$/.test(t) && !/^bot\b/i.test(t) ? t : null;
+}
+export const profileMessage = (raidId: string, slot: number, handle: string, ready: boolean) =>
+  new TextEncoder().encode(`razkyn-profile:${raidId}:${slot}:${handle}:${ready ? 1 : 0}`);

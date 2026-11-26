@@ -15,7 +15,7 @@ import { teeConn, sleep } from "../../scripts/spike-lib.ts";
 /** District display names for the current raid (serve mode runs one raid at a time). */
 export const DISTRICTS: string[] = ["Tower", "Factory", "Harbor"];
 export function setDistrictNames(mode: "mystery" | "live" | "live-markets") {
-  DISTRICTS.splice(0, 3, ...(mode === "live-markets" ? ["NVDA Tower", "TSLA Factory", "Gold Vault"] : ["Tower", "Factory", "Harbor"]));
+  DISTRICTS.splice(0, 3, ...(mode === "live-markets" ? ["NVDA Tower", "TSLA Factory", "SOL Harbor"] : ["Tower", "Factory", "Harbor"]));
 }
 const NUM_CRATES = 36;
 const DROP_BASE = 36;

@@ -3,6 +3,7 @@ import { navigate } from "../App";
 import { P, base, coder, decode, districtNames, type RaidAcc } from "../lib/chain";
 import { explorerAddr, explorerTx } from "../lib/config";
 import { canonical, getReport, hex, sha256, verifyMystery, type ReportFile } from "../lib/keeper";
+import ShareCard from "../game/ShareCard";
 
 type Check = { recomputed: string; onchain: string; ok: boolean } | null;
 
@@ -109,7 +110,7 @@ export default function Report({ raidId }: { raidId: string }) {
             </div>
 
             <div className="card">
-              <h3>Market · {r.mode === "mystery" || r.raid.mode === "mystery" ? "Mystery Market Day" : liveMarkets ? "Stocks & gold (NVDA · TSLA · XAU), live" : "Live"} · {r.pricePathSource ?? "price path"}</h3>
+              <h3>Market · {r.mode === "mystery" || r.raid.mode === "mystery" ? "Mystery Market Day" : liveMarkets ? "Live markets (NVDA · TSLA · SOL)" : "Live"} · {r.pricePathSource ?? "price path"}</h3>
               <PricePath path={r.pricePath} />
               <div className="row note">
                 {(r.assets ?? []).map((a: { district: string; tracks: string }, i: number) => (
@@ -158,6 +159,11 @@ export default function Report({ raidId }: { raidId: string }) {
                 </div>
               </div>
             )}
+
+            <div className="card">
+              <h3>Share this raid</h3>
+              <ShareCard data={{ raidId, outcome: "VERIFIED RAID", mode: r.mystery ? "Mystery Market Day" : liveMarkets ? "Live markets" : "Live", title: r.mystery?.event?.title, payout: r.awards?.topRaider ? `${(r.awards.topRaider.value / 1e6).toFixed(2)} dUSD` : undefined, line: r.awards?.topRaider ? `top raider: ${r.awards.topRaider.who}` : undefined, hash: file?.hash }} />
+            </div>
 
             {r.livePicks && (
               <div className="card">

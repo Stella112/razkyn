@@ -14,8 +14,10 @@ import { loadAvatar } from "../game/three/actors";
 import { startGame, type RaidScene } from "../game/RaidScene3D";
 import Market from "../game/Market";
 import Minimap from "../game/Minimap";
+import ShareCard from "../game/ShareCard";
 import HowToPlay, { howToSeen } from "./HowToPlay";
 import { sfx } from "../lib/sfx";
+import { loadShowFps } from "../lib/prefs";
 
 const RAID_SECS = 300;
 const WINDOWS = [120, 210, 270];
@@ -85,6 +87,20 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const [specDistrict, setSpecDistrict] = useState(0);
   const [specFollow, setSpecFollow] = useState(-1);
   const [help, setHelp] = useState(() => !watch && !howToSeen());
+  const [inv, setInv] = useState(false);
+  const showFps = useMemo(loadShowFps, []);
+  const [bigMap, setBigMap] = useState(false);
+  // Tab: inventory · M: full map (client views of state this browser already has; nothing hidden is added).
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.closest?.("input,textarea")) return;
+      if (e.key === "Tab") { e.preventDefault(); setInv((v) => !v); }
+      else if (e.key.toLowerCase() === "m") setBigMap((v) => !v);
+      else if (e.key === "Escape") { setInv(false); setBigMap(false); }
+    };
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, []);
   useEffect(() => {
     if (help) return;
     const k = (e: KeyboardEvent) => { if (e.key.toLowerCase() === "h" && !(e.target as HTMLElement)?.closest?.("input,textarea")) setHelp(true); };
@@ -244,8 +260,8 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     // Loot lands as a jump far bigger than a one-second price move (trades keep the value level).
     if (prev != null && curVal - prev > Math.max(50_000, prev * 0.03) && mine?.rprv?.channelKind !== 2) {
       const gain = curVal - prev;
-      // Rarity by value (the 5.5 dUSD x raiders loot pool averages ~1.2 dUSD a crate).
-      const tier = gain >= 2_000_000 ? "JACKPOT" : gain >= 1_000_000 ? "RARE" : "";
+      // Rarity by value (the 7.5 dUSD x raiders loot pool averages ~1.7 dUSD a crate).
+      const tier = gain >= 2_700_000 ? "JACKPOT" : gain >= 1_400_000 ? "RARE" : "";
       pop(`${tier ? tier + " " : ""}+${(gain / 1e6).toFixed(2)} dUSD`);
       sfx.loot(); if (tier) setTimeout(() => sfx.loot(), 160); if (tier === "JACKPOT") setTimeout(() => sfx.extract(), 320);
       if (tier) { sceneRef.current()?.burst({ x: mine!.rprv!.x, y: mine!.rprv!.y }, tier === "JACKPOT" ? 0xd9ac65 : 0x45c9b2, tier === "JACKPOT" ? 90 : 55); }
@@ -441,6 +457,20 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     return () => { stop = true; clearInterval(i); };
   }, [ended, report, raidId]);
 
+  // Settlement states (base layer): ended → results committed → settled by the Magic Action (or the
+  // permissionless recovery path) → claims paid. Read from the base copy of the Raid account.
+  const endedAt = useRef(0);
+  if (ended && !endedAt.current) endedAt.current = Date.now();
+  const [baseRaid, setBaseRaid] = useState<{ status: number; settled: boolean } | null>(null);
+  useEffect(() => {
+    if (!ended || (baseRaid?.settled && report)) return;
+    let stop = false;
+    const f = async () => { const b = await readRaidBase(raidId).catch(() => null); if (!stop && b) setBaseRaid({ status: b.status, settled: !!b.settled }); };
+    f();
+    const i = setInterval(f, 3000);
+    return () => { stop = true; clearInterval(i); };
+  }, [ended, raidId, !!baseRaid?.settled, !!report]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ---------- render ----------
   const elapsed = raid && Number(raid.startTs.toString()) > 0 ? now / 1000 - Number(raid.startTs.toString()) : 0;
   const left = RAID_SECS - elapsed;
@@ -485,6 +515,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     <div className="raid">
       <div className="raid-canvas" ref={hostRef} />
       {ctxPrompt && <div className="ctx-prompt">{ctxPrompt}</div>}
+      {showFps && (() => { const st = sceneRef.current()?.stats?.(); return st ? <div className="fps-chip">{st.fps} FPS · p95 {st.p95Ms} ms{st.lowPower ? " · LOW" : ""}</div> : null; })()}
       <div className="portrait-hint">Turn your phone sideways: RAZKYN plays in landscape.</div>
       <div className={`vignette ${now - hurtAt < 260 ? "on" : inHaz ? "haz" : ""}`} />
       {pops.map((p) => <div key={p.id} className="popup">{p.text}</div>)}
@@ -518,7 +549,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
               <div className="dim" style={{ fontSize: 11 }}>
                 {mine?.rprv?.backpack.map((u, i) => `${DN[i].split(" ")[0]} ${(Number(u.toString()) / 1e6).toFixed(2)}`).join(" · ") ?? ""}
               </div>
-              <div className="label" style={{ marginTop: 6 }}>Protected slot <span style={{ color: "var(--text)" }}>4.00 dUSD</span></div>
+              <div className="label" style={{ marginTop: 6 }}>Protected slot <span style={{ color: "var(--text)" }}>2.00 dUSD</span></div>
             </div>
           </>
         )}
@@ -568,7 +599,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
         <div className="hud-actions">
           <button className="act loot" onClick={onInteract}><kbd>E</kbd>Open / trade</button>
           <button className="act exit" onPointerDown={() => void startExtract(true)} onPointerUp={() => (extractHeld.current = false)}><kbd>Space</kbd>Extract (hold)</button>
-          <span className="note" style={{ textAlign: "right" }}>WASD move · click a raider to shoot</span>
+          <span className="note" style={{ textAlign: "right" }}>WASD move · click a raider to shoot · Tab inventory · M map</span>
         </div>
       )}
       <TouchStick onMove={(x, y) => { const sc = sceneRef.current(); if (sc) sc.stick = { x, y }; }} />
@@ -602,6 +633,59 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       )}
 
       {help && <HowToPlay onClose={() => setHelp(false)} />}
+      {bigMap && (
+        <div className="term-wrap" onClick={() => setBigMap(false)}>
+          <div className="bigmap" onClick={(e) => e.stopPropagation()}>
+            <div className="term-head"><span>CITY MAP · {raid?.exitWindow ? `EXIT WINDOW ${raid.exitWindow} OPEN` : "exits closed"}</span><span className="term-src">M / ESC TO CLOSE</span></div>
+            <Minimap pub={pub} me={!watch && mine?.rprv ? { x: mine.rprv.x, y: mine.rprv.y } : null} visible={mine?.view ? mine.view.entries.slice(0, mine.view.count) : []} mySlot={watch ? -1 : mySlot} names={DN} scale={12} big />
+            <div className="map-legend">
+              <span><i style={{ background: "#ffffff" }} />you (ring = vision)</span>
+              <span><i style={{ background: "#D9AC65" }} />sealed crate · raider in your vision</span>
+              <span><i style={{ background: "#E4514E" }} />BOT in vision · red district = hazard</span>
+              <span><i style={{ background: "#45C9B2" }} />terminal · open exit · trading raider</span>
+            </div>
+          </div>
+        </div>
+      )}
+      {inv && !watch && mySlot >= 0 && (
+        <div className="term-wrap" onClick={() => setInv(false)}>
+          <div className="term inv" onClick={(e) => e.stopPropagation()}>
+            <div className="term-head"><span>INVENTORY · RAIDER {mySlot + 1}</span><span className="term-src">TAB / ESC TO CLOSE · trade at a terminal</span></div>
+            {(() => {
+              const units = mine?.rprv ? mine.rprv.backpack.map((u) => Number(u.toString())) : [0, 0, 0];
+              const vals = units.map((u, i) => (u * Number(pub?.districts[i]?.currentPrice.toString() ?? PRICE_ONE)) / PRICE_ONE);
+              const total = vals.reduce((a, b) => a + b, 0);
+              return (
+                <>
+                  <div className="inv-grid">
+                    <div className="inv-cell protected">
+                      <div className="ic-k">PROTECTED SLOT</div>
+                      <div className="ic-v">2.00</div>
+                      <div className="ic-s">dUSD · always paid to you, even if knocked out</div>
+                    </div>
+                    {[0, 1, 2].map((i) => {
+                      const b = changeBps(pub?.districts[i] ?? null);
+                      return (
+                        <div key={i} className={`inv-cell ${units[i] ? "" : "empty"}`}>
+                          <div className="ic-k">{DN[i]}</div>
+                          <div className="ic-v">{(units[i] / 1e6).toFixed(2)}<span className="ic-u"> units</span></div>
+                          <div className="ic-s">worth {(vals[i] / 1e6).toFixed(2)} dUSD · <span className={b >= 0 ? "up" : "down"}>{pct(b)}</span></div>
+                          <div className="ic-bar"><div style={{ width: `${total ? (vals[i] / total) * 100 : 0}%` }} /></div>
+                          <div className="ic-s">{total ? Math.round((vals[i] / total) * 100) : 0}% of your bag</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="inv-foot">
+                    <span>Backpack {(total / 1e6).toFixed(2)} dUSD at risk</span>
+                    <span>{total && Math.max(...vals) / total > 0.7 ? <b className="amber">CONCENTRATED: one district crash hits most of your bag</b> : total ? "Spread across districts" : "Empty: crack a sealed crate (E)"}</span>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
       {watch && pub?.raid && (
         <div className="spec-cam">
           <span className="sc-l">CAMERA</span>
@@ -653,6 +737,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
           <div className="card">
             <div className={`result-title ${outcome.c}`}>{outcome.t}</div>
             {!watch && myResult && <div className="payout">{fmt(Number(myResult.dusdPayout) + 0)} <span style={{ fontSize: 18 }}>dUSD</span>{myResult.mintUnits.some((u: string) => Number(u) > 0) && <span className="note" style={{ fontSize: 14, marginLeft: 10 }}>+ loot minted as {myResult.mintUnits.map((u: string, i: number) => (Number(u) ? `${(Number(u) / 1e6).toFixed(2)} d${["TWR", "FAC", "HRB"][i]}` : "")).filter(Boolean).join(" · ")}</span>}</div>}
+            <SettleSteps ended={ended} base={baseRaid} paid={!!report} endedAt={endedAt.current} now={now} />
             {!report && <p className="dim">Settling on-chain and paying everyone out… (about a minute)</p>}
             {report && (
               <>
@@ -681,6 +766,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
                     {report.report.awards.topSpectator && <div className="award"><span className="aw-k">TOP SPECTATOR</span><b className="mono">{report.report.awards.topSpectator.wallet.slice(0, 4)}…</b><span>{report.report.awards.topSpectator.correct}/{report.report.awards.topSpectator.picks} picks</span></div>}
                   </div>
                 )}
+                {!watch && <ShareCard data={{ raidId, outcome: outcome.t, payout: myResult ? `${fmt(Number(myResult.dusdPayout))} dUSD` : undefined, mode: raid?.mode === 0 ? "Mystery Market Day" : "Live", title: report.report.mystery?.event?.title, line: myResult?.kills ? `${myResult.kills} knockout${myResult.kills === 1 ? "" : "s"}` : undefined, hash: report.hash }} />}
                 <div className="row" style={{ marginTop: 16 }}>
                   <button className="btn primary" onClick={() => navigate(`/report/${raidId}`)}>Market Raid Report</button>
                   <button className="btn" onClick={() => navigate("/play")}>Next raid</button>
@@ -737,3 +823,32 @@ function TouchStick({ onMove }: { onMove: (x: number, y: number) => void }) {
   );
 }
 
+
+/** Every settlement state, from the base layer: pending → committed → settled (Magic Action, or the
+ *  permissionless settle_stuck_raid recovery after 120 s) → paid. "Failed" shows if nothing has
+ *  settled 10 minutes after the end; anyone can still call settle_stuck_raid, and claims are idempotent. */
+function SettleSteps({ ended, base, paid, endedAt, now }: { ended: boolean; base: { status: number; settled: boolean } | null; paid: boolean; endedAt: number; now: number }) {
+  if (!ended) return null;
+  const committed = !!base && base.status >= 3;
+  const settled = !!base?.settled;
+  const waited = endedAt ? (now - endedAt) / 1000 : 0;
+  const recovering = committed && !settled && waited > 120;
+  const failed = !settled && waited > 600;
+  const steps: [string, boolean, string][] = [
+    ["RAID ENDED", true, "final state frozen on the Private ER"],
+    ["COMMITTED", committed || settled, "results committed to Solana"],
+    [recovering ? "RECOVERING" : "SETTLED", settled, recovering ? "Magic Action missed · settle_stuck_raid path" : "Magic Action finalize_raid"],
+    ["PAID", paid, "claims sent to every wallet"],
+  ];
+  const cur = steps.findIndex((x) => !x[1]);
+  return (
+    <div className={`settle-steps ${failed ? "failed" : ""}`}>
+      {steps.map(([k, ok, d], i) => (
+        <div key={k} className={`ss ${ok ? "ok" : i === cur ? "now" : ""} ${k === "RECOVERING" ? "warn" : ""}`}>
+          <span className="ss-k">{ok ? "✓ " : i === cur ? "● " : ""}{k}</span><span className="ss-d">{d}</span>
+        </div>
+      ))}
+      {failed && <div className="err" style={{ gridColumn: "1 / -1" }}>Settlement has not landed after 10 minutes. The keeper keeps retrying; anyone can call settle_stuck_raid, and no wallet can be paid twice.</div>}
+    </div>
+  );
+}

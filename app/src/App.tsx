@@ -21,6 +21,7 @@ import Report from "./screens/Report";
 import History from "./screens/History";
 import Training from "./screens/Training";
 import Overlay from "./screens/Overlay";
+import Settings from "./screens/Settings";
 
 /** Tiny path router: /, /play, /raid/:id, /watch[/:id], /report/:id. */
 export function navigate(path: string) {
@@ -43,6 +44,7 @@ export default function App() {
     parts[0] === "report" && parts[1] ? <Report raidId={parts[1]} /> :
     parts[0] === "history" ? <History /> :
     parts[0] === "training" ? <Training /> :
+    parts[0] === "settings" ? <Settings /> :
     parts[0] === "overlay" ? <Overlay raidId={parts[1] ?? ""} /> :
     <Landing />;
   return <Boundary key={path}>{screen}</Boundary>;

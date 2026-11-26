@@ -199,15 +199,15 @@ fn option_a_no_extraction_all_loot_back_pro_rata() {
 
 #[test]
 fn option_a_rally_scales_extracted_backpacks_to_the_pool() {
-    // 2 raiders, pool 11 dUSD. Slot 0 extracted 10 units of Tower; Tower doubled → worth 20 > 11.
+    // 2 raiders, pool 15 dUSD. Slot 0 extracted 10 units of Tower; Tower doubled → worth 20 > 15.
     let mut b = [[0u64; 3]; 8];
     b[0] = [10_000_000, 0, 0];
     let p = compute_payouts(&slots(&[true, false]), &b, &[2 * PRICE_ONE, PRICE_ONE, PRICE_ONE]).unwrap();
     check_conserved(&p);
     assert!(p.scaled);
     assert_eq!(p.extracted_value, 20_000_000);
-    assert_eq!(p.raiders[0].mint_units[0], 5_500_000, "scaled to 11/20");
-    assert_eq!(p.raiders[0].mint_value, 11_000_000);
+    assert_eq!(p.raiders[0].mint_units[0], 7_500_000, "scaled to 15/20");
+    assert_eq!(p.raiders[0].mint_value, 15_000_000);
     assert_eq!(p.leftover, 0);
     assert_eq!(p.raiders[1].dusd_payout, PROTECTED);
 }
@@ -219,8 +219,8 @@ fn option_a_fall_leaves_more_for_the_pool() {
     let p = compute_payouts(&slots(&[true, false]), &b, &[PRICE_ONE, 500_000, PRICE_ONE]).unwrap();
     check_conserved(&p);
     assert_eq!(p.raiders[0].mint_value, 1_000_000, "Factory halved");
-    assert_eq!(p.leftover, 10_000_000);
-    assert_eq!(p.raiders[0].dusd_payout + p.raiders[1].dusd_payout, 2 * PROTECTED + 10_000_000);
+    assert_eq!(p.leftover, 14_000_000);
+    assert_eq!(p.raiders[0].dusd_payout + p.raiders[1].dusd_payout, 2 * PROTECTED + 14_000_000);
 }
 
 #[test]

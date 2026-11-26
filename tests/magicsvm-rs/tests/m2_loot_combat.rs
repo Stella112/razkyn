@@ -4,7 +4,7 @@
 mod common;
 use common::*;
 
-const POOL_8: u64 = LOOT_POOL * 8; // 44 dUSD of loot for 8 raiders
+const POOL_8: u64 = LOOT_POOL * 8; // 60 dUSD of loot for 8 raiders
 
 /// Nearest crate of the wanted kind to `slot`.
 fn nearest(w: &mut World, slot: u8, dormant: bool) -> (u8, Crate) {
@@ -51,7 +51,7 @@ fn scripted_raid(seed: Option<[u8; 32]>) -> Snapshot {
         sum += c.units[d];
         crates.push((c.x, c.y, c.units, c.dormant, c.district));
     }
-    assert_eq!(sum, POOL_8, "crates hold exactly the 55% loot pool");
+    assert_eq!(sum, POOL_8, "crates hold exactly the loot pool");
     // Positions are public (DECISIONS #16): a stranger reads them from Raid; contents stay hidden.
     let stranger = Some(Keypair::new().pubkey());
     let public_raid: Raid = w.read_as(stranger, raid_pda()).expect("raid is public");

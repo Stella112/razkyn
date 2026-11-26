@@ -65,6 +65,8 @@ export async function runRaid(o: RaidOptions) {
     for (;;) {
       const r = (await S.P.account.raid.fetch(S.raid)) as unknown as { raiders: { joined: boolean; wallet: PublicKey; rawKey: PublicKey }[] };
       if (o.humanSlots.every((s) => r.raiders[s].joined) || Date.now() > until) break;
+      const joinedHumans = o.humanSlots.filter((s) => r.raiders[s].joined);
+      if (o.wireServer?.allReady(S.raidId.toString(), joinedHumans)) { lap(`all joined players READY (${JSON.stringify(joinedHumans)}): dropping early`); break; }
       await sleep(2000);
     }
   }
@@ -295,7 +297,7 @@ export async function runRaid(o: RaidOptions) {
     network: "devnet",
     programId: S.raid ? S.P.programId.toBase58() : "",
     raid: { id: S.raidId.toString(), pda: S.raid.toBase58(), mode: o.mode },
-    assets: DISTRICTS.map((d, i) => ({ district: d, tracks: mystery ? ["SOLUSDT", "BTCUSDT", "ETHUSDT"][i] : o.mode === "live-markets" ? ["Equity.US.NVDA/USD", "Equity.US.TSLA/USD", "Metal.XAU/USD"][i] : ["SOL/USD", "BTC/USD", "ETH/USD"][i], note: mystery ? "revealed after the raid" : "Pricing Oracle on the TEE" })),
+    assets: DISTRICTS.map((d, i) => ({ district: d, tracks: mystery ? ["SOLUSDT", "BTCUSDT", "ETHUSDT"][i] : o.mode === "live-markets" ? ["Equity.US.NVDA/USD", "Equity.US.TSLA/USD", "SOL/USD"][i] : ["SOL/USD", "BTC/USD", "ETH/USD"][i], note: mystery ? "revealed after the raid" : "Pricing Oracle on the TEE" })),
     classes: Array.from({ length: o.slots }, (_, s) => ["RAIDER", "SCOUT", "TRADER", "GUNNER"][(endRaidState?.classes?.[s] as number) ?? 0]),
     marketEvents: eventPlan,
     // Mystery: the full path is the verified slice (all 300 steps, index ×10^4). Live: sampled

@@ -147,3 +147,27 @@ export async function publishAvatar(raidId: string, slot: number, raidKey: Keypa
 export async function getAvatars(raidId: string): Promise<Record<number, HumanSpec>> {
   try { const r = await fetch(`${KEEPER_URL}/avatars/${raidId}`, { cache: "no-store" }); return r.ok ? await r.json() : {}; } catch { return {}; }
 }
+
+// ---------------- lobby profiles: handle + READY (keeper/wire/avatars.ts) ----------------
+export type Profile = { handle: string; ready: boolean };
+/** Must match profileMessage in keeper/wire/avatars.ts byte for byte. */
+const profileMessage = (raidId: string, slot: number, handle: string, ready: boolean) =>
+  new TextEncoder().encode(`razkyn-profile:${raidId}:${slot}:${handle}:${ready ? 1 : 0}`);
+export const validHandle = (h: string) => /^[A-Za-z0-9 _-]{1,16}$/.test(h.trim()) && !/^bot\b/i.test(h.trim());
+export function loadHandle(): string { try { return window.localStorage.getItem("razkyn-handle") ?? ""; } catch { return ""; } }
+export function saveHandle(h: string) { try { window.localStorage.setItem("razkyn-handle", h); } catch { /* private mode */ } }
+/** Publish my handle and READY flag, signed with my raid key (the keeper checks it is my seat's key). */
+export async function publishProfile(raidId: string, slot: number, raidKey: Keypair, handle: string, ready: boolean): Promise<string | null> {
+  try {
+    const h = handle.trim();
+    const sig = nacl.sign.detached(profileMessage(raidId, slot, h, ready), raidKey.secretKey);
+    const r = await fetch(`${KEEPER_URL}/profile`, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ raidId, slot, handle: h, ready, pubkey: raidKey.publicKey.toBase58(), sig: btoa(String.fromCharCode(...sig)) }),
+    });
+    return r.ok ? null : ((await r.json().catch(() => ({}))) as { error?: string }).error ?? `HTTP ${r.status}`;
+  } catch (e) { return String(e).slice(0, 80); }
+}
+export async function getProfiles(raidId: string): Promise<Record<number, Profile>> {
+  try { const r = await fetch(`${KEEPER_URL}/profiles/${raidId}`, { cache: "no-store" }); return r.ok ? await r.json() : {}; } catch { return {}; }
+}

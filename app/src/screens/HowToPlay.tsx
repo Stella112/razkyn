@@ -36,8 +36,8 @@ export default function HowToPlay({ onClose }: { onClose: () => void }) {
       <div className="howto" onClick={(e) => e.stopPropagation()}>
         <div className="howto-head"><span>HOW TO PLAY</span><button className="term-btn" onClick={onClose}>CLOSE · ESC</button></div>
         <p className="howto-goal">
-          Five minutes, up to eight raiders. Your 10 dUSD entry splits into <b className="c-amber">4.00 that is always yours</b> (the protected slot),
-          5.50 hidden in the crates and 0.50 fee. <b>Grab loot, ride the market, get out alive.</b> Knocked out = you keep only the protected slot.
+          Five minutes, up to eight raiders. Your 10 dUSD entry splits into <b className="c-amber">2.00 that is always yours</b> (the protected slot),
+          7.50 hidden in the crates and 0.50 fee. <b>Grab loot, ride the market, get out alive.</b> Knocked out = you keep only the protected slot.
           Loot nobody extracts is shared back to everyone by stake.
         </p>
         <div className="howto-grid">
