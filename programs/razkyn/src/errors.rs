@@ -108,4 +108,21 @@ pub enum RazkynError {
     TradingHalted,
     #[msg("unknown raider class")]
     BadClass,
+    // ---- RAZKYN LIVE picks (appended; codes above unchanged) ----
+    #[msg("picks for this pool are closed")]
+    PicksClosed,
+    #[msg("pick book is full")]
+    BookFull,
+    #[msg("bad pick (pool, choice or amount)")]
+    BadPick,
+    #[msg("session key is not a registered spectator")]
+    NotSpectator,
+    #[msg("one choice per spectator per pick")]
+    AlreadyPicked,
+    #[msg("not enough play credits")]
+    NoCredits,
+    #[msg("picks still open")]
+    PicksOpen,
+    #[msg("no badge to claim")]
+    NoBadge,
 }

@@ -166,4 +166,33 @@ pub mod razkyn {
     pub fn tick_raiders<'info>(ctx: Context<'info, TickRaiders<'info>>) -> Result<()> {
         instructions::play::tick_raiders(ctx)
     }
+
+    // ---- RAZKYN LIVE picks (DECISIONS #39) ----
+    pub fn create_pick_book(ctx: Context<CreatePickBook>, raid_id: u64) -> Result<()> {
+        instructions::picks::create_pick_book(ctx, raid_id)
+    }
+    pub fn register_spectator(ctx: Context<RegisterSpectator>, session: Pubkey) -> Result<()> {
+        instructions::picks::register_spectator(ctx, session)
+    }
+    pub fn place_pick(ctx: Context<PlacePick>, pool: u8, choice: u8, amount: u16) -> Result<()> {
+        instructions::picks::place_pick(ctx, pool, choice, amount)
+    }
+    pub fn resolve_picks(ctx: Context<ResolvePicks>) -> Result<()> {
+        instructions::picks::resolve_picks(ctx)
+    }
+    pub fn schedule_pick_crank<'info>(ctx: Context<'info, SchedulePickCrank<'info>>, task_id: i64, interval_ms: i64, iterations: i64) -> Result<()> {
+        instructions::picks::schedule_pick_crank(ctx, task_id, interval_ms, iterations)
+    }
+    pub fn cancel_picks(ctx: Context<CancelPicks>) -> Result<()> {
+        instructions::picks::cancel_picks(ctx)
+    }
+    pub fn close_picks<'info>(ctx: Context<'info, ClosePicks<'info>>, raid_id: u64) -> Result<()> {
+        instructions::picks::close_picks(ctx, raid_id)
+    }
+    pub fn init_badge_mint(ctx: Context<InitBadgeMint>) -> Result<()> {
+        instructions::picks::init_badge_mint(ctx)
+    }
+    pub fn claim_badge(ctx: Context<ClaimBadge>, raid_id: u64, spec: u8) -> Result<()> {
+        instructions::picks::claim_badge(ctx, raid_id, spec)
+    }
 }

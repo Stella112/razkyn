@@ -14,6 +14,73 @@ export type Razkyn = {
   },
   "instructions": [
     {
+      "name": "cancelPicks",
+      "discriminator": [
+        237,
+        77,
+        202,
+        131,
+        158,
+        212,
+        52,
+        222
+      ],
+      "accounts": [
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  105,
+                  99,
+                  107,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "signer": true,
+          "relations": [
+            "raid"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "cancelTrade",
       "discriminator": [
         124,
@@ -522,6 +589,273 @@ export type Razkyn = {
       ]
     },
     {
+      "name": "claimBadge",
+      "discriminator": [
+        111,
+        30,
+        18,
+        17,
+        228,
+        252,
+        239,
+        102
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  105,
+                  99,
+                  107,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "raidId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mintAuth",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "badgeMint",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  97,
+                  100,
+                  103,
+                  101,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "wallet"
+        },
+        {
+          "name": "walletAta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "wallet"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "badgeMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "raidId",
+          "type": "u64"
+        },
+        {
+          "name": "spec",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "closePicks",
+      "discriminator": [
+        133,
+        191,
+        18,
+        220,
+        7,
+        60,
+        144,
+        173
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  105,
+                  99,
+                  107,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "raidId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "secret",
+          "docs": [
+            "Read only for the VRF seed (badge variants), after every pick has resolved."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  114,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "raidId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "magicProgram",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magicContext",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "raidId",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "createCrates",
       "discriminator": [
         255,
@@ -675,6 +1009,99 @@ export type Razkyn = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "createPickBook",
+      "discriminator": [
+        20,
+        244,
+        235,
+        131,
+        222,
+        209,
+        41,
+        144
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "raidId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  105,
+                  99,
+                  107,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "raidId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "raidId",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "createRaid",
@@ -2430,6 +2857,99 @@ export type Razkyn = {
       ]
     },
     {
+      "name": "initBadgeMint",
+      "discriminator": [
+        52,
+        183,
+        75,
+        202,
+        1,
+        209,
+        59,
+        101
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mintAuth",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "badgeMint",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  97,
+                  100,
+                  103,
+                  101,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "initConfig",
       "discriminator": [
         23,
@@ -2987,6 +3507,83 @@ export type Razkyn = {
       ]
     },
     {
+      "name": "placePick",
+      "discriminator": [
+        3,
+        215,
+        3,
+        176,
+        155,
+        59,
+        179,
+        108
+      ],
+      "accounts": [
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  105,
+                  99,
+                  107,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "session",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "pool",
+          "type": "u8"
+        },
+        {
+          "name": "choice",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u16"
+        }
+      ]
+    },
+    {
       "name": "postReportHash",
       "discriminator": [
         2,
@@ -3167,6 +3764,75 @@ export type Razkyn = {
       ]
     },
     {
+      "name": "registerSpectator",
+      "discriminator": [
+        164,
+        80,
+        7,
+        165,
+        202,
+        31,
+        236,
+        213
+      ],
+      "accounts": [
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  105,
+                  99,
+                  107,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "wallet",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "session",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "requestRaidVrf",
       "discriminator": [
         188,
@@ -3250,6 +3916,99 @@ export type Razkyn = {
       "args": []
     },
     {
+      "name": "resolvePicks",
+      "discriminator": [
+        237,
+        254,
+        169,
+        5,
+        79,
+        202,
+        48,
+        245
+      ],
+      "accounts": [
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  105,
+                  99,
+                  107,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "raid",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "raid.raid_id",
+                "account": "raid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "district0"
+        },
+        {
+          "name": "district1"
+        },
+        {
+          "name": "district2"
+        },
+        {
+          "name": "rpub0"
+        },
+        {
+          "name": "rpub1"
+        },
+        {
+          "name": "rpub2"
+        },
+        {
+          "name": "rpub3"
+        },
+        {
+          "name": "rpub4"
+        },
+        {
+          "name": "rpub5"
+        },
+        {
+          "name": "rpub6"
+        },
+        {
+          "name": "rpub7"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "revealAfterEnd",
       "discriminator": [
         4,
@@ -3301,6 +4060,84 @@ export type Razkyn = {
         {
           "name": "items",
           "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "schedulePickCrank",
+      "discriminator": [
+        158,
+        186,
+        97,
+        250,
+        109,
+        255,
+        118,
+        39
+      ],
+      "accounts": [
+        {
+          "name": "magicProgram",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "book",
+          "writable": true
+        },
+        {
+          "name": "raid"
+        },
+        {
+          "name": "district0"
+        },
+        {
+          "name": "district1"
+        },
+        {
+          "name": "district2"
+        },
+        {
+          "name": "rpub0"
+        },
+        {
+          "name": "rpub1"
+        },
+        {
+          "name": "rpub2"
+        },
+        {
+          "name": "rpub3"
+        },
+        {
+          "name": "rpub4"
+        },
+        {
+          "name": "rpub5"
+        },
+        {
+          "name": "rpub6"
+        },
+        {
+          "name": "rpub7"
+        }
+      ],
+      "args": [
+        {
+          "name": "taskId",
+          "type": "i64"
+        },
+        {
+          "name": "intervalMs",
+          "type": "i64"
+        },
+        {
+          "name": "iterations",
+          "type": "i64"
         }
       ]
     },
@@ -4478,6 +5315,19 @@ export type Razkyn = {
       ]
     },
     {
+      "name": "pickBook",
+      "discriminator": [
+        8,
+        242,
+        193,
+        118,
+        76,
+        54,
+        74,
+        80
+      ]
+    },
+    {
       "name": "raid",
       "discriminator": [
         247,
@@ -4847,6 +5697,46 @@ export type Razkyn = {
       "code": 6052,
       "name": "badClass",
       "msg": "unknown raider class"
+    },
+    {
+      "code": 6053,
+      "name": "picksClosed",
+      "msg": "picks for this pool are closed"
+    },
+    {
+      "code": 6054,
+      "name": "bookFull",
+      "msg": "pick book is full"
+    },
+    {
+      "code": 6055,
+      "name": "badPick",
+      "msg": "bad pick (pool, choice or amount)"
+    },
+    {
+      "code": 6056,
+      "name": "notSpectator",
+      "msg": "session key is not a registered spectator"
+    },
+    {
+      "code": 6057,
+      "name": "alreadyPicked",
+      "msg": "one choice per spectator per pick"
+    },
+    {
+      "code": 6058,
+      "name": "noCredits",
+      "msg": "not enough play credits"
+    },
+    {
+      "code": 6059,
+      "name": "picksOpen",
+      "msg": "picks still open"
+    },
+    {
+      "code": 6060,
+      "name": "noBadge",
+      "msg": "no badge to claim"
     }
   ],
   "types": [
@@ -5143,6 +6033,162 @@ export type Razkyn = {
       }
     },
     {
+      "name": "pickBet",
+      "docs": [
+        "6 bytes, 2-aligned, no padding."
+      ],
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "spec",
+            "type": "u8"
+          },
+          {
+            "name": "pool",
+            "type": "u8"
+          },
+          {
+            "name": "choice",
+            "type": "u8"
+          },
+          {
+            "name": "pad",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "pickBook",
+      "docs": [
+        "`[\"picks\", raid_id]`, base → TEE (public). Zero-copy (too large for the 4 KB stack as Borsh).",
+        "Size: 8 + 3_208 bytes (< 10,240). Fields ordered by alignment so there is no implicit padding."
+      ],
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raidId",
+            "type": "u64"
+          },
+          {
+            "name": "startTs",
+            "type": "i64"
+          },
+          {
+            "name": "totals",
+            "type": {
+              "array": [
+                {
+                  "array": [
+                    "u32",
+                    4
+                  ]
+                },
+                23
+              ]
+            }
+          },
+          {
+            "name": "spectators",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "spectator"
+                  }
+                },
+                24
+              ]
+            }
+          },
+          {
+            "name": "bets",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "pickBet"
+                  }
+                },
+                160
+              ]
+            }
+          },
+          {
+            "name": "nBets",
+            "type": "u16"
+          },
+          {
+            "name": "outcome",
+            "type": {
+              "array": [
+                "u8",
+                23
+              ]
+            }
+          },
+          {
+            "name": "prevHazard",
+            "docs": [
+              "Snapshot of public state at the previous resolve (to detect new cracks / knockouts)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                3
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "status",
+            "type": "u8"
+          },
+          {
+            "name": "nSpec",
+            "type": "u8"
+          },
+          {
+            "name": "prevAlive",
+            "type": "u8"
+          },
+          {
+            "name": "inited",
+            "docs": [
+              "1 once resolve_picks has taken its first public-state snapshot after the start."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "pad",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "raid",
       "docs": [
         "`[\"raid\", raid_id]`, base → TEE, public. Size: 8 + 981 = 989 bytes (measured on devnet)."
@@ -5421,6 +6467,9 @@ export type Razkyn = {
           },
           {
             "name": "results"
+          },
+          {
+            "name": "picks"
           }
         ]
       }
@@ -5941,6 +6990,72 @@ export type Razkyn = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "spectator",
+      "docs": [
+        "76 bytes, 4-aligned, no padding."
+      ],
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "session",
+            "docs": [
+              "Session key that signs picks for this wallet (scoped: it can only call place_pick on this book)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "credits",
+            "type": "u32"
+          },
+          {
+            "name": "picks",
+            "type": "u8"
+          },
+          {
+            "name": "correct",
+            "type": "u8"
+          },
+          {
+            "name": "streak",
+            "type": "u8"
+          },
+          {
+            "name": "bestStreak",
+            "type": "u8"
+          },
+          {
+            "name": "badge",
+            "docs": [
+              "0 none; 1..=4 streak badge variant (from the raid's VRF seed)."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "badgeClaimed",
+            "type": "u8"
+          },
+          {
+            "name": "pad",
+            "type": {
+              "array": [
+                "u8",
+                2
+              ]
+            }
           }
         ]
       }

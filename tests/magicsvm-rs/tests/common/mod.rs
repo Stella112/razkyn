@@ -20,7 +20,7 @@ pub use {
     magicsvm::{MagicSVM, TransactionTarget},
     razkyn::{
         accounts, constants::*, instruction,
-        instructions::RaidAccount,
+        instructions::{PickBook, RaidAccount},
         state::{crate_state, mode, status, ClaimRecord, Crate, District, Raid, RaiderPrivate, RaiderPublic, Results, Settlement, View},
     },
     solana_address::Address,
@@ -67,6 +67,13 @@ pub const E_UNAUTHORIZED: u32 = ERR_BASE + 1;
 pub const E_TOO_EARLY: u32 = ERR_BASE + 48;
 pub const E_NOT_COMMITTED: u32 = ERR_BASE + 49;
 pub const E_TRADING_HALTED: u32 = ERR_BASE + 51;
+pub const E_PICKS_CLOSED: u32 = ERR_BASE + 53;
+pub const E_NOT_SPECTATOR: u32 = ERR_BASE + 56;
+pub const E_ALREADY_PICKED: u32 = ERR_BASE + 57;
+pub const E_NO_CREDITS: u32 = ERR_BASE + 58;
+pub const E_PICKS_OPEN: u32 = ERR_BASE + 59;
+pub const E_NO_BADGE: u32 = ERR_BASE + 60;
+pub const E_ALREADY_CLAIMED: u32 = ERR_BASE + 47;
 pub const E_BAD_FEED: u32 = ERR_BASE + 40;
 const MINT_SIZE: usize = 82;
 
@@ -131,6 +138,12 @@ pub fn settle_pda() -> Pubkey {
 }
 pub fn reserve_auth() -> Pubkey {
     pda(&[RESERVE_SEED, &id_bytes()])
+}
+pub fn picks_pda() -> Pubkey {
+    pda(&[b"picks", &id_bytes()])
+}
+pub fn badge_mint_pda() -> Pubkey {
+    pda(&[b"badge_mint"])
 }
 pub fn test_flags_pda() -> Pubkey {
     pda(&[b"test_flags"])
@@ -462,6 +475,12 @@ pub fn raid_seeded(n: u8, seed: Option<[u8; 32]>, raid_mode: u8, leaf_count: u32
     let escrow = w.svm.get_account_for(Base, &a(ata(escrow_auth(), w.dusd))).unwrap();
     assert_eq!(u64::from_le_bytes(escrow.data[64..72].try_into().unwrap()), STAKE * n as u64, "escrow holds every stake");
 
+    // RAZKYN LIVE pick book (base, while the raid is in the lobby), delegated with the raid.
+    w.send(Base, &[&keeper], &[ix(
+        instruction::CreatePickBook { raid_id: RAID_ID },
+        accounts::CreatePickBook { config: config_pda(), raid: raid_pda(), book: picks_pda(), keeper: k, system_program: system_program::ID },
+    )], "create_pick_book");
+
     // Delegate every TEE account (never the escrow).
     let validator = p(&w.svm.validator_identity());
     let mut targets = vec![(secret_pda(), RaidAccount::Secret)];
@@ -477,6 +496,7 @@ pub fn raid_seeded(n: u8, seed: Option<[u8; 32]>, raid_mode: u8, leaf_count: u32
         targets.push((crate_pda(idx), RaidAccount::Crate { idx }));
     }
     targets.push((results_pda(), RaidAccount::Results));
+    targets.push((picks_pda(), RaidAccount::Picks));
     targets.push((raid_pda(), RaidAccount::Raid));
     for (t, kind) in targets {
         w.send(Base, &[&keeper], &[delegate_ix(k, validator, t, kind)], "delegate_pda");

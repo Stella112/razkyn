@@ -315,6 +315,8 @@ pub enum RaidAccount {
     View { slot: u8 },
     Crate { idx: u8 },
     Results,
+    /// RAZKYN LIVE pick book (appended; earlier variants keep their indices).
+    Picks,
 }
 
 impl RaidAccount {
@@ -329,6 +331,7 @@ impl RaidAccount {
             RaidAccount::View { slot } => vec![VIEW_SEED.to_vec(), id, vec![slot]],
             RaidAccount::Crate { idx } => vec![CRATE_SEED.to_vec(), id, vec![idx]],
             RaidAccount::Results => vec![RESULTS_SEED.to_vec(), id],
+            RaidAccount::Picks => vec![crate::instructions::picks::PICKS_SEED.to_vec(), id],
         }
     }
 }
