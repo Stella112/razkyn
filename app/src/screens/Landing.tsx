@@ -100,9 +100,11 @@ export default function Landing() {
           Drop into a night-market city where every district is a live price chart. Rising streets light up and wake hidden loot.
           Falling ones crack into hazard. Grab what you can, trade under fire, and get out before the exits close.
         </p>
-        <div className="row" style={{ justifyContent: "center", marginTop: 6 }}>
-          <button className="btn primary big" onClick={() => navigate("/play")}>▶ PLAY</button>
-          <button className="btn big" onClick={() => navigate("/watch")}>◉ WATCH</button>
+        <div className="menu">
+          <button className="btn primary big" onClick={() => navigate("/play")}>▶ ENTER RAID</button>
+          <button className="btn big menu-m" onClick={() => navigate("/play")}>🌀 MYSTERY MARKET DAY</button>
+          <button className="btn big menu-c" onClick={() => navigate("/watch")}>◉ WATCH LIVE</button>
+          <button className="btn big" onClick={() => navigate("/history")}>☰ RAID HISTORY</button>
         </div>
         <div className="steps" style={{ marginTop: 22 }}>
           <div className="step"><div className="n neon-c">01 RAID</div><p>Stake 10 devnet dUSD and drop in with up to 7 others. Sealed crates hide loot you can't see until you crack one open.</p></div>

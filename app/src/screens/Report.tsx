@@ -77,6 +77,7 @@ export default function Report({ raidId }: { raidId: string }) {
                   <>
                     <span>Mystery day</span>
                     <span><b className="mono">{r.mystery.day}</b> (leaf {r.mystery.leafIndex} of {r.mystery.leafCount}) · {proof ? (proof.ok ? <span className="verified">Merkle proof ✓ vs Raid.day_root</span> : <span className="mismatch">Merkle proof mismatch</span>) : "checking…"}</span>
+                    {r.mystery.event && (<><span>What happened</span><span><b className="neon-m">{r.mystery.event.title}</b> · {r.mystery.event.summary} {(r.mystery.event.sources ?? []).map((x: { url: string; outlet: string }) => <a key={x.url} href={x.url} target="_blank" rel="noreferrer" style={{ marginLeft: 6 }}>{x.outlet} ↗</a>)}<div className="note" style={{ fontSize: 11 }}>{r.mystery.event.note}</div></span></>)}
                     <span>day_root (on-chain)</span><span className="mono">{proof?.onchain}</span>
                     <span>Sources</span><span>{(r.mystery.sources ?? []).map((u: string) => <div key={u}><a href={u} target="_blank" rel="noreferrer" className="mono" style={{ fontSize: 12 }}>{u}</a></div>)}</span>
                   </>

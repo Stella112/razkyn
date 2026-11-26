@@ -18,6 +18,7 @@ import Landing from "./screens/Landing";
 import Lobby from "./screens/Lobby";
 import Raid from "./screens/Raid";
 import Report from "./screens/Report";
+import History from "./screens/History";
 
 /** Tiny path router: /, /play, /raid/:id, /watch[/:id], /report/:id. */
 export function navigate(path: string) {
@@ -38,6 +39,7 @@ export default function App() {
     parts[0] === "raid" && parts[1] ? <Raid key={`r${parts[1]}`} raidId={parts[1]} watch={false} /> :
     parts[0] === "watch" ? <Raid key={`w${parts[1] ?? ""}`} raidId={parts[1] ?? ""} watch /> :
     parts[0] === "report" && parts[1] ? <Report raidId={parts[1]} /> :
+    parts[0] === "history" ? <History /> :
     <Landing />;
   return <Boundary key={path}>{screen}</Boundary>;
 }

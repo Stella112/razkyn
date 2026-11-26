@@ -126,7 +126,7 @@ export class Wire {
       `Outcome: ${d.extracted ? "extracted" : d.alive ? "alive, did not extract" : "knocked out"}; knockouts ${d.kills}; crates opened ${d.cratesOpened}; trades ${d.trades}.`,
       `Payout ${(d.payout / 1e6).toFixed(2)} dUSD on a ${(d.stake / 1e6).toFixed(0)} dUSD stake.`,
       `Market: best ${D(d.bestDistrict)} ${(d.bestBps / 100).toFixed(2)}%, worst ${D(d.worstDistrict)} ${(d.worstBps / 100).toFixed(2)}%.`,
-      d.reveal ? `Revealed day: ${d.reveal.day}; districts tracked ${d.reveal.tracks.join(", ")}.` : "",
+      d.reveal ? `Revealed day: ${d.reveal.day}${d.reveal.title ? ` (${d.reveal.title})` : ""}; districts tracked ${d.reveal.tracks.join(", ")}.` : "",
       `Their public log:\n${mine.map(describe).join("\n") || "(nothing public)"}`,
       `HEADLINES (quote only these, word for word, or none):\n${titles.length ? titles.map((t) => `- ${t}`).join("\n") : "(none)"}`,
     ].filter(Boolean).join("\n");

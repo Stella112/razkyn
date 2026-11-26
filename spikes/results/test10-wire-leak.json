@@ -53,7 +53,7 @@
       {
         "t": 60,
         "tag": "IN-GAME EVENT",
-        "text": "Harbor cracks open, hazard tiles live at 10 HP/s",
+        "text": "VOLATILITY ALERT: Harbor cracks open, hazard tiles at 10 HP/s",
         "source": "template",
         "llmMs": 5,
         "fallback": "filtered: $ price"

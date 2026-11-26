@@ -243,3 +243,18 @@ table.t th { color: var(--dim); font-weight: 600; font-size: 11px; letter-spacin
 @media (orientation: portrait) and (pointer: coarse) {
   .portrait-hint { display: flex; position: absolute; inset: 0; z-index: 20; background: var(--bg); align-items: center; justify-content: center; text-align: center; padding: 24px; font-family: var(--display); color: var(--magenta); text-shadow: var(--glow-m); }
 }
+
+.trade-alert { position: absolute; z-index: 6; left: 50%; top: 64px; transform: translateX(-50%); font-family: var(--display); font-size: 13px; letter-spacing: 0.06em; padding: 8px 14px; border-radius: 12px; color: #1a1000; background: var(--amber); box-shadow: 0 0 18px rgba(255, 197, 61, 0.7); animation: hazb 0.8s infinite; white-space: nowrap; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
+
+.reveal { margin: 6px 0 16px; padding: 18px; border-radius: 16px; border: 1px solid var(--magenta); background: linear-gradient(135deg, rgba(255, 43, 214, 0.14), rgba(34, 242, 255, 0.06)); box-shadow: var(--glow-m); animation: pop 0.5s ease-out; }
+.reveal-title { font-family: var(--display); font-size: clamp(26px, 5vw, 46px); line-height: 1.05; color: #fff; text-shadow: var(--glow-m); margin: 4px 0 6px; }
+.reveal-date { font-family: var(--mono); color: var(--cyan); text-shadow: var(--glow-c); font-size: 14px; }
+.reveal-sum { color: var(--text); font-size: 15px; line-height: 1.55; margin: 10px 0 12px; }
+.reveal a.pill { color: var(--cyan); }
+
+.menu { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 12px; margin-top: 6px; }
+@media (max-width: 560px) { .menu { grid-template-columns: 1fr; } }
+.menu .btn.big { font-size: 15px; }
+.menu-m { border-color: rgba(255, 43, 214, 0.6); color: var(--magenta); text-shadow: var(--glow-m); }
+.menu-c { border-color: rgba(34, 242, 255, 0.6); color: var(--cyan); text-shadow: var(--glow-c); }
+.receipt { margin: 10px 0 14px; padding: 10px 14px; border-radius: 12px; border: 1px dashed var(--acid); background: rgba(182, 255, 59, 0.05); }

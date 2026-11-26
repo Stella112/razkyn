@@ -8,6 +8,7 @@ import {
   type PublicState, type RprvAcc, type ViewAcc,
 } from "../lib/chain";
 import { programError } from "../lib/errors";
+import { explorerTx } from "../lib/config";
 import { getLobby, getReport, subscribeWire, verifyMystery, hex, type ReportFile, type WireLine } from "../lib/keeper";
 import { startGame, type RaidScene } from "../game/RaidScene";
 import { sfx } from "../lib/sfx";
@@ -71,6 +72,10 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const [muted, setMuted] = useState(sfx.muted);
   const prevHp = useRef<number | null>(null);
   const prevVal = useRef<number | null>(null);
+  const [voice, setVoice] = useState(() => { try { return window.localStorage.getItem("razkyn-voice") === "1"; } catch { return false; } });
+  const voiceRef = useRef(voice); voiceRef.current = voice;
+  const toggleVoice = () => setVoice((v) => { const n = !v; try { window.localStorage.setItem("razkyn-voice", n ? "1" : "0"); } catch { /* ignore */ } if (!n) window.speechSynthesis?.cancel(); return n; });
+  const alerted = useRef<Set<number>>(new Set());
   const pop = (text: string) => { const id = Date.now() + Math.random(); setPops((p) => [...p, { id, text }]); setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1500); };
   const pubRef = useRef(pub); pubRef.current = pub;
   const mineRef = useRef(mine); mineRef.current = mine;
@@ -112,7 +117,17 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   // THE WIRE.
   useEffect(() => {
     if (!raidId) return;
-    return subscribeWire(raidId, (l) => setWire((w) => [...w.slice(-80), l]));
+    return subscribeWire(raidId, (l) => {
+      setWire((w) => [...w.slice(-80), l]);
+      // Voice narration (optional): breaking news and in-game events, read by the browser voice.
+      if (voiceRef.current && (l.tag === "BREAKING" || l.tag === "IN-GAME EVENT") && "speechSynthesis" in window) {
+        try {
+          const u = new SpeechSynthesisUtterance(l.text.replace(/[▲▼]/g, ""));
+          u.rate = 1.08; u.pitch = 0.9; u.volume = 0.9;
+          window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+        } catch { /* no voice available */ }
+      }
+    });
   }, [raidId]);
 
   // Raid key + TEE token (players only).
@@ -168,8 +183,11 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     // Loot lands as a jump far bigger than a one-second price move (trades keep the value level).
     if (prev != null && curVal - prev > Math.max(50_000, prev * 0.03) && mine?.rprv?.channelKind !== 2) {
       const gain = curVal - prev;
-      pop(`+${(gain / 1e6).toFixed(2)} dUSD`);
-      sfx.loot();
+      // Rarity by value (the 5.5 dUSD x raiders loot pool averages ~1.2 dUSD a crate).
+      const tier = gain >= 2_000_000 ? "JACKPOT" : gain >= 1_000_000 ? "RARE" : "";
+      pop(`${tier ? tier + " " : ""}+${(gain / 1e6).toFixed(2)} dUSD`);
+      sfx.loot(); if (tier) setTimeout(() => sfx.loot(), 160); if (tier === "JACKPOT") setTimeout(() => sfx.extract(), 320);
+      if (tier) { sceneRef.current()?.burst({ x: mine!.rprv!.x, y: mine!.rprv!.y }, tier === "JACKPOT" ? 0xff2bd6 : 0x22f2ff, tier === "JACKPOT" ? 90 : 55); }
       const sc = sceneRef.current();
       if (sc && mine?.rprv) { sc.burst({ x: mine.rprv.x, y: mine.rprv.y }); sc.popText({ x: mine.rprv.x, y: mine.rprv.y }, `+${(gain / 1e6).toFixed(2)}`); }
     }
@@ -216,7 +234,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     try {
       await player.send(await startIx);
       setChannel({ label, start: Date.now(), ms });
-      if (label.startsWith("Opening")) sfx.open(); else sfx.trade();
+      if (label.startsWith("Ripping")) sfx.open(); else sfx.trade();
       await new Promise((r) => setTimeout(r, ms + 150));
       await player.send(await finishIx());
       say(done);
@@ -251,7 +269,10 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     if (best < 0 || bd > UNIT) { say("Nothing in reach: stand on a crate or a terminal"); return; }
     const district = best < NUM_CRATES ? Math.floor(best / 12) : p.crates[best]!.district; // drop crates are public
     if (best < NUM_CRATES && best % 12 >= 8 && !p.districts[district]?.awake) { say("Dormant crate: wakes when its district is +2%"); return; }
-    void runChannel("Opening crate", 2000, player.openIx(best, district), () => player.finishOpenIx(best), "Crate opened: loot in your backpack");
+    const at = best < NUM_CRATES ? p.raid.cratePos[best] : { x: p.crates[best]!.x, y: p.crates[best]!.y };
+    sceneRef.current()?.startRip(at, 2000);
+    void runChannel("Ripping crate open", 2000, player.openIx(best, district), () => player.finishOpenIx(best), `Crate #${best + 1} open: contents were fixed by this raid's VRF seed`)
+      .finally(() => sceneRef.current()?.stopRip());
   };
 
   const startExtract = async (down: boolean) => {
@@ -353,6 +374,18 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const rolling = useRolling(bpValue);
   const myD = mine?.rprv ? districtOfX(mine.rprv.x) : -1;
   const myRows = myD >= 0 ? HAZARD_ROWS[pub?.districts[myD]?.hazardLevel ?? 0] : undefined;
+  // Trade alert: any raider trading within 12 tiles (their position is public while they trade).
+  const alerts = (pub?.rpubs ?? []).map((r, s) => {
+    if (!r || s === mySlot || !r.exposed || !r.alive || r.extracted || !mine?.rprv) return null;
+    const dx = r.pubX - mine.rprv.x, dy = r.pubY - mine.rprv.y, d = Math.hypot(dx, dy) / 100;
+    if (d > 12) return null;
+    const dir = (dy < -150 ? "N" : dy > 150 ? "S" : "") + (dx > 150 ? "E" : dx < -150 ? "W" : "");
+    return { s, d: Math.round(d), dir: dir || "here", bot: r.isBot };
+  }).filter(Boolean) as { s: number; d: number; dir: string; bot: boolean }[];
+  useEffect(() => {
+    for (const a of alerts) if (!alerted.current.has(a.s)) { alerted.current.add(a.s); sfx.peek(); }
+    for (const s of [...alerted.current]) if (!alerts.some((a) => a.s === s)) alerted.current.delete(s);
+  }, [alerts.map((a) => a.s).join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
   const inHaz = !!(myRows && mine?.rprv && rpub?.alive && Math.floor(mine.rprv.y / 100) >= myRows[0] && Math.floor(mine.rprv.y / 100) <= myRows[1]);
   const outcome = watch ? { t: "RAID OVER", c: "meh" } : rpub?.extracted || myResult?.extracted ? { t: "EXTRACTED", c: "win" } : rpub && !rpub.alive ? { t: "KNOCKED OUT", c: "lose" } : { t: "STRANDED", c: "meh" };
 
@@ -362,6 +395,9 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       <div className="portrait-hint">Turn your phone sideways: RAZKYN plays in landscape.</div>
       <div className={`vignette ${now - hurtAt < 260 ? "on" : inHaz ? "haz" : ""}`} />
       {pops.map((p) => <div key={p.id} className="popup">{p.text}</div>)}
+      {!watch && alerts.length > 0 && (
+        <div className="trade-alert">⚠ {alerts.map((a) => `${a.bot ? "BOT" : "RAIDER"} ${a.s + 1} TRADING · ${a.d} tiles ${a.dir}`).join("  ·  ")}</div>
+      )}
 
       {/* top-left: me */}
       <div className="hud hud-tl">
@@ -370,6 +406,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
           <span className="pill">{raid?.mode === 0 ? "MYSTERY" : "LIVE"}</span>
           {watch ? <span className="pill">WATCH · public only</span> : mySlot >= 0 ? <span className="pill live">RAIDER {mySlot + 1}</span> : null}
           <button className="act mute" title={muted ? "Sound off" : "Sound on"} onClick={() => setMuted(sfx.toggle())}>{muted ? "🔇" : "🔊"}</button>
+          <button className="act mute" title={voice ? "THE WIRE voice on" : "THE WIRE voice off"} onClick={toggleVoice} style={{ opacity: voice ? 1 : 0.5 }}>🎙</button>
         </div>
         {!watch && mySlot >= 0 && (
           <>
@@ -478,17 +515,21 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
             {!report && <p className="dim">Settling on-chain and paying everyone out… (about a minute)</p>}
             {report && (
               <>
-                {report.report.mystery && (
-                  <p style={{ fontSize: 18 }}>
-                    The tape was <b className="mono">{report.report.mystery.day}</b> · Tower = SOL, Factory = BTC, Harbor = ETH ·{" "}
-                    {reveal ? (reveal.ok ? <span className="verified">Verified ✓</span> : <span className="mismatch">Proof mismatch</span>) : "checking proof…"}
-                  </p>
-                )}
+                {report.report.mystery && <Reveal m={report.report.mystery} watch={watch} proof={reveal} />}
                 {!watch && myResult && (
                   <div className="kv" style={{ margin: "12px 0" }}>
                     <span>Outcome</span><span>{myResult.extracted ? <span className="up">Extracted</span> : myResult.alive === false ? <span className="down">Knocked out</span> : "Did not extract"}</span>
                     <span>dUSD paid</span><span className="mono">{fmt(Number(myResult.dusdPayout))} dUSD</span>
                     <span>Minted (devnet demo)</span><span className="mono">{myResult.mintUnits.map((u: string, i: number) => `${(Number(u) / 1e6).toFixed(2)} d${["TWR", "FAC", "HRB"][i]}`).join(" · ")}</span>
+                  </div>
+                )}
+                {!watch && myResult && (
+                  <div className="receipt">
+                    <div className="label">extraction receipt · devnet</div>
+                    {(report.report.claims as { slot: number; sig: string }[]).filter((c) => c.slot === mySlot).map((c) => (
+                      <div key={c.sig} className="mono" style={{ fontSize: 12 }}>claim → your wallet: {c.sig.length > 40 ? <a href={explorerTx(c.sig)} target="_blank" rel="noreferrer">{c.sig.slice(0, 22)}… ↗</a> : c.sig}</div>
+                    ))}
+                    {report.report.settlement?.baseCommit?.length > 40 && <div className="mono" style={{ fontSize: 12 }}>settlement (commit + Magic Action): <a href={explorerTx(report.report.settlement.baseCommit)} target="_blank" rel="noreferrer">{report.report.settlement.baseCommit.slice(0, 22)}… ↗</a></div>}
                   </div>
                 )}
                 {!watch && <div className="debrief">{myDebrief?.text ?? report.report.wire?.debriefs?.find((d: WireLine) => d.slot === mySlot)?.text ?? "THE WIRE is writing your debrief…"}</div>}
@@ -508,6 +549,25 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
         {lastWire && <div className={`chyron-tag ${lastWire.tag.split(" ")[0]}`}>{lastWire.tag}</div>}
         <div className="chyron-text"><span key={wire.length} className="fresh">{lastWire?.text ?? "Waiting for the first move…"}</span></div>
       </div>
+    </div>
+  );
+}
+
+type MysteryEvent = { title: string; summary: string; sources: { url: string; outlet: string }[]; note?: string } | null;
+/** Cinematic Mystery Market Day reveal: the real day, sourced context, and the proof check. */
+function Reveal({ m, watch, proof }: { m: { day: string; event?: MysteryEvent }; watch: boolean; proof: { ok: boolean } | null }) {
+  const date = new Date(`${m.day}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  return (
+    <div className="reveal">
+      <div className="label">{watch ? "the tape was" : "you just survived"}</div>
+      <div className="reveal-title">{m.event?.title ?? "A REAL MARKET DAY"}</div>
+      <div className="reveal-date">{date} · Tower = SOL · Factory = BTC · Harbor = ETH</div>
+      {m.event?.summary && <p className="reveal-sum">{m.event.summary}</p>}
+      <div className="row" style={{ gap: 8 }}>
+        {(m.event?.sources ?? []).map((x) => <a key={x.url} className="pill" href={x.url} target="_blank" rel="noreferrer">{x.outlet} ↗</a>)}
+        <span className="pill">{proof ? (proof.ok ? <span className="verified">price data Verified ✓</span> : <span className="mismatch">proof mismatch</span>) : "checking proof…"}</span>
+      </div>
+      {m.event?.note && <div className="note" style={{ marginTop: 8, fontSize: 11 }}>{m.event.note}</div>}
     </div>
   );
 }

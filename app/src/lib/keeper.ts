@@ -47,6 +47,17 @@ export function subscribeWire(raidId: string, onLine: (l: WireLine) => void): ()
 
 export type ReportFile = { report: Record<string, any>; hash: string; postReportSig: string }; // eslint-disable-line @typescript-eslint/no-explicit-any
 
+export type HistoryItem = {
+  raidId: string; mode: "mystery" | "live"; hash: string; day: string | null; title: string | null;
+  raiders: { slot: number; bot: boolean; wallet: string; extracted: boolean; alive: boolean | null; dusd: string }[];
+};
+export async function getHistory(): Promise<HistoryItem[] | null> {
+  try {
+    const r = await fetch(`${KEEPER_URL}/reports`, { cache: "no-store" });
+    return r.ok ? ((await r.json()) as HistoryItem[]) : null;
+  } catch { return null; }
+}
+
 /** Report from the keeper, falling back to the static copy deployed with the app. */
 export async function getReport(raidId: string, src?: string): Promise<ReportFile | null> {
   const urls = src ? [src] : [`${KEEPER_URL}/reports/${raidId}`, `/reports/${raidId}.json`];

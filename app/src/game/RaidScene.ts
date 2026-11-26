@@ -43,6 +43,7 @@ export class RaidScene extends Phaser.Scene {
   private keys!: Record<"W" | "A" | "S" | "D" | "UP" | "LEFT" | "DOWN" | "RIGHT", Phaser.Input.Keyboard.Key>;
   private display = { x: 0, y: 0, init: false, ang: 0 };
   private flashes: { x1: number; y1: number; x2: number; y2: number; until: number }[] = [];
+  private rip: { x: number; y: number; start: number; ms: number } | null = null;
   stick = { x: 0, y: 0 };
   onShootAt: (wx: number, wy: number) => void = () => {};
   onInteract: () => void = () => {};
@@ -164,6 +165,9 @@ export class RaidScene extends Phaser.Scene {
   }
 
   // ---------- effects (called from the React layer) ----------
+  /** Crate-ripping animation for the open channel (shake, cracks spreading, then the seal breaks). */
+  startRip(u: { x: number; y: number }, ms: number) { this.rip = { x: px(u.x), y: px(u.y), start: this.time.now, ms }; }
+  stopRip() { this.rip = null; }
   flash(fromU: { x: number; y: number }, toU: { x: number; y: number }) {
     this.flashes.push({ x1: px(fromU.x), y1: px(fromU.y), x2: px(toU.x), y2: px(toU.y), until: this.time.now + 140 });
     this.sparks.emitParticleAt(px(fromU.x), px(fromU.y), 6);
@@ -325,6 +329,24 @@ ${bps >= 0 ? "▲" : "▼"} ${(Math.abs(bps) / 100).toFixed(1)}%`).setColor(bps 
       }
       label(s, x, y, `${r.isBot ? "BOT " : "P"}${s + 1}${r.exposed && r.alive ? " · TRADING" : !r.alive ? " · DOWN" : " · OUT"}`, r.exposed ? "#22f2ff" : "#a59bd0");
     });
+
+    // Crate ripping.
+    if (this.rip) {
+      const k = Math.min(1, (time - this.rip.start) / this.rip.ms);
+      const j = (1 + 5 * k) * Math.sin(time / 18);
+      const cx = this.rip.x + j, cy = this.rip.y;
+      const sz = 12 + 6 * k;
+      gl.fillStyle(COL.amber, 0.25 + 0.5 * k).fillCircle(this.rip.x, cy, sz * (2 + 2 * k));
+      top.fillStyle(COL.amber, 1).fillPoints([{ x: cx, y: cy - sz }, { x: cx + sz, y: cy }, { x: cx, y: cy + sz }, { x: cx - sz, y: cy }], true);
+      top.lineStyle(2, 0xffffff, 0.95);
+      const n = Math.floor(2 + 8 * k);
+      for (let c = 0; c < n; c++) {
+        const a = c * 2.399, r = sz * k * 1.1;
+        top.lineBetween(cx, cy, cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+      }
+      top.lineStyle(3, COL.magenta, 0.9).beginPath().arc(this.rip.x, cy, sz * 2.2, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2).strokePath();
+      if (k >= 1) this.rip = null;
+    }
 
     // Muzzle flashes (light up through the fog).
     this.flashes = this.flashes.filter((f) => f.until > time);

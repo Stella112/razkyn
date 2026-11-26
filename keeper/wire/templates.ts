@@ -34,11 +34,11 @@ export function templateLine(f: Fact): string {
         ? `${D(f.district)} ${f.move30Bps > 0 ? "rips" : "slides"} ${pct(f.move30Bps)} in 30s, ${pct(f.bps)} on the raid`
         : `${D(f.district)} drifts, ${pct(f.bps)} since the drop`;
     case "hazard":
-      return f.level >= 2 ? `${D(f.district)} floor caves in: hazard zone doubled` : `${D(f.district)} cracks open, hazard tiles live at 10 HP/s`;
+      return f.level >= 2 ? `MARKET CRASH: ${D(f.district)} floor caves in, hazard zone doubled` : `VOLATILITY ALERT: ${D(f.district)} cracks open, hazard tiles at 10 HP/s`;
     case "wake":
-      return `${D(f.district)} up 2%+: dormant crates wake`;
+      return `LIQUIDITY SURGE: ${D(f.district)} up 2%+, dormant crates wake`;
     case "exit_open":
-      return `Exit window ${f.window} open: two exits live for 30s`;
+      return `EXTRACTION WATCH: exit window ${f.window} open, two exits for 30s`;
     case "exposed":
       return `${raiderName(f.slot, f.bot)} trading in ${D(f.district)}, position exposed`;
     case "crate_opened":
@@ -67,7 +67,7 @@ export type DebriefInput = {
   bestBps: number;
   worstDistrict: number;
   worstBps: number;
-  reveal?: { day: string; tracks: string[] } | null;
+  reveal?: { day: string; title?: string; tracks: string[] } | null;
 };
 
 export function templateDebrief(d: DebriefInput): string {
@@ -80,6 +80,6 @@ export function templateDebrief(d: DebriefInput): string {
     `${D(d.bestDistrict)} was the market's best district (${pct(d.bestBps)}); ${D(d.worstDistrict)} the worst (${pct(d.worstBps)}).`,
     `Payout ${(d.payout / 1e6).toFixed(2)} dUSD on a ${(d.stake / 1e6).toFixed(0)} dUSD stake (${pnl >= 0 ? "+" : ""}${pnl.toFixed(1)}%).`,
   ];
-  if (d.reveal) parts.push(`The tape was ${d.reveal.day}: ${d.reveal.tracks.join(", ")}.`);
+  if (d.reveal) parts.push(`The tape was ${d.reveal.title ? `${d.reveal.title}, ` : ""}${d.reveal.day}: ${d.reveal.tracks.join(", ")}.`);
   return parts.join(" ");
 }

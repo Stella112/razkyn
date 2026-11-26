@@ -76,7 +76,12 @@ export async function runRaid(o: RaidOptions) {
     const steps = JSON.parse(readFileSync(join(REPO, "data", "mystery", "private", "slices", `${day.day}.json`), "utf8")).steps;
     await S.loadAndVerify(day, steps);
     mysterySteps = steps;
-    mysteryDay = { leafIndex: idx, leafCount: merkle.leafCount, root: merkle.root, day: day.day, sliceStart: day.sliceStart, dataHash: day.dataHash, headlinesHash: day.headlinesHash, leaf: day.leaf, proof: day.proof, kind: day.kind, sources: day.urls };
+    // Sourced context for the reveal (data/mystery/private/events.json): what happened that day, with links.
+    // Added after the raid for the player; it is not part of the committed Merkle leaf.
+    const evFile = join(REPO, "data", "mystery", "private", "events.json");
+    const ev = existsSync(evFile) ? (JSON.parse(readFileSync(evFile, "utf8")) as { day: string; title: string; summary: string; sources: { url: string; outlet: string }[] }[]).find((e) => e.day === day.day) : undefined;
+    mysteryDay = { leafIndex: idx, leafCount: merkle.leafCount, root: merkle.root, day: day.day, sliceStart: day.sliceStart, dataHash: day.dataHash, headlinesHash: day.headlinesHash, leaf: day.leaf, proof: day.proof, kind: day.kind, sources: day.urls,
+      event: ev ? { title: ev.title, summary: ev.summary, sources: ev.sources, note: "Context added after the raid from the linked reporting; not part of the committed Merkle leaf." } : null };
   }
   await S.start();
   // Raid clock: TEE unix time (the WSL clock can be several seconds off).
@@ -169,7 +174,7 @@ export async function runRaid(o: RaidOptions) {
       cratesOpened: mine.filter((f) => f.kind === "crate_opened").length, trades: mine.filter((f) => f.kind === "exposed").length,
       payout: Number(res.raiders[s].dusdPayout.toString()) + Number((res.raiders[s] as unknown as { mintValue: anchor.BN }).mintValue.toString()), stake: 10_000_000,
       bestDistrict: best, bestBps: finalBps[best], worstDistrict: worst, worstBps: finalBps[worst],
-      reveal: mysteryDay ? { day: String(mysteryDay.day), tracks: ["SOLUSDT (Tower)", "BTCUSDT (Factory)", "ETHUSDT (Harbor)"] } : null,
+      reveal: mysteryDay ? { day: String(mysteryDay.day), title: (mysteryDay.event as { title?: string } | null)?.title, tracks: ["SOLUSDT (Tower)", "BTCUSDT (Factory)", "ETHUSDT (Harbor)"] } : null,
     }, headlines));
   }));
   debriefs.sort((a, b) => (a.slot ?? 0) - (b.slot ?? 0));

@@ -6,7 +6,7 @@
 // THE WIRE lines are public by construction (public facts + post-filter); reports are published
 // after settlement; the lobby holds only public ids.
 import { createServer, type Server } from "node:http";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { REPO } from "../../scripts/spike-lib.ts";
 import type { Wire, WireLine } from "./wire.ts";
@@ -56,6 +56,22 @@ export class WireServer {
           json(r.ok ? 202 : 409, r);
         });
         return;
+      }
+      // Raid history: newest first, a short public summary of each published report.
+      if (url === "/reports" && req.method === "GET") {
+        const dir = join(REPO, "app", "public", "reports");
+        const files = existsSync(dir) ? readdirSync(dir).filter((f) => /^\d+\.json$/.test(f)) : [];
+        const list = files.map((f) => {
+          try {
+            const { report: r, hash } = JSON.parse(readFileSync(join(dir, f), "utf8"));
+            return {
+              raidId: r.raid.id, mode: r.raid.mode, hash, day: r.mystery?.day ?? null, title: r.mystery?.event?.title ?? null,
+              raiders: (r.raiders as { slot: number; bot: boolean; wallet: string | null; extracted: boolean; alive: boolean | null; dusdPayout: string }[])
+                .filter((x) => x.wallet).map((x) => ({ slot: x.slot, bot: x.bot, wallet: x.wallet, extracted: x.extracted, alive: x.alive, dusd: x.dusdPayout })),
+            };
+          } catch { return null; }
+        }).filter(Boolean).sort((a, b) => Number(BigInt(b!.raidId) - BigInt(a!.raidId) > 0n ? 1 : -1));
+        return json(200, list.slice(0, 50));
       }
       const rep = /^\/reports\/(\d+)\/?$/.exec(url);
       if (rep) {
