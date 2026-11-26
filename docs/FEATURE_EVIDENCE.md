@@ -71,3 +71,22 @@ All cosmetic and saved in the browser (localStorage); nothing here touches rules
 - Settlement: 18 bets, staked 145 dPLAY, paid 145 dPLAY (wins 40 + refunds 105) in one transaction `3wZnifqY…`; leaderboard dJnD 4/9 correct, best streak 3. Report hash posted `3y1CthsR…`.
 - UI: `live-picks-watch.jpg` (cards with countdown, LOCKED stamp, share per choice, EXTRACTS rows below).
 - Finding: the 3 s / 5 s locks are tight for base-layer transactions with a wallet popup (confirmation ~1–2 s); a dev wallet or quick approval is needed.
+
+## RAZKYN LIVE on-chain (DECISIONS #39) — devnet raid 1795715322915
+| Acceptance test (upgrade doc) | Status | Evidence |
+|---|---|---|
+| Two real clients in the same spectator session | Built | Browser dev wallet `FPizAE…` (razkyn.vercel.app/watch) + `scripts/spectator-onchain.ts` `Eh9cEc…`; both on the on-chain leaderboard |
+| Prediction via the intended MagicBlock flow | Built | Pick book delegated to the TEE; session-key transactions on the Private ER; register `T3kCtE7q…`, picks e.g. `2A5EbsfG…` |
+| Closes at the authoritative deadline / late rejected | Built | Program clock: late pick on pool 13 refused 6053 (PicksClosed); MagicSVM test too |
+| One choice per participant / duplicate protection | Built | Duplicate on EXTRACTS r1 refused 6057 (AlreadyPicked) |
+| Verified raid outcome decides the result | Built | resolve_picks reads only Raid, District, RaiderPublic (MagicSVM asserts the account list); outcomes: 8× EXTRACTS YES, NEXT CRACK NONE, KNOCKOUT NO; a real knockout resolves YES in MagicSVM |
+| Cranks for closure | Built | ScheduleCrankCpi scheduled at the drop (sig in the report); the keeper also resolves as an idempotent fallback |
+| Leaderboard scores update correctly | Built | 10/10 → 110 credits, 1/2 → 90; total 200 = 2 × 100 |
+| Repeated requests cannot produce duplicate claims | Built | Badge claimed once (`2N3E11Gs…`, 1 token); second claim refused 6047 (AlreadyClaimed) on devnet |
+| VRF reward drops | Built | Streak badge variant = hash(raid VRF seed, "streak", wallet); badge is a transferable devnet SPL token |
+| Cancelled / failed raids | Built | cancel_picks refunds every open pool (MagicSVM); serve mode calls it when a raid fails |
+| THE WIRE opens and results | Built | "PICKS OPEN: a knockout in the next 30 s? Locks in 3s", "LIVE PICK: no district cracked · 100% of spectators called it, paid 1.0×" |
+| Awards | Built | Top Raider, Biggest Extraction, Most Dramatic Escape (wounded only), Most Knockouts, Top Spectator — report + end screen |
+| Spectator cameras, streamer overlay | Built | Watch mode camera bar (overview, districts, action cam, follow public raiders); `/overlay` |
+| Original 3D raid still playable / regressions | Built | 19 earlier MagicSVM tests pass; the raid ran end to end with settlement and claims |
+| Finding | — | Pick confirmation from this machine ~3–3.6 s, so 3 s KNOCKOUT locks are often missed |
