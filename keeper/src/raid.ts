@@ -14,7 +14,7 @@ import { BotCrew } from "./bots.ts";
 import { Ticker, type TickStats } from "./ticker.ts";
 import { publishReport } from "./report.ts";
 import { claimAll } from "./claimer.ts";
-import { BetBook, BET_CLOSE_SECS } from "./bets.ts";
+import { BetBook } from "./bets.ts";
 import { PublicFeed } from "../wire/facts.ts";
 import { Wire, loadHeadlines, type WireLine } from "../wire/wire.ts";
 import type { WireServer } from "../wire/server.ts";
@@ -97,13 +97,15 @@ export async function runRaid(o: RaidOptions) {
   const startTs = Number(((await S.readRaid()) as unknown as { startTs: anchor.BN }).startTs.toString());
   const offset = ((await S.teeK.getBlockTime(await S.teeK.getSlot())) ?? Date.now() / 1000) - Date.now() / 1000;
   const elapsed = () => Date.now() / 1000 + offset - startTs;
-  (book as { closeTs: number }).closeTs = startTs + BET_CLOSE_SECS;
+  book.start(startTs); // EXTRACTS locks at start + 270 s; pick windows from the on-chain start time
   o.wireServer?.patchLobby({ phase: "live", startTs });
   lap(`live (VRF ${vrfMs} ms${mystery ? `, mystery leaf ${(mysteryDay as { leafIndex: number }).leafIndex}` : ""})`);
 
   // THE WIRE: public facts only, read with a key that is never a permission member.
   const wire = new Wire(o.mode === "mystery" ? "mystery" : "live"); // Live Markets talks about price moves only, like Live
-  const feed = new PublicFeed(S.raidId, (f) => wire.push(f));
+  // The public feed resolves spectator picks (cracks, knockouts) and THE WIRE announces the results.
+  book.onResult = (f) => wire.push(f);
+  const feed = new PublicFeed(S.raidId, (f) => { wire.push(f); book.onFact(f); });
   feed.assertNotMember([S.keeper.publicKey, ...S.raiders.flatMap((r) => (r ? [r.raidKey.publicKey, r.wallet.publicKey] : []))]);
   o.wireServer?.register(S.raidId.toString(), wire);
   wire.subscribe((l) => log(`  WIRE [${l.tag}] ${l.text}${l.source === "template" ? " (template)" : ""}`));
@@ -243,7 +245,7 @@ export async function runRaid(o: RaidOptions) {
     settlement: { endRaid: endSig, baseCommit, settledVia: st.settledVia, settleStuck: stuckSig },
     claims,
     tick: { ...tick, mode: tickMode, hz: o.hz },
-    spectators: { ...book.view(), rules: "dPLAY play-money (devnet). Parimutuel per raider: the winning side splits that raider's pool pro rata; no winners or late bets are refunded. Bets count until raid start + 270 s." },
+    spectators: { ...book.view(), rules: "dPLAY play-money (devnet). EXTRACTS(raider) until raid start + 270 s; LIVE picks: NEXT CRACK every 60 s (locks after 5 s, watches the next 60 s), KNOCKOUT IN 30 S every 30 s (locks after 3 s, watches the next 30 s). A bet counts only if its on-chain block time is inside its window. Outcomes from public state only. Parimutuel, no dust; no winners or late bets are refunded." },
     wire: { model: "claude-sonnet-5-5", stats: wireStats, live: wire.lines.filter((l) => l.tag !== "DEBRIEF"), debriefs, headlinesCited: debriefs.flatMap((d) => d.headlines ?? []) },
   };
   const pub = await publishReport(S, report);

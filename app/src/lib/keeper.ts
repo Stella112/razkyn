@@ -47,10 +47,16 @@ export function subscribeWire(raidId: string, onLine: (l: WireLine) => void): ()
 
 export type ReportFile = { report: Record<string, any>; hash: string; postReportSig: string }; // eslint-disable-line @typescript-eslint/no-explicit-any
 
+export type PickView = {
+  type: "C" | "D"; window: number; openTs: number; lockTs: number; endTs: number; name: string; choices: string[]; totals: number[]; bets: number;
+  result: { outcome: number; resolvedTs: number; total: number; winning: number; pct: number; mult: number } | null;
+};
 export type BetView = {
-  raidId: string; closeTs: number; open: boolean; keeperAta: string; mint: string; settled: boolean; outcomes: boolean[] | null;
+  raidId: string; startTs?: number; closeTs: number; open: boolean; keeperAta: string; mint: string; settled: boolean; outcomes: boolean[] | null;
   pools: { slot: number; yes: number; no: number; count: number }[];
-  bets: { sig: string; bettor: string; slot: number; side: "Y" | "N"; amount: number; late: boolean }[];
+  picks?: PickView[];
+  leaderboard?: { bettor: string; picks: number; correct: number; bestStreak: number; net: number }[];
+  bets: { sig: string; bettor: string; slot: number; side: "Y" | "N" | ""; pool?: string; choice?: number; amount: number; late: boolean }[];
   payouts: { bettor: string; amount: number; reason: "win" | "refund"; sig?: string }[];
 };
 export async function getBets(raidId: string): Promise<BetView | null> {

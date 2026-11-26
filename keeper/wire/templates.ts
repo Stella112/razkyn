@@ -13,7 +13,7 @@ const D = (d: number) => DISTRICTS[d] ?? "District";
 export const isEvent = (f: Fact) => f.kind === "hazard" || f.kind === "wake" || f.kind === "exit_open" || f.kind === "market_event";
 
 const PRIORITY: Record<Fact["kind"], number> = {
-  kill: 9, extract: 8, exposed: 7, crate_opened: 5, hazard: 6, wake: 6, exit_open: 6, market_event: 8, raid_end: 10, price: 1,
+  kill: 9, extract: 8, exposed: 7, crate_opened: 5, hazard: 6, wake: 6, exit_open: 6, market_event: 8, pick_result: 7, raid_end: 10, price: 1,
 };
 
 /** Pick the most newsworthy fact of a batch (ties: latest). */
@@ -51,6 +51,11 @@ export function templateLine(f: Fact): string {
       return f.event === 1 ? `TRADING HALT: ${D(f.district)} terminals frozen for 30s`
         : f.event === 2 ? "RATE SHOCK: hazards trigger early across the map for 30s"
         : `EARNINGS SURPRISE: ${D(f.district)} crates wake, loot unlocked`;
+    case "pick_result": {
+      const crowd = f.bets ? ` · ${f.pct}% of spectators called it${f.mult10 ? `, paid ${(f.mult10 / 10).toFixed(1)}×` : ""}` : "";
+      if (f.pick === 0) return `LIVE PICK: ${f.outcome === 3 ? "no district cracked" : `${D(f.outcome)} cracked first`}${crowd}`;
+      return `LIVE PICK: ${f.outcome === 0 ? "a raider went down" : "nobody went down"} in that 30 s${crowd}`;
+    }
     case "raid_end":
       return "Raid over. Settlement is on its way to the base layer";
   }

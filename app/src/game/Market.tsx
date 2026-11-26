@@ -4,7 +4,8 @@
 import { useEffect, useState } from "react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
-import { buildBetTx, base, playBalance, type PublicState } from "../lib/chain";
+import { buildBetTx, base, districtNames, playBalance, type PublicState } from "../lib/chain";
+import LivePicks from "./LivePicks";
 import { explorerTx } from "../lib/config";
 import { getBets, type BetView } from "../lib/keeper";
 import { useGameWallet } from "../lib/wallet";
@@ -68,7 +69,7 @@ export default function Market({ raidId, pub }: { raidId: string; pub: PublicSta
   return (
     <div className="hud-box market">
       <div className="row" style={{ justifyContent: "space-between" }}>
-        <div className="label neon-a" style={{ letterSpacing: "0.14em" }}>EXTRACTION MARKET · dPLAY</div>
+        <div className="label neon-a" style={{ letterSpacing: "0.14em" }}>EXTRACTION MARKET · RAZKYN LIVE · dPLAY</div>
         <button className="act mute" onClick={() => setOpen((o) => !o)}>{open ? "–" : "+"}</button>
       </div>
       {open && (
@@ -85,6 +86,8 @@ export default function Market({ raidId, pub }: { raidId: string; pub: PublicSta
             </div>
           )}
           {raid.raiders.every((r) => !r.joined) && <div className="note" style={{ fontSize: 11 }}>Raiders appear here as they join.</div>}
+          <LivePicks book={book} amount={amount} names={districtNames(raid.mode).map((n) => n.toUpperCase())} onMsg={setMsg} />
+          <div className="lp-sub" style={{ marginTop: 8 }}>EXTRACTS? · per raider</div>
           <div className="mkt-rows">
             {raid.raiders.map((r, s) => {
               if (!r.joined) return null;
@@ -92,7 +95,7 @@ export default function Market({ raidId, pub }: { raidId: string; pub: PublicSta
               const pool = book?.pools[s] ?? { yes: 0, no: 0 };
               const tot = pool.yes + pool.no;
               const pYes = tot ? Math.round((pool.yes / tot) * 100) : 50;
-              const status = rp?.extracted ? "OUT ✔" : rp && !rp.alive ? "DOWN ✖" : "IN RAID";
+              const status = rp?.extracted ? "OUT" : rp && !rp.alive ? "DOWN" : "IN RAID";
               const outcome = book?.outcomes ? (book.outcomes[s] ? "EXTRACTED" : "DIDN'T") : null;
               return (
                 <div key={s} className="mkt-row">
@@ -103,17 +106,17 @@ export default function Market({ raidId, pub }: { raidId: string; pub: PublicSta
                   </div>
                   {canBet && w.publicKey && !rp?.extracted && rp?.alive !== false && (
                     <div className="row" style={{ gap: 4, flexWrap: "nowrap" }}>
-                      <button className="chip yes" disabled={!!busy} onClick={() => bet(s, "Y")} title="Bet that this raider extracts">✔</button>
-                      <button className="chip no" disabled={!!busy} onClick={() => bet(s, "N")} title="Bet that this raider does not extract">✖</button>
+                      <button className="chip yes" disabled={!!busy} onClick={() => bet(s, "Y")} title="Bet that this raider extracts">YES</button>
+                      <button className="chip no" disabled={!!busy} onClick={() => bet(s, "N")} title="Bet that this raider does not extract">NO</button>
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
-          {busy && <div className="note">⏳ {busy}</div>}
+          {busy && <div className="note">{busy}</div>}
           {msg && <div className="note" style={{ color: "var(--text)" }}>{msg}</div>}
-          {myBets.length > 0 && <div className="note" style={{ fontSize: 11 }}>Your bets: {myBets.map((b) => `${b.amount} on P${b.slot + 1} ${b.side === "Y" ? "✔" : "✖"}${b.late ? " (late, refunded)" : ""}`).join(" · ")}</div>}
+          {myBets.length > 0 && <div className="note" style={{ fontSize: 11 }}>Your bets: {myBets.map((b) => `${b.amount} on P${b.slot + 1} ${b.side === "Y" ? "extracts" : "doesnt"}${b.late ? " (late, refunded)" : ""}`).join(" · ")}</div>}
           {myPay.map((p) => (
             <div key={`${p.reason}${p.sig}`} className="note neon-a" style={{ fontSize: 12 }}>
               {p.reason === "win" ? "WON" : "REFUND"} {p.amount} dPLAY {p.sig && p.sig.length > 40 && <a href={explorerTx(p.sig)} target="_blank" rel="noreferrer">tx ↗</a>}

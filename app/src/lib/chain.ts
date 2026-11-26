@@ -230,6 +230,13 @@ export const MEMO_PROGRAM = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDL
 export async function playBalance(wallet: PublicKey) {
   return base.getTokenAccountBalance(walletAta(wallet, PLAY)).then((b) => Number(b.value.amount)).catch(() => 0);
 }
+/** RAZKYN LIVE pick: same transfer + memo razkyn-pick:<raid>:<C|D>:<window>:<choice> (keeper/src/picks.ts). */
+export async function buildPickTx(wallet: PublicKey, raidId: string, type: "C" | "D", window: number, choice: number, amount: number, keeperAta: PublicKey): Promise<Transaction> {
+  const tx = await buildBetTx(wallet, raidId, 0, "Y", amount, keeperAta);
+  const memoIx = tx.instructions.findIndex((ix) => ix.programId.equals(MEMO_PROGRAM));
+  tx.instructions[memoIx] = new TransactionInstruction({ programId: MEMO_PROGRAM, keys: [{ pubkey: wallet, isSigner: true, isWritable: false }], data: Buffer.from(`razkyn-pick:${raidId}:${type}:${window}:${choice}`, "utf8") });
+  return tx;
+}
 /** One bet = free dPLAY from the faucet if needed + a dPLAY transfer to the keeper + a memo naming raid, raider and side. */
 export async function buildBetTx(wallet: PublicKey, raidId: string, slot: number, side: "Y" | "N", amount: number, keeperAta: PublicKey): Promise<Transaction> {
   const ata = walletAta(wallet, PLAY);

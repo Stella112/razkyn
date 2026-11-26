@@ -159,6 +159,32 @@ export default function Report({ raidId }: { raidId: string }) {
                   </tbody>
                 </table>
                 {(r.spectators.bets as unknown[]).length === 0 && <p className="note">No bets this raid.</p>}
+                {Array.isArray(r.spectators.picks) && (
+                  <>
+                    <div className="label" style={{ marginTop: 12 }}>RAZKYN LIVE picks · resolved from public raid state</div>
+                    <table className="t">
+                      <thead><tr><th>Pick</th><th>Window</th><th>Outcome</th><th>Picks</th><th>Called it</th><th>Paid</th></tr></thead>
+                      <tbody>
+                        {(r.spectators.picks as { type: string; window: number; name: string; choices: string[]; bets: number; result: { outcome: number; pct: number; mult: number } | null }[]).map((p) => (
+                          <tr key={`${p.type}${p.window}`}>
+                            <td>{p.name}</td><td className="mono">{p.window + 1}</td>
+                            <td>{p.result ? (p.type === "C" && p.result.outcome < 3 ? DN[p.result.outcome] : p.choices[p.result.outcome]) : "—"}</td>
+                            <td className="mono">{p.bets}</td><td className="mono">{p.result && p.bets ? `${p.result.pct}%` : "—"}</td>
+                            <td className="mono">{p.result?.mult ? `${p.result.mult.toFixed(1)}×` : p.bets ? "refund" : "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {Array.isArray(r.spectators.leaderboard) && r.spectators.leaderboard.length > 0 && (
+                      <>
+                        <div className="label" style={{ marginTop: 10 }}>Top spectators</div>
+                        {(r.spectators.leaderboard as { bettor: string; picks: number; correct: number; bestStreak: number; net: number }[]).slice(0, 10).map((x, i) => (
+                          <div key={x.bettor} className="mono" style={{ fontSize: 12 }}>{i + 1}. {x.bettor.slice(0, 4)}…{x.bettor.slice(-4)} · {x.correct}/{x.picks} correct · best streak {x.bestStreak} · net {x.net >= 0 ? "+" : ""}{x.net} dPLAY</div>
+                        ))}
+                      </>
+                    )}
+                  </>
+                )}
                 {(r.spectators.payouts as { bettor: string; amount: number; reason: string; sig?: string }[]).map((p, i) => (
                   <div key={i} className="mono" style={{ fontSize: 12 }}>{p.reason === "win" ? "won" : "refund"} {p.amount} dPLAY → {p.bettor.slice(0, 4)}…{p.bettor.slice(-4)} {p.sig && p.sig.length > 40 && <a href={explorerTx(p.sig)} target="_blank" rel="noreferrer">tx ↗</a>}</div>
                 ))}

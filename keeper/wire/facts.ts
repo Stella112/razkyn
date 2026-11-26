@@ -32,6 +32,8 @@ export type Fact =
   | { kind: "kill"; t: number; slot: number; bot: boolean; by: number | null; byBot: boolean | null }
   | { kind: "extract"; t: number; slot: number; bot: boolean }
   | { kind: "market_event"; t: number; event: number; district: number }
+  /** RAZKYN LIVE pick resolved (bets.ts): pick 0 = NEXT CRACK, 1 = KNOCKOUT IN 30 S; pct / mult from recorded bets. */
+  | { kind: "pick_result"; t: number; pick: number; window: number; outcome: number; pct: number; mult10: number; bets: number }
   | { kind: "raid_end"; t: number };
 /** Market events (constants.rs EVENT_*), public on Raid once fired. */
 export const MARKET_EVENTS = ["", "TRADING HALT", "RATE SHOCK", "EARNINGS SURPRISE"] as const;
@@ -55,6 +57,7 @@ export function sanitizeFact(f: unknown): Fact | null {
     case "kill": return { kind: "kill", t, slot: slotOf(o.slot), bot: bool(o.bot), by: o.by == null ? null : slotOf(o.by), byBot: o.byBot == null ? null : bool(o.byBot) };
     case "extract": return { kind: "extract", t, slot: slotOf(o.slot), bot: bool(o.bot) };
     case "market_event": return { kind: "market_event", t, event: Math.min(3, Math.max(1, int(o.event))), district: dist(o.district) };
+    case "pick_result": return { kind: "pick_result", t, pick: Math.min(1, Math.max(0, int(o.pick))), window: Math.max(0, int(o.window)), outcome: Math.min(3, Math.max(0, int(o.outcome))), pct: Math.min(100, Math.max(0, int(o.pct))), mult10: Math.max(0, int(o.mult10)), bets: Math.max(0, int(o.bets)) };
     case "raid_end": return { kind: "raid_end", t };
     default: return null;
   }
