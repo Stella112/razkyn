@@ -1,92 +1,203 @@
 # R A Z K Y N — RAID. TRADE. EXTRACT.
 
-**A market-driven multiplayer extraction game on Solana.** Built for MagicBlock Solana Blitz v10 (Entertainment Finance).
+**A market-driven multiplayer extraction game on Solana, built on MagicBlock.**
+MagicBlock Solana Blitz v10 · Entertainment Finance · Games · DeFi · Privacy
 
-Eight raiders drop into a 64 × 40 map for five minutes. The map is the market: three districts — Tower, Factory and Harbor — each follow an asset's price tape. A rising district glows and wakes dormant crates; a falling one cracks its floor into hazard tiles. Sealed crates hold real (devnet) loot whose contents stay private inside a TEE until someone opens them. Trade at terminals (your position is public while you do), fight in the fog from behind cover, and stand on an open exit for five seconds to extract — your backpack settles to your wallet. An AI newsroom, **THE WIRE**, narrates every public move.
+![RAZKYN title screen: the city at night, DEPLOY, and the last raid's verified report](docs/screens/title-v3.jpg)
+
+> **In RAZKYN, a market crash changes the map while you're still carrying loot.** You can rebalance at a terminal, but doing so reveals your position. Survive the raid and your extracted rewards settle to your Solana devnet wallet.
+
+**[Play it now](https://razkyn.vercel.app)** · **[A verified raid report](https://razkyn.vercel.app/report/1795735156066)** · **[Program on Solana Explorer](https://explorer.solana.com/address/CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97?cluster=devnet)** · **[Submission](SUBMISSION.md)**
+
+No setup needed: open the site, press **DEPLOY → OPEN RAID**, press **Use a dev wallet** (or connect Phantom on devnet) and join. One signature; the game server covers the join fee for an empty devnet wallet.
 
 > Devnet demo. dUSD, dTWR, dFAC, dHRB and dPLAY are transferable devnet game tokens, not shares and not real money. BOT raiders are labelled BOT everywhere.
 
-**Quick start:** open https://razkyn.vercel.app → **DEPLOY** → **OPEN RAID** (Mystery Market) → connect a devnet wallet or press **Use a dev wallet** → join (one signature; no devnet SOL needed, the game server covers the join fee for an empty wallet) → play. After the raid, verify any payout from chain data with `npx tsx scripts/payout-proof.ts <raid_id>`. Program: `CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97` (devnet).
+---
 
-## Why MagicBlock
+## At a glance
 
-**The problem.** Extraction games are huge, but their loot is worthless outside the game. Trading apps are real, but they feel like casinos. Fantasy stock games teach the market, but nothing you win is real.
-
-**Who has it.** Extraction-game players who grind for loot they can never own, and crypto-curious players who want market stakes with game mechanics instead of a trading terminal.
-
-**Best alternatives and the pain they leave in place**
-| Alternative | What still hurts |
+| | |
 |---|---|
-| Web2 game server | Players must trust the operator not to peek at loot, rig crates or backdate moves. Prizes are custodied points |
-| Plain Solana | ~400 ms confirmations are too slow for live combat, every move costs a fee, and every backpack is public |
-| Another fast chain | Cut off from Solana wallets, SPL tokens and the tokenized-asset rails the loot settles into |
+| **32 raids** settled on devnet | each with a hash-checked report on-chain ([raid history](https://razkyn.vercel.app/history)) |
+| **8 raiders, 5 minutes, 10 ticks/s** | movement, combat, looting and trading run gasless on MagicBlock's Private Ephemeral Rollup (TEE) |
+| **1 wallet signature** | a raid-scoped session key signs every move after that: no popups, no fees |
+| **3 market modes** | a real past crypto day (Mystery), live SOL/BTC/ETH, live NVDA/TSLA/SOL from MagicBlock's Pricing Oracle |
+| **0 peeks** | sealed crates, other raiders and the secret day are refused by the TEE, live, from your own browser |
+| **28 / 28** MagicSVM tests · **6** devnet test suites | conservation, cheats, privacy, settlement recovery, load, report tamper |
 
-**Edge.** Only a TEE-backed rollup at ~10–20 ms of execution time (measured in spike S2, on top of network round trip) lets 8 players fight over hidden, real assets in a live market, where no rival can peek and every move is timestamped onchain.
+---
 
-**What each MagicBlock piece does in RAZKYN**
-| Piece | Job |
+## The problem
+
+- **Extraction games are huge, but their loot is worthless outside the game.** You grind for hours for items you can never own.
+- **Trading apps are real, but they feel like casinos.** A chart and a buy button teach nothing and reward impulse.
+- **Fantasy stock games teach the market, but nothing you win is real.**
+
+And building the honest version is hard: a game server can peek at hidden loot, rig crates and backdate moves; a plain blockchain is too slow for live combat (~400 ms confirmations), charges a fee for every step, and makes every backpack public.
+
+## The solution
+
+RAZKYN turns the market into a map you physically survive.
+
+| The market... | ...becomes gameplay |
 |---|---|
-| Private Ephemeral Rollup (TEE) + permissions | Fog of war, sealed crates, private backpacks, the secret mystery day. "Try to peek" shows the refusal live |
-| Ephemeral Rollup execution | Gasless movement, shooting, trading and looting at 10 Hz (100 ms ticks; from the game server every tick transaction sent in a 300 s raid confirmed (5,908/5,908), p95 376 ms including network) |
-| VRF | Spawns, crate contents, exits, the two market events and the mystery-day pick, verifiable on the report page |
-| MagicBlock Pricing Oracle (read on the TEE with full validation) | Live district prices: SOL/BTC/ETH (Live Crypto) or NVDA/TSLA/SOL (Live Markets) |
-| Commit + Magic Action | One settlement commit; per-raider claims that can't pay twice, with a recovery path anyone can trigger |
-| Raid keys | One wallet signature to join, then no popups |
+| Three assets | Three districts: **Tower**, **Factory**, **Harbor** |
+| A district rises 2% | It glows and **wakes dormant loot crates** |
+| A district falls 2% | Its floor **cracks into hazard tiles** that drain 10 HP/s (−5%: twice the area) |
+| Your portfolio | Your **backpack**, whose dollar value ticks live with the prices |
+| Rebalancing | A **terminal trade** that takes 3 s and **exposes your position** to everyone |
+| Taking profit | **Extracting**: stand on an open exit for 5 s and the bag settles to your wallet |
+| A crash day you lived through | **Mystery Market Day**: the city replays a real day; you learn which one only after the raid, with a Merkle proof |
 
-**Honest limits.** Devnet only. dTWR/dFAC/dHRB are devnet demo tokens, not shares. The keeper is the game operator and holds permission to private state (like a game server). THE WIRE never does.
+Everything that decides money runs on-chain: movement, damage, line of sight, crate contents, market events and payouts come from program rules and VRF, never from the client.
 
-## How to play
+---
 
-1. **Lobby** (`/play`): press **DEPLOY**, pick a mode (Mystery Market, Live Crypto, or NVDA · TSLA · SOL), connect Phantom or Solflare (or the labelled devnet dev wallet) and pick a class. One signature faucets 10 dUSD if needed and stakes it: 2.0 protected slot (20%), 7.5 loot pool, 0.5 ops (DECISIONS #41). Set a handle and press READY; when every joined player is ready the raid drops early.
-2. **Drop**: a raid-scoped key (a burner in your browser) signs every in-raid move on the TEE. No wallet popups, no gas; the raid key can never move tokens.
-3. **Move** WASD (touch stick on phones) · **open a crate / trade** E · **shoot** click a raider in range (6 tiles, 34 damage, 500 ms cooldown; Gunner 7 tiles, 400 ms) · **extract** hold Space on an open exit (windows at 120 s, 210 s and 270 s, 30 s each) · **Tab** inventory · **M** full map. 13 cover blocks (grey with an amber cap) stop movement and shots: the program refuses a move onto cover and a shot without a clear line of sight.
-4. **Try to peek** sends real reads of a sealed crate, another raider's private state and the raid secret over the TEE with your own token, and shows the refusal.
-5. After the raid: Mystery mode reveals the real day with a Merkle proof the browser checks, THE WIRE writes your debrief, and the **Market Raid Report** (`/report/:id`) recomputes its own hash against the one stored on-chain.
+## How a raid plays
 
-Payouts (Option A): an extracted raider gets the protected slot plus their backpack, minted as dTWR/dFAC/dHRB backed in a reserve; a knocked-out raider gets the protected slot and their backpack drops as a crate; unextracted loot goes back to everyone pro rata by stake. `sum(payouts) + ops == sum(stakes)` is asserted in the program.
+| | |
+|---|---|
+| ![Trading at a terminal while a BOT closes in](docs/screens/after-trading-exposed.jpg) | ![Cracking a sealed crate: contents fixed by the raid's VRF seed](docs/screens/pass2-crate-opened.jpg) |
+| **Trade under fire.** A terminal trade exposes your position for 3 s; a hit cancels it. | **Sealed crates.** Contents were fixed by the raid's VRF seed and stay hidden in the TEE until opened. |
+| ![A TRADING HALT market event while a BOT attacks](docs/screens/pass2-trading-halt.jpg) | ![Watch mode with RAZKYN LIVE on-chain picks](docs/screens/live-picks-watch.jpg) |
+| **Market events.** TRADING HALT, RATE SHOCK and EARNINGS SURPRISE, drawn from VRF and committed by hash before the raid. | **Watch and pick.** Spectators make on-chain picks (who extracts, which district cracks next, a knockout in 30 s), resolved by the program. |
+| ![EXTRACTED: payout, Mystery reveal verified, extraction receipt](docs/screens/pass2-extracted.jpg) | ![KNOCKED OUT: still paid the protected slot plus a share](docs/screens/after-end-screen.jpg) |
+| **Extract and get paid.** The real day is revealed ("Ukraine tensions hit crypto, 22 Feb 2022"), the price data is verified against the on-chain Merkle root, and the receipt links your claim and the settlement. | **Knocked out still pays.** You keep the protected slot plus a share of the loot nobody extracted. |
+
+<sub>In-raid screenshots were taken on 26 Nov, before the protected slot changed from 4.0 to 2.0 dUSD (DECISIONS #41) and before cover blocks and BOT combat were added; the end screens and watch view are unchanged.</sub>
+
+**The loop, step by step**
+
+1. **Lobby.** Press DEPLOY, pick a mode and a class (Raider, Scout, Trader, Gunner), join with one signature. Your 10 dUSD entry splits into **2.0 protected** (always yours), **7.5 into the loot crates**, **0.5 fee**. Empty seats become labelled BOTs.
+2. **Drop.** Spawns, crate contents, exits, two market events and the Mystery day all come from one VRF seed.
+3. **Loot, trade, fight.** WASD to move, E to crack a crate (2 s) or trade at a terminal (3 s, exposed), click to shoot (6 tiles, 34 damage), cover blocks stop shots and movement. BOTs hunt you inside their own fog of war.
+4. **Extract.** Exits open at 2:00, 3:30 and 4:30. Hold Space on one for 5 s.
+5. **Settle and verify.** The raid commits to Solana with a Magic Action, every raider is paid automatically, the Mystery day is revealed with a Merkle proof, and the Market Raid Report checks its own hash against the chain.
+
+---
+
+## Why it needs MagicBlock
+
+| Requirement | Without MagicBlock | With MagicBlock in RAZKYN |
+|---|---|---|
+| Live combat at 10 ticks/s | ~400 ms confirmations, a fee per step | **Ephemeral Rollup**: gasless moves and shots at 100 ms ticks |
+| Hidden loot, fog of war, a secret day | Everything on a public chain is readable | **Private ER (TEE) + permissions**: each raider reads only their own state; sealed crates and the day are keeper-only. Try to Peek shows the refusal |
+| Fair crates and spawns | The operator picks the outcome | **VRF**: one verifiable seed per raid drives every random outcome |
+| Real market moves | A server feeds whatever prices it likes | **Pricing Oracle**, read and validated on the TEE (key, owner, freshness, slot) |
+| No popups mid-fight | A wallet signature per action | **Raid-scoped session keys**: one signature to join; the key can never move tokens |
+| Real payouts | Custodied points | **Commit + Magic Action**: one settlement commit, then `finalize_raid` on Solana; claims pay each wallet once, with a recovery path anyone can trigger |
+
+```mermaid
+flowchart LR
+  W[Player wallet] -- "join_raid: stake 10 dUSD (1 signature)" --> B[(Solana devnet)]
+  B -- "delegate raid accounts" --> T[MagicBlock Private ER<br/>TEE validator]
+  K[Raid session key] -- "move / shoot / open / trade<br/>gasless, 10 Hz" --> T
+  V[MagicBlock VRF] -- "one seed: spawns, crates,<br/>exits, events, day" --> T
+  O[MagicBlock Pricing Oracle] -- "validated prices (Live)" --> T
+  T -- "end_raid: commit + undelegate<br/>Magic Action finalize_raid" --> B
+  B -- "claim: dUSD + minted<br/>dTWR / dFAC / dHRB" --> W
+  B -- "report hash" --> R[Market Raid Report<br/>Verified ✓]
+```
+
+---
+
+## Proof: check the chain, not our word
+
+### 1. A raid played on the live site (27 Nov)
+
+Raid **[1795735156066](https://razkyn.vercel.app/report/1795735156066)** (Mystery, 1 human + 7 BOTs). Joined as a Gunner, pressed READY to drop early, Try to Peek refused three private reads, BOTs fought and knocked the human out, and the human was still paid.
+
+| Step | Evidence |
+|---|---|
+| Commit + Magic Action (`finalize_raid`) | [`3LASRLjY…`](https://explorer.solana.com/tx/3LASRLjY3cTpr1F2a52phHd7meE6xaYVmJiA82xc4qYPPCXTYkVioqNr56icZQ38rgv53x1LSq77ACsLvKE7BBCK?cluster=devnet) |
+| Claim to the player's wallet | [`3Q6nbF5f…`](https://explorer.solana.com/tx/3Q6nbF5fi7346DGeNK4vE4fEi2xqPSQBLswFBLpNVN4RhNwhM1ipMAeUY2VXzTQohjk6yAxS2HGLqvpQzCvqXeMz?cluster=devnet): dUSD **8.103408 → 16.143201 (+8.04)** |
+| Second claim of the same seat | refused: the seat's Claim record already exists, so it can be paid only once |
+| Report hash posted on-chain | [`4gwbYS6a…`](https://explorer.solana.com/tx/4gwbYS6aRkD9GJ7kDQDUQhLDGV28wsvGQFz1uXoJ1S3ycXjJmuK4NMJ7K2MGAN3BipVexrS7AfuaQ4tAfW5Uib2s?cluster=devnet) · report page: hash ✓, Merkle proof ✓ vs `Raid.day_root`, event plan ✓ vs `Raid.event_plan_hash` |
+| Gameplay load | 2,794 / 2,794 tick transactions confirmed, p95 374 ms, 0 stalls over 1 s |
+
+### 2. Every MagicBlock piece, in one raid
+
+Raid **[1795718682996](https://razkyn.vercel.app/report/1795718682996)** (Mystery, 1 human + 7 BOTs, 26 Nov).
+
+| Proof | Signature |
+|---|---|
+| Delegation to the TEE validator `MTEWGuqx…` | [`3jFMd4D8…`](https://explorer.solana.com/tx/3jFMd4D87AgVoqDsbPBbDrrTdSAb7KPsTHjP3rWBBaUPvVRNRjD1mcN5GLC5fpjFoVDqf2u3ufpnYbEZM17mwrF?cluster=devnet) |
+| Gameplay transaction on the TEE (`end_raid`) | `4YwKSJZZbkhfP8RtnyZktrK6CS4J1dqYeZPxiKVPgtcacRavt4VvMpa7sx9aUHqbeen8ZQr3Jx1hkUNZoPnG7tLC` (readable only with a TEE token) |
+| VRF request (TEE) | `2zP4RK9S7r3pXLmrKm7pckQ4mJfs2S7Kpcv9iuxQc9rDt9s1X6Zhb3WyifMotE3URXFkYDekvGGY1AZ7xKmsNADi` (devnet-tee hides the callback signature; the seed's effects are verified on the report page) |
+| Commit + Magic Action | [`5h5j3x6E…`](https://explorer.solana.com/tx/5h5j3x6E3Gfb9wujCmN2xJQavuYC1xSxU3PE2S2KQieVh4ym65czeC1AoVtoYopJX5pk4A73BCXKVaqAXfxyhmhj?cluster=devnet): commit → `FinalizeRaid` → "settled … via 1" → undelegate |
+| Claim | [`2fmRq5Py…`](https://explorer.solana.com/tx/2fmRq5PyL4cUbxreapR5yDAj2vyxEUjw3SZvAtyChab64L55EXjD3sHBdvc9DQH4rWEvQdn5FzSbkvzwEaC6vzDT?cluster=devnet): 6.61 dUSD (2.00 protected + pro-rata share) |
+| Report hash on-chain | [`39Dso3T3…`](https://explorer.solana.com/tx/39Dso3T3ibb1YnxT4V6iXuivpko99HjwEYiitYmydaRBYr88d9TaVLhtu9U7uE6SLJu28JKMBUTPRrzrCfQ9JbS7?cluster=devnet) |
+| Fee vault | [`3gA9REuL…`](https://explorer.solana.com/address/3gA9REuLgMoe2RTFPucfH2YQbcqFqYyFsfuCxZAwUYbM?cluster=devnet) receives 0.5 dUSD per raider in `finalize_raid` |
+
+### 3. Two independent wallets, both paid
+
+Raid **[1795728660174](https://razkyn.vercel.app/report/1795728660174)**: two separate devnet wallets joined from two browsers.
+
+| Wallet | Claim | dUSD before → after |
+|---|---|---|
+| `4Stk…8iJr` | [`3jbABBfK…`](https://explorer.solana.com/tx/3jbABBfKpT7RHp8V93yRFBYvuvuTyrZv5jB9sK3Hu1uxHP6TXh3khEsMHopAueagHsTdWxw293FaPQk4mmL7uhcL?cluster=devnet) | 8.144396 → 16.247809 (+8.10) |
+| `FG8i…qwCW` | [`2c3L68yK…`](https://explorer.solana.com/tx/2c3L68yKkq5sphWqJ2DJEGqtUoGui3HcAcdwPKJVQhAUvFKUZu3pfp3iFbTjNmddcwhk2vGei4uhfX1GkaKBPx6V?cluster=devnet) | 0.000000 → 8.103408 (+8.10) |
+
+### 4. The money always adds up
+
+![Report: per-raider payouts and the conservation check](docs/screens/report-awards-live.jpg)
+
+The program asserts `payouts + reserve + ops == stakes` in integer base units at settlement, and every report shows it (above: dUSD 48.70 + reserve 27.30 + ops 4.00 = stakes 80.00 ✓). Extracted backpacks are minted as dTWR / dFAC / dHRB, backed by dUSD moved into a per-raid reserve at that raid's final prices.
+
+### Verify it yourself
+
+1. **Any payout, from public chain data:** `npx tsx scripts/payout-proof.ts <raid_id>` prints the settlement, each human's claim, their token balances before and after (read from the claim transaction itself) and a simulated second claim that the program refuses. No keys needed.
+2. **Any report:** open `https://razkyn.vercel.app/report/<raid_id>`; it recomputes the report hash and checks it, the Merkle proof and the market-event plan against the chain. Edit one number in the JSON and it says **Mismatch**.
+3. **Privacy, live:** in any raid press **TRY TO PEEK**. Your browser sends real reads of a sealed crate, another raider's private state and the raid secret to the TEE with your own token; all three come back refused.
+
+### Tests
+
+- **MagicSVM, 28 / 28** (local): full 8-raider raid settles and claims sum to escrow; same seed → same outcome; speed cheats and wrong signers rejected; `finalize_raid` / `claim` guards and no double pay; `verify_slice` rejects a wrong slice or leaf; randomized payout conservation; classes, a hit cancelling a trade, committed market events; on-chain picks (program-clock locks, public-only resolver, credits conserved, refunds); cover (moves and shots through cover refused).
+- **Devnet:** privacy (test 8), spoiler scan of all client traffic (9), THE WIRE leak test (10), settlement recovery when the Magic Action is dropped (11), 10 Hz load for 300 s (12), report tamper → Mismatch (13). Evidence in [STATUS.md](STATUS.md) and `spikes/results/`.
+
+---
 
 ## Features
 
-- **Main menu**: Deploy · Mystery Market Day · Character · How to Play · Training Ground (offline practice, nothing on-chain) · Watch Live · Raid History · Settings (sound, voice, graphics, FPS counter, handle, controls).
-- **Three modes**: Mystery Market (a real past crypto day, revealed and proven after the raid), Live Crypto (SOL, BTC, ETH) and Live Markets (NVDA, TSLA, SOL).
-- **Lobby**: you get a seat, a second human can take the other (two players joining at once are moved to different seats), labelled BOTs fill the rest. One wallet signature (free dUSD + stake). Handles and READY are signed with the seat's raid key; all players ready = early drop.
-- **BOT raiders fight**: each BOT sees only what its own fog view shows, shoots raiders in range with a clear line (about once a second, after a short reaction time), and hunts raiders it has seen. The program checks every shot exactly as for a human. BOTs pace their fights so knockouts build up towards the exit windows (DECISIONS #43).
-- **Classes** (chosen at join, enforced on-chain): Raider (no perk), Scout (vision 10 tiles instead of 8), Trader (trades in 2 s instead of 3), Gunner (range 7 tiles, shoots every 400 ms).
-- **In the raid**: three districts react to their asset (rising = glow and dormant crates wake; falling = cracked floors that drain HP). Sealed crates are ripped open with a 2 s channel; loot lands with a rarity burst (RARE, JACKPOT). The backpack value rolls with the market. **Trade alerts** warn you when a raider within 12 tiles is trading; a hit on a trading raider cancels the trade. **Cover and line of sight** (13 blocks). Fog of war, hazards, extraction beacons, synth sound effects and optional **voice narration** of THE WIRE.
-- **Market events**: two per raid, drawn from the VRF seed and committed by hash before the raid (TRADING HALT closes a district's terminals for 30 s; RATE SHOCK tightens hazard thresholds for 30 s; EARNINGS SURPRISE wakes a district's dormant crates). The report page re-checks the plan against the on-chain hash.
-- **Try to Peek**: real TEE reads of a sealed crate, another raider and the raid secret, refused.
-- **Tab inventory** (protected slot, units and value per asset, share of the bag) and **M full map**.
-- **End screen**: EXTRACTED / KNOCKED OUT / STRANDED, payout, settlement steps (raid ended → committed → settled → paid), an **extraction receipt** (your claim and the settlement transactions), a shareable raid card, the Mystery reveal ("YOU JUST SURVIVED THE GLOBAL SELLOFF · 5 August 2024" with a sourced summary and outlet links, price data verified against the on-chain Merkle root) and THE WIRE's debrief.
-- **Watch mode** shows public state only, so raiders appear while they trade, when they are knocked out and when they extract; the screen says so, and the first click turns on sound and THE WIRE's voice.
-- **RAZKYN LIVE** (watch mode, on-chain): spectators sign once, get 100 non-redeemable play credits and a session key, then pick without popups: EXTRACTS per raider, NEXT CRACK (opens every 60 s, locks after 10 s) and KNOCKOUT IN 30 S (opens every 30 s, locks after 8 s). The program locks picks by its own clock, resolves them from public raid state only and pays parimutuel; a streak of 3 earns a devnet badge whose variant comes from the VRF seed. Spectator cameras and an `/overlay` view for streamers.
-- **Extraction Market** (watch mode): bet free devnet dPLAY play-money on "raider N extracts / doesn't", settled by the keeper as devnet transfers listed in the report (DECISIONS #33).
-- **Market Raid Report** and **Raid History**: every raid's report, hash-checked against the chain. A matching hash proves the report has not been edited since it was posted; it does not by itself prove every event in it. The on-chain parts (Results, payouts, settlement, claims, the Merkle proof, the market-event plan hash) are checked against chain data on the report page; BOT activity in the report comes from the keeper's own log.
+- **Three modes:** Mystery Market (one of 23 real crypto days, committed by Merkle root before the raid), Live Crypto (SOL, BTC, ETH) and Live Markets (NVDA, TSLA, SOL), priced by MagicBlock's Pricing Oracle.
+- **Combat with cover:** 100 HP, 34 damage, 6-tile range; 13 cover blocks the program enforces for movement and line of sight. **Classes:** Scout sees 10 tiles, Trader trades in 2 s, Gunner shoots 7 tiles every 400 ms.
+- **BOTs that fight:** each BOT sees only its own fog view, shoots and hunts like a player under the same program checks, and paces its fights so knockouts build towards the exit windows.
+- **Market events** from VRF: TRADING HALT, RATE SHOCK, EARNINGS SURPRISE.
+- **THE WIRE**, an AI newsroom that narrates public facts only ("Shots fired: BOT 4 under fire, down to 66 HP", "Harbor slides −1.7% in 30s"), with a spoiler filter and optional voice. It is never a permission member, so it cannot leak private state.
+- **Spectators:** RAZKYN LIVE on-chain picks with play credits and a session key, the dPLAY Extraction Market, spectator cameras and a `/overlay` view for streamers.
+- **End screen:** settlement steps (ended → committed → settled → paid), extraction receipt, the sourced Mystery reveal, a debrief and a shareable raid card.
+- **Also:** handles and READY (early drop), Tab inventory, M full map, Training Ground (offline), raid history, settings (graphics, FPS counter, sound, voice), phone support in landscape.
+
+---
 
 ## MagicBlock stack
 
 | Piece | How RAZKYN uses it | Where |
 |---|---|---|
 | Private Ephemeral Rollup (TEE, `devnet-tee`) | Every account a raid mutates is delegated to the TEE validator `MTEWGuqx…`; gameplay runs there at 10 ticks/s | `delegate_raid`, `programs/razkyn/src/instructions/lobby.rs` |
-| Permissions (`EphemeralPermission`) | Created on the ER: a raider's private state → their raid key + keeper; fog View → that raid key only; sealed crates and the raid secret → keeper only. Public accounts have no permission | `tee_setup.rs`, `crates.rs` |
-| `getAuthToken` | Client and keeper authenticate to the TEE; the client signs with the raid key and refreshes 60 s before expiry | `app/src/lib/chain.ts` |
-| VRF (`#[vrf]` / `#[vrf_callback]`, ephemeral queue) | One seed per raid → spawns, crate placement and contents, exit plan, market events, Mystery day index, spectator badge variant | `request_raid_vrf`, `vrf_callback_raid` |
-| Pricing Oracle | Live modes read SOL/BTC/ETH or NVDA/TSLA/SOL `PriceUpdateV3` feeds on the TEE with key, owner, freshness and `posted_slot` checks | `market.rs` `read_feed` |
-| Keeper ticks + crank | The keeper calls the permissionless, clock-gated `tick` at 10 Hz for gameplay; RAZKYN LIVE picks resolve every second through a `ScheduleCrankCpi` crank on the TEE (keeper resolve as fallback) | `keeper/src/ticker.ts`, `picks.rs` `schedule_pick_crank` |
-| Magic Actions | `end_raid` commits and undelegates Raid + Results with `MagicIntentBundleBuilder` and a post-commit `finalize_raid` action on the base layer; `settle_stuck_raid` recovers if the action is dropped | `settle.rs` |
-| Raid keys | Burner key registered at `join_raid`, valid only for that raid's gameplay instructions, never a token authority | `join_raid`, `require_can_act` |
+| Permissions (`EphemeralPermission`) | A raider's private state → their raid key + keeper; fog View → that raid key only; sealed crates and the raid secret → keeper only; public accounts have none | `tee_setup.rs`, `crates.rs` |
+| `getAuthToken` | Client and keeper authenticate to the TEE; the client signs with the raid key and refreshes before expiry | `app/src/lib/chain.ts` |
+| VRF (`#[vrf]` / `#[vrf_callback]`, ephemeral queue) | One seed per raid → spawns, crate placement and contents, exits, market events, Mystery day, spectator badge | `request_raid_vrf`, `vrf_callback_raid` |
+| Pricing Oracle | SOL/BTC/ETH or NVDA/TSLA/SOL `PriceUpdateV3` feeds read on the TEE with key, owner, freshness and `posted_slot` checks | `market.rs` `read_feed` |
+| Keeper ticks + crank | Permissionless, clock-gated `tick` at 10 Hz; spectator picks resolve every second through a `ScheduleCrankCpi` crank | `keeper/src/ticker.ts`, `picks.rs` |
+| Magic Actions | `end_raid` commits and undelegates with `MagicIntentBundleBuilder` plus a post-commit `finalize_raid`; `settle_stuck_raid` recovers if the action is dropped | `settle.rs` |
+| Raid keys | Burner key registered at `join_raid`, valid only for that raid's gameplay, never a token authority | `join_raid`, `require_can_act` |
 
-SDK: `ephemeral-rollups-sdk` 0.18.0 (Rust and npm), Anchor 1.0.2, Agave 3.1.9.
+SDK `ephemeral-rollups-sdk` 0.18.0 (Rust and npm), Anchor 1.0.2, Agave 3.1.9. Program `CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97` (devnet); mints in `config/devnet.json`.
 
-## Trust model
+---
 
-- **The keeper is the game operator.** It creates raids, drives ticks, runs the BOTs, settles and claims for everyone, and builds the report. It is a permission member of raiders' private state, sealed crates and the raid secret, the same trust you give a game server.
-- **What the keeper cannot do**: change a move, a hit, a crate's contents, a market event, the Mystery day or a payout. Those come only from program rules, the VRF seed and the committed Merkle root, and players send their own moves straight to the TEE with their raid key (not through the keeper). `tick`, `claim` and `settle_stuck_raid` are permissionless, so a stalled keeper can be replaced by anyone.
-- **What the keeper could still do** (operator trust, not prevented by code): leak private state it can read (crate contents, positions, the Mystery day) to a player; delay or skip its own tick, BOT and claim transactions; decide when raids open; run the keeper-settled Extraction Market honestly or not. The BOTs are written to use only their own private state and public data (`keeper/src/bots.ts`: crates are chosen by public position), but that is code you have to read, not something the program enforces.
-- **The Mystery day is committed before the raid.** A Merkle root of 23 day slices is stored in `create_raid`; the VRF picks the leaf; `verify_slice` checks the loaded slice against the root at that index, and the raid cannot start unverified. The client re-checks the proof after the reveal.
-- **What the TEE protects**: sealed crate contents, every raider's position and backpack, each raider's fog view, and the Mystery day. Crate *positions* are public (DECISIONS #16). Public reads (watch mode) use no token.
-- **THE WIRE is never a permission member.** It reads public accounts through a token for a fresh key, rebuilds every fact from a public-field whitelist, and every line passes a post-filter (no tickers, dates or prices before the reveal, no invented quotes) or is replaced by a template. It narrates; it decides nothing.
-- **Settlement is reconcilable.** Payouts are idempotent (`claimed` records), `finalize_raid` verifies the escrow signer and the committed results hash, and anyone can call `settle_stuck_raid` if the action was dropped.
-- **Devnet stand-ins are not shares.** At settlement the program moves the dUSD value of every extracted backpack, at that raid's final prices, into a per-raid reserve, then mints those units as dTWR/dFAC/dHRB. If extracted value would exceed the loot pool (a rally), units are scaled down so the reserve never exceeds the pool; in a fall the difference goes back to everyone pro rata. Conservation (`payouts + reserve + ops == stakes`) is asserted on-chain and tested with randomized prices. Limits: there is no redeem instruction (the reserve is locked backing, not a withdrawable peg), the tokens are fungible across raids although each raid's reserve was set at its own final prices, and integer rounding leaves each raider's reserve at most 1 base unit (0.000001 dUSD) below the exact value.
+## Trust model and honest limits
+
+- **The keeper is the game operator**, with the same trust as a game server: it creates raids, drives ticks, runs the BOTs, settles, claims for everyone and builds the report, and it can read private state.
+- **It cannot change outcomes:** moves, hits, crate contents, market events, the Mystery day and payouts come only from program rules, the VRF seed and the committed Merkle root. Players send their own moves straight to the TEE. `tick`, `claim` and `settle_stuck_raid` are permissionless.
+- **It could** leak private state it can read, delay its own transactions, choose when raids open, or run the keeper-settled dPLAY market dishonestly. BOTs are written to use only their own view and public data (`keeper/src/bots.ts`), but that is code you read, not a program rule.
+- **A report hash** proves the report was not edited after posting; the on-chain parts (results, payouts, settlement, claims, Merkle proof, event plan) are checked against the chain; BOT activity in the report comes from the keeper's log.
+- **Tokens:** minted assets are backed by dUSD in a per-raid reserve at that raid's final prices; there is no redeem instruction, and rounding can leave a reserve up to 0.000001 dUSD short per raider.
+- **Known gaps:** the VRF callback signature is hidden by devnet-tee; THE WIRE runs on template lines until an `ANTHROPIC_API_KEY` is configured; Mystery days are crypto days only; under network jitter some pipelined moves fail the program's speed check, so walking is slower than the 6 tiles/s cap; not built: reload/ammo, sprint/dodge, weapon switching, items beyond classes, a tradable market for minted assets, replays.
+
+---
 
 ## Run it
 
@@ -95,35 +206,12 @@ Prerequisites (pinned): Rust 1.89.0, Agave 3.1.9, Anchor 1.0.2, Node 24. Scripts
 ```bash
 npm ci                                    # keeper, scripts, tests
 scripts/build.sh                          # anchor build (program + IDL)
-scripts/test-magicsvm.sh                  # local MagicSVM suites (28 tests)
-npx tsx keeper/src/index.ts --humans 1 --human-wait 300    # one raid: 1 human slot + 7 BOTs
-cd app && npm ci && npm run dev           # client on http://localhost:5173
+scripts/test-magicsvm.sh                  # MagicSVM suites (28 tests)
+npx tsx keeper/src/serve.ts               # game server: opens a raid when a player presses DEPLOY
+cd app && npm ci && npm run dev           # client on http://localhost:5173 (VITE_KEEPER_URL → the keeper)
+npx tsx scripts/payout-proof.ts <raid_id> # verify any raid's payouts from chain data
 ```
 
-The keeper serves `GET /lobby`, `GET /reports/:id` and THE WIRE (`/wire/:id/stream`) on port 8787 (`VITE_KEEPER_URL` points the client at it). THE WIRE uses `claude-sonnet-5-5` when `ANTHROPIC_API_KEY` is set in a local `.env` (never committed) and template lines otherwise.
+**Deployment (judging):** client on Vercel (https://razkyn.vercel.app); keeper on a VPS as a systemd service behind HTTPS (`https://razkyn.16-61-50-207.sslip.io`: `/lobby`, `/lobby/open`, `/fund`, `/reports/:id`, `/wire/:id/stream`), one raid at a time, at most 4 per hour.
 
-Devnet: program `CTJGR8bj7HAzFja1YGjvkc9wP2JrFnachqMLeoniox97`; mints in `config/devnet.json`.
-
-### Deployment (judging)
-
-- **Client**: Vercel, https://razkyn.vercel.app (`app/`, build env `VITE_KEEPER_URL`).
-- **Keeper**: a VPS (AWS Lightsail, Ubuntu 24.04; ~170 ms round trip to `devnet-tee`) running `keeper/src/serve.ts` as the systemd service in `deploy/razkyn-keeper.service`: idle until a player presses **DEPLOY → OPEN RAID** in the lobby, one raid at a time, at most 4 per hour, only with enough keeper SOL; memory-capped at 600 MB. HTTPS through Caddy (`deploy/Caddyfile.razkyn`) at `https://razkyn.16-61-50-207.sslip.io` (`/lobby`, `/lobby/open`, `/reports/:id`, `/wire/:id/stream`).
-- Run only one keeper per keeper wallet at a time (the BOT wallets are shared).
-
-## Tests
-
-- MagicSVM (local, 28 tests): full 8-raider raid settles and claims sum to escrow; determinism; movement cheat and wrong signer rejected; guards on `finalize_raid` / `claim`; `verify_slice` rejects a wrong slice or leaf; payout conservation (randomized); classes, combat interrupting a trade, committed market events; RAZKYN LIVE picks (program-clock locks, public-only resolver, credits conserved, refunds, badge once); cover (layout, crates never on cover, line of sight, a move and a shot through cover refused).
-- Devnet: privacy (test 8), spoiler scan of client traffic (9), THE WIRE leak test (10), settlement recovery (11), 10 Hz load (12), report tamper (13). Results and transaction signatures are in `STATUS.md` and `spikes/results/`.
-
-## Known limitations
-
-- The VRF callback signature cannot be listed: devnet-tee hides signatures of transactions that write private accounts. The report shows the request signatures.
-- The Extraction Market (dPLAY bets) is settled by the keeper (a bet is a dPLAY transfer to the keeper's account with a memo); it is play-money only and every payout is a devnet transaction in the report. RAZKYN LIVE picks are the on-chain spectator path.
-- Live crypto districts track SOL, BTC and ETH; Live Markets districts track NVDA, TSLA and SOL from the Pricing Oracle on the TEE (the stocks only move in US market hours). Mystery days are crypto days from Binance public data (no free stock history source).
-- Not built: reload / ammo, sprint / dodge, weapon switching, items beyond the four classes, a tradable market for minted assets, replays.
-- Mystery day context (title, summary, links) is added after the raid from public reporting; it is not part of the committed Merkle leaf (the price data is).
-- About 45% of pipelined moves are rejected by the speed check under network jitter, so effective speed is below the 6 tiles/s cap.
-- 10 Hz ticks from a machine far from the Singapore TEE showed occasional gaps just over 1 s; the keeper should run close to the TEE.
-- THE WIRE's model path (`claude-sonnet-5-5`) has not been exercised on devnet yet; every line in the recorded raids is a template line.
-
-See `STATUS.md` (what is done, with evidence), `DECISIONS.md` (every deviation from the spec) and `CLAUDE.md` (the build spec).
+More: [SUBMISSION.md](SUBMISSION.md) (links and proof), [STATUS.md](STATUS.md) (what is done, with evidence), [DECISIONS.md](DECISIONS.md) (every change from the spec), [docs/demo-script.md](docs/demo-script.md) (2-minute demo).
