@@ -69,6 +69,11 @@ const FIRE_JITTER_MS = 550;
 const RANGE_UNITS = 600, GUNNER_RANGE_UNITS = 700, RANGE_MARGIN = 15;
 const CLASS_GUNNER = 3;
 const HUNT_CHANCE = 0.6; // a BOT that sees someone walks towards them instead of wandering
+// Pacing (devnet raid 1795729676499 without it: 6 of 7 BOTs knocked out by second 82, then an empty
+// raid). About 45% of BOT pairs feud; before BOT_MERCY_UNTIL_S a BOT does not finish another BOT.
+const FEUD_SHARE = 0.45;
+const BOT_MERCY_UNTIL_S = 200;
+const SHOT_DAMAGE = 34;
 const SIGHT_FRESH_MS = 2500;
 
 const districtOfX = (x: number) => DISTRICT_TILES.findIndex(([lo, hi]) => Math.floor(x / 100) >= lo && Math.floor(x / 100) <= hi);
@@ -162,6 +167,16 @@ export class BotCrew {
   /** humans > 0: BOTs leave room for players (MAX_BOT_CRATES each, HUMAN_HEAD_START s before looting). */
   constructor(private S: RaidSession, private slots: number[], private elapsed: () => number, seed = 1, private humans = 0) {
     this.seed = seed;
+    this.feudSeed = seed >>> 0;
+  }
+  private feudSeed: number;
+
+  /** Whether BOTs a and b fight (symmetric, fixed per raid by the crew seed). */
+  private feud(a: number, b: number) {
+    const lo = Math.min(a, b), hi = Math.max(a, b);
+    let h = this.feudSeed ^ Math.imul(lo + 1, 0x9e3779b1) ^ Math.imul(hi + 1, 0x85ebca6b);
+    h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16; // murmur3 fmix32
+    return ((h >>> 0) % 1000) / 1000 < FEUD_SHARE;
   }
 
   private rnd() {
@@ -202,7 +217,8 @@ export class BotCrew {
       if (!info) continue;
       const v = S.T.coder.accounts.decode("view", info.data) as { count: number; entries: { slot: number; x: number; y: number }[] };
       const now = Date.now();
-      const seen = v.entries.slice(0, v.count).filter((e) => e.slot !== slot && !gone.has(e.slot));
+      // Humans are always targets; another BOT only if this pair feuds (pacing, see feud()).
+      const seen = v.entries.slice(0, v.count).filter((e) => e.slot !== slot && !gone.has(e.slot) && (!this.slots.includes(e.slot) || this.feud(slot, e.slot)));
       for (const k of [...seenSince.keys()]) if (!seen.some((e) => e.slot === k)) seenSince.delete(k);
       for (const e of seen) if (!seenSince.has(e.slot)) seenSince.set(e.slot, now);
       if (!seen.length) continue;
@@ -212,6 +228,8 @@ export class BotCrew {
       if (now < nextShot) continue;
       const t = byDist.find((e) => now - seenSince.get(e.slot)! >= REACTION_MS && Math.hypot(e.x - me.x, e.y - me.y) <= range && lineClear(me.x, me.y, e.x, e.y));
       if (!t) continue;
+      // Early on, BOTs wound each other but leave the knockout for later (the late exit fights).
+      if (this.slots.includes(t.slot) && this.elapsed() < BOT_MERCY_UNTIL_S && (await S.rpub(t.slot)).hp <= SHOT_DAMAGE) continue;
       nextShot = now + FIRE_MIN_MS + Math.floor(this.rnd() * FIRE_JITTER_MS);
       shots++;
       try {
