@@ -1,0 +1,53 @@
+{
+  "raidStatus": 2,
+  "rows": [
+    {
+      "account": "sealed crate 0",
+      "pubkey": "2v5inU4DZmK64Gs37UP1k9RLnM7T1iX7qakrkaeNb6R8",
+      "stranger": "null",
+      "keeper": "75 bytes"
+    },
+    {
+      "account": "sealed crate 1",
+      "pubkey": "5BYiw2mCBZW4aJD991CnbompMRKnhwafWfnvksU8vHhE",
+      "stranger": "null",
+      "keeper": "75 bytes"
+    },
+    {
+      "account": "sealed crate 8",
+      "pubkey": "9bAw62Ug4tvEDizybaoLA7hNfABwxRYVCrurffU1BGL",
+      "stranger": "null",
+      "keeper": "75 bytes"
+    },
+    {
+      "account": "RaiderPrivate 0",
+      "pubkey": "8DKirQwam5u2McWMbDWeXUYkyUaK2L1uugsuCaWYaZbF",
+      "stranger": "null",
+      "keeper": "112 bytes"
+    },
+    {
+      "account": "View 0",
+      "pubkey": "67yBk2KJ7V6ShnNvVc1tvatA8mKLjsfnTs6CzaQy1zwQ",
+      "stranger": "null",
+      "keeper": "null"
+    },
+    {
+      "account": "RaiderPrivate 1",
+      "pubkey": "4XZtUpEgFGfTcK9ju3sWFHx8SvJbE5zMgpKeCbtyhMGr",
+      "stranger": "null",
+      "keeper": "112 bytes"
+    },
+    {
+      "account": "View 1",
+      "pubkey": "Gj7A585k2PUxNPZxkwdjCZEgpUkvVNL3ezEHVmyhQ45L",
+      "stranger": "null",
+      "keeper": "null"
+    },
+    {
+      "account": "RaidSecret",
+      "pubkey": "CrpijNwaxVc4jSFMCNz698ckPzCDrZZ2GSwFiBjSWEu3",
+      "stranger": "null",
+      "keeper": "3720 bytes"
+    }
+  ]
+}

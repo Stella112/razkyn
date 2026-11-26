@@ -1,6 +1,6 @@
 # STATUS.md
 
-_Last updated: 2026-11-26 — Pitch features built on top of the spec: Extraction Market, cinematic sourced reveal, trade alerts, crate ripping with rarity, voice, receipt, main menu, Raid History. Player test on devnet passed. Test 8 re-run in progress._
+_Last updated: 2026-11-26 — All §9 devnet tests have passing runs (8, 9 partial coverage, 10, 11, 12 from the VPS, 13). Pitch features built and deployed. Remaining: SUBMISSION links, demo video._
 
 ## Done
 - §4.1 setup: MagicBlock dev skill v0.5.1 (commit `88f6719`, 2026-11-24) installed; references read. `vendor/` cloned (examples `3376663`, starter-kits, SDK tag `v0.18.0`).
@@ -297,7 +297,7 @@ TEST 10 PASS: no private value reached a prompt or an output
 - **Devnet play-through** (raid `E4f1fjEK…`, id 1795630441921, Mystery, 1 human + 7 BOTs): dev wallet joined (`3j4ncvxx…`, faucet + stake); raid went live; movement on-chain (7.5 tiles in 3 s); **Try to peek** → sealed crate, raider 2's RaiderPrivate and RaidSecret all "refused: the TEE returned nothing"; walked to crate 7 and opened it with E (1,573,707 Tower units in the backpack); died when Tower's hazard escalated to level 2 under the crate; after end_raid the overlay showed the reveal (2021-12-04, Merkle proof **Verified ✓**), payout 7.33 dUSD (4.00 protected + pro-rata) and THE WIRE debrief; report `b0c69df2…` posted `2sfRAxF6…`.
 - **§9 test 13 PASS** (`tests/devnet/test13-report-tamper.ts`): `/report/1795628725761` shows "Verified ✓" (recomputed sha256 = on-chain Settlement.report_hash, Merkle proof ✓ vs Raid.day_root); the copy with raider 1's payout +1 dUSD (`?src=/test-fixtures/tampered-1795628725761.json`) shows "Mismatch".
 - **§9 test 9 PASS (partial coverage)**: in-browser scan (`?record=1`, `app/src/lib/spoilerScan.ts`) of 644 responses, 7,694 decoded account payloads, 489 District snapshots (start_raw = 0, prices in the index band) and 73 WIRE lines → 0 dates, tickers, months or absolute prices. Recording covered the last ~80 s of the live raid + end (page reloaded after a fix), not all 300 s. Evidence `spikes/results/test9-spoiler-1795630441921.json`.
-- **§9 test 8**: the run during the live raid failed on its own control (a View's only member is the raider, so the keeper cannot read it either; test fixed). Must re-run in a live raid: blocked on keeper SOL. The in-game peek above already showed a non-member refused for a sealed crate, another RaiderPrivate and RaidSecret.
+- **§9 test 8 PASS** (raid 1795689459125, `spikes/results/test8-privacy-1795689459125.json`): 8/8 private reads refused for a non-member (3 sealed crates, 2 RaiderPrivate, 2 View, RaidSecret); keeper (member) read crates 75 B, RaiderPrivate 112 B, RaidSecret 3,720 B; Views null for the keeper too (only the raider is a member). Earlier: the run during the live raid failed on its own control (a View's only member is the raider, so the keeper cannot read it either; test fixed). Must re-run in a live raid: blocked on keeper SOL. The in-game peek above already showed a non-member refused for a sealed crate, another RaiderPrivate and RaidSecret.
 - Bugs found in the play-through and fixed: `anchor.Wallet` is not in Anchor's browser build (minimal wallet object); movement prediction diverged past the map edge (pending −1.78 M units) → moves capped at 50 units, prediction bounded to 3 tiles, range checks use the on-chain position; added an error boundary.
 - Known: ~45% of pipelined moves are rejected as too fast (7.5 tiles in 3 s vs 6 tiles/s max); watch mode checked only after the raid (live view not yet seen); production build OK (`vite build`, one chunk > 500 kB).
 
@@ -317,4 +317,5 @@ TEST 10 PASS: no private value reached a prompt or an output
 - BOT extraction on deep crash days is verified in simulation only (`scripts/check-bot-hazard-sim.ts`); the last devnet crash day (raid 1795627119584, Tower −24%) predates the staging/drift fix and lost 4 BOTs while staging.
 
 ## Next
-- Re-run test 8 in a live raid; check watch mode live; reduce rejected moves. Then M8 (deploy app to Vercel, keeper host in Singapore + test 12 there, README, SUBMISSION.md, demo script).
+- SUBMISSION.md: fill explorer links from raid 1795688865968 / 1795687416849; make the repo public (or add judges); record the 2-minute demo video (docs/demo-script.md).
+- Optional: THE WIRE model path (needs ANTHROPIC_API_KEY in .env on the VPS).

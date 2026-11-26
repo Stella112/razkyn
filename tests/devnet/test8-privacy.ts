@@ -38,5 +38,5 @@ console.table(rows);
 // Public accounts stay public to the stranger (sanity).
 assert.ok(await stranger.getAccountInfo(S.raid), "Raid should be public");
 saveEvidence(`test8-privacy-${process.argv[2]}`, { raidStatus: raid.status, rows });
-console.log(`TEST 8 PASS: ${rows.length}/${rows.length} private reads refused for a non-member; keeper control read all of them`);
+console.log(`TEST 8 PASS: ${rows.length}/${rows.length} private reads refused for a non-member; keeper (member) read the crates, RaiderPrivate and RaidSecret; Views readable only by their raider`);
 process.exit(0);
