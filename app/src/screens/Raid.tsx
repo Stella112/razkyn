@@ -79,6 +79,12 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const [channel, setChannel] = useState<{ label: string; start: number; ms: number } | null>(null);
   const [peek, setPeek] = useState<Peek | null>(null);
   const [trade, setTrade] = useState(false);
+  useEffect(() => {
+    if (!trade) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setTrade(false); };
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [trade]);
   const [report, setReport] = useState<ReportFile | null>(null);
   const [reveal, setReveal] = useState<{ ok: boolean; root: string; onchainRoot: string } | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -570,18 +576,34 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
 
       {/* trade picker */}
       {trade && mine?.rprv && (
-        <div className="overlay" onClick={() => setTrade(false)}>
-          <div className="card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
-            <h3>Terminal · swap at the current price (no spread)</h3>
-            <p className="note">Takes 3 s. Your position is public while it runs.</p>
-            {[0, 1, 2].map((from) => (
-              <div key={from} className="row" style={{ marginBottom: 8 }}>
-                <span className="mono" style={{ width: 150 }}>{DN[from]} {(Number(mine.rprv!.backpack[from].toString()) / 1e6).toFixed(2)}</span>
-                {[0, 1, 2].filter((t) => t !== from).map((to) => (
-                  <button key={to} className="btn" disabled={mine.rprv!.backpack[from].isZero()} onClick={() => doTrade(from, to)}>→ {DN[to]}</button>
-                ))}
-              </div>
-            ))}
+        <div className="term-wrap" onClick={() => setTrade(false)}>
+          <div className="term" onClick={(e) => e.stopPropagation()}>
+            <div className="term-head">
+              <span>TERMINAL · {DN[districtOfX(mine.rprv.x)] ?? ""}</span>
+              <span className="term-src">{raid?.mode === 0 ? "PRICES: HISTORICAL REPLAY (MYSTERY DAY)" : "PRICES: MAGICBLOCK PRICING ORACLE ON THE TEE"}</span>
+            </div>
+            <div className="term-sub">Swap a whole asset at the current district index · no spread · no fee · {raid?.classes?.[mySlot] === 2 ? 2 : 3} s channel</div>
+            <table className="term-t">
+              <thead><tr><th>Asset</th><th>Units</th><th>Index</th><th>Value</th><th>Swap all to</th></tr></thead>
+              <tbody>
+                {[0, 1, 2].map((from) => {
+                  const units = Number(mine.rprv!.backpack[from].toString());
+                  const px = Number(pub?.districts[from]?.currentPrice.toString() ?? PRICE_ONE);
+                  return (
+                    <tr key={from} className={units ? "" : "empty"}>
+                      <td>{DN[from]}</td>
+                      <td className="mono">{(units / 1e6).toFixed(2)}</td>
+                      <td className="mono">{(px / 1e4).toFixed(2)}</td>
+                      <td className="mono">{((units * px) / PRICE_ONE / 1e6).toFixed(2)}</td>
+                      <td>{[0, 1, 2].filter((t) => t !== from).map((to) => (
+                        <button key={to} className="term-btn" disabled={!units} onClick={() => doTrade(from, to)}>{DN[to]}</button>
+                      ))}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="term-warn">WHILE THE CHANNEL RUNS YOUR POSITION IS PUBLIC · A HIT CANCELS THE TRADE · ESC / CLICK OUTSIDE TO CLOSE</div>
           </div>
         </div>
       )}
