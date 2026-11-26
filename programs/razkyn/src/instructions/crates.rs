@@ -122,7 +122,11 @@ pub fn crate_position(seed: &[u8; 32], idx: u8) -> (u16, u16) {
     let h = derive(seed, b"crate_pos", idx as u32);
     let span_x = (hi - lo - 1) as u64; // tiles lo+1 ..= hi-1
     let tx = lo + 1 + (u64::from_le_bytes([h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7]]) % span_x) as u16;
-    let ty = 2 + (u64::from_le_bytes([h[8], h[9], h[10], h[11], h[12], h[13], h[14], h[15]]) % 36) as u16;
+    let mut ty = 2 + (u64::from_le_bytes([h[8], h[9], h[10], h[11], h[12], h[13], h[14], h[15]]) % 36) as u16;
+    // Never on cover: step to the row just below the block (blocks end by row 35, so ty stays <= 36).
+    while let Some(&(_, _, _, y1)) = COVER_RECTS.iter().find(|&&(x0, y0, x1, y1)| tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1) {
+        ty = y1 + 1;
+    }
     (tx * UNITS_PER_TILE + UNITS_PER_TILE / 2, ty * UNITS_PER_TILE + UNITS_PER_TILE / 2)
 }
 
@@ -323,6 +327,7 @@ pub fn shoot(ctx: Context<Shoot>, slot: u8, target: u8) -> Result<()> {
     require!(clock.slot >= since.saturating_add(cooldown), RazkynError::Cooldown);
     let tp = &ctx.accounts.target_prv;
     require!(dist2(sp.x, sp.y, tp.x, tp.y) <= range * range, RazkynError::OutOfRange);
+    require!(crate::util::line_clear(sp.x, sp.y, tp.x, tp.y), RazkynError::NoLineOfSight);
     sp.last_shot_slot = clock.slot;
 
     let tpub = &mut ctx.accounts.target_pub;

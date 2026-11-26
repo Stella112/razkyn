@@ -2,7 +2,7 @@
 // (exits, crate positions, opened crates, exposed / downed raiders) plus, for a player, their own
 // position and the raiders inside their own fog-of-war View. No hidden state is added here.
 import { useEffect, useRef } from "react";
-import { DISTRICT_TILES, EXITS, MAP_H, MAP_W, NUM_CRATES, TERMINALS, UNIT, type PublicState } from "../lib/chain";
+import { COVER_RECTS, DISTRICT_TILES, EXITS, MAP_H, MAP_W, NUM_CRATES, TERMINALS, UNIT, type PublicState } from "../lib/chain";
 
 export default function Minimap({ pub, me, visible, mySlot, names, scale = 3, big = false }: {
   pub: PublicState | null; me: { x: number; y: number } | null; visible: { slot: number; x: number; y: number }[]; mySlot: number; names: string[];
@@ -32,6 +32,8 @@ export default function Minimap({ pub, me, visible, mySlot, names, scale = 3, bi
       c.strokeStyle = open.includes(i) ? "#45C9B2" : "rgba(200,210,209,0.35)"; c.lineWidth = open.includes(i) ? 2 : 1;
       c.beginPath(); c.arc(ex * S + S / 2, ey * S + S / 2, S * 1.6, 0, Math.PI * 2); c.stroke();
     });
+    c.fillStyle = "rgba(200,210,209,0.42)";
+    for (const [x0, y0, x1, y1] of COVER_RECTS) c.fillRect(x0 * S, y0 * S, (x1 - x0 + 1) * S, (y1 - y0 + 1) * S);
     c.fillStyle = "#45C9B2";
     for (const [tx, ty] of TERMINALS) c.fillRect(tx * S, ty * S, S, S);
     raid?.cratePos.forEach((p, i) => {

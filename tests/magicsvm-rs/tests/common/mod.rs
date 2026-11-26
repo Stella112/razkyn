@@ -73,6 +73,8 @@ pub const E_ALREADY_PICKED: u32 = ERR_BASE + 57;
 pub const E_NO_CREDITS: u32 = ERR_BASE + 58;
 pub const E_PICKS_OPEN: u32 = ERR_BASE + 59;
 pub const E_NO_BADGE: u32 = ERR_BASE + 60;
+pub const E_BLOCKED: u32 = ERR_BASE + 61;
+pub const E_NO_LOS: u32 = ERR_BASE + 62;
 pub const E_ALREADY_CLAIMED: u32 = ERR_BASE + 47;
 pub const E_BAD_FEED: u32 = ERR_BASE + 40;
 const MINT_SIZE: usize = 82;
@@ -228,8 +230,17 @@ impl World {
         let i = self.move_ix(slot, kp(&k), dx, dy);
         self.try_send(TransactionTarget::Ephemeral, &[&k], &[i])
     }
-    /// Walk at legal speed until within `within` units of (x, y).
+    /// Walk at legal speed until within `within` units of (x, y), routing around cover
+    /// (tile BFS, then straight legs between waypoints that have a clear line).
     pub fn walk_to(&mut self, slot: u8, x: u16, y: u16, within: u64) {
+        let me = self.rprv(slot);
+        for (wx, wy) in cover_path(me.x, me.y, x, y) {
+            self.walk_straight(slot, wx, wy, 20);
+        }
+        self.walk_straight(slot, x, y, within);
+    }
+    /// Straight walk (no routing): used by walk_to between waypoints.
+    pub fn walk_straight(&mut self, slot: u8, x: u16, y: u16, within: u64) {
         for _ in 0..2000 {
             let me = self.rprv(slot);
             let (dx, dy) = (x as i64 - me.x as i64, y as i64 - me.y as i64);
@@ -634,4 +645,56 @@ pub fn cu_ix(units: u32) -> Instruction {
     let mut data = vec![2u8];
     data.extend_from_slice(&units.to_le_bytes());
     Instruction { program_id: solana_sdk_ids::compute_budget::id(), accounts: vec![], data }
+}
+
+/// Waypoints (tile centres) around cover from a to b; empty when the straight line is clear.
+pub fn cover_path(ax: u16, ay: u16, bx: u16, by: u16) -> Vec<(u16, u16)> {
+    use razkyn::util::{line_clear, tile_blocked};
+    // Clearance: the straight walk passes within ~30 units of the line, so test a fat line.
+    let fat = |ax: u16, ay: u16, bx: u16, by: u16| {
+        [(0i32, 0i32), (35, 0), (-35, 0), (0, 35), (0, -35)].iter().all(|&(ox, oy)| {
+            let c = |v: u16, o: i32, m: u16| (v as i32 + o).clamp(0, m as i32) as u16;
+            line_clear(c(ax, ox, MAX_X), c(ay, oy, MAX_Y), c(bx, ox, MAX_X), c(by, oy, MAX_Y))
+        })
+    };
+    if fat(ax, ay, bx, by) { return vec![]; }
+    let (w, h) = (MAP_W_TILES as usize, MAP_H_TILES as usize);
+    let idx = |x: usize, y: usize| y * w + x;
+    let (sx, sy) = ((ax / UNITS_PER_TILE) as usize, (ay / UNITS_PER_TILE) as usize);
+    let (gx, gy) = ((bx / UNITS_PER_TILE) as usize, (by / UNITS_PER_TILE) as usize);
+    let mut prev = vec![usize::MAX; w * h];
+    let mut q = std::collections::VecDeque::new();
+    prev[idx(sx, sy)] = idx(sx, sy);
+    q.push_back((sx, sy));
+    while let Some((x, y)) = q.pop_front() {
+        if (x, y) == (gx, gy) { break; }
+        for (dx, dy) in [(1i32, 0i32), (-1, 0), (0, 1), (0, -1)] {
+            let (nx, ny) = (x as i32 + dx, y as i32 + dy);
+            if nx < 0 || ny < 0 || nx >= w as i32 || ny >= h as i32 { continue; }
+            let (nx, ny) = (nx as usize, ny as usize);
+            if prev[idx(nx, ny)] != usize::MAX || tile_blocked(nx as u16, ny as u16) { continue; }
+            prev[idx(nx, ny)] = idx(x, y);
+            q.push_back((nx, ny));
+        }
+    }
+    assert!(prev[idx(gx, gy)] != usize::MAX, "no path around cover");
+    let mut tiles = vec![];
+    let mut cur = idx(gx, gy);
+    while cur != idx(sx, sy) { tiles.push(cur); cur = prev[cur]; }
+    tiles.reverse();
+    let centre = |i: usize| (((i % w) as u16) * UNITS_PER_TILE + 50, ((i / w) as u16) * UNITS_PER_TILE + 50);
+    // String-pull: keep the farthest tile centre reachable by a fat clear line.
+    let mut out = vec![];
+    let (mut px, mut py) = (ax, ay);
+    let mut k = 0;
+    while k < tiles.len() {
+        let mut far = k;
+        for j in k..tiles.len() { let (cx, cy) = centre(tiles[j]); if fat(px, py, cx, cy) { far = j; } }
+        let (cx, cy) = centre(tiles[far]);
+        out.push((cx, cy));
+        (px, py) = (cx, cy);
+        if fat(px, py, bx, by) { break; }
+        k = far + 1;
+    }
+    out
 }

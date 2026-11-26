@@ -58,6 +58,7 @@ pub fn move_to(ctx: Context<MoveTo>, slot: u8, dx: i16, dy: i16) -> Result<()> {
         (0..=MAX_X as i64).contains(&nx) && (0..=MAX_Y as i64).contains(&ny),
         RazkynError::OutOfBounds
     );
+    require!(!crate::util::pos_blocked(nx as u16, ny as u16), RazkynError::Blocked);
     p.x = nx as u16;
     p.y = ny as u16;
     p.last_move_slot = clock.slot;

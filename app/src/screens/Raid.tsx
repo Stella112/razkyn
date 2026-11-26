@@ -4,7 +4,7 @@ import type { Connection, Keypair } from "@solana/web3.js";
 import { navigate } from "../App";
 import {
   CLASSES, EXITS, MAP_H, MAP_W, MARKET_EVENTS, NUM_CRATES, P, PRICE_ONE, RaidPlayer, TERMINALS, UNIT, districtNames, rangeTiles,
-  HAZARD_ROWS, backpackValue, changeBps, districtOfX, raidKeyFor, readMine, readPublic, readRaidBase, readSettlement, teeAuthed, teePublic,
+  HAZARD_ROWS, backpackValue, changeBps, districtOfX, raidKeyFor, readMine, readPublic, readRaidBase, readSettlement, posBlocked, lineClear, teeAuthed, teePublic,
   type PublicState, type RprvAcc, type ViewAcc,
 } from "../lib/chain";
 import { programError } from "../lib/errors";
@@ -293,6 +293,12 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
       // Stay inside the map; never more than one step in either direction.
       dx = Math.max(-STEP, Math.min(STEP, Math.max(-cx, Math.min(MAP_W * UNIT - 1 - cx, dx))));
       dy = Math.max(-STEP, Math.min(STEP, Math.max(-cy, Math.min(MAP_H * UNIT - 1 - cy, dy))));
+      // Cover (program rule, DECISIONS #42): a move onto a cover tile is refused, so slide along it.
+      if (posBlocked(cx + dx, cy + dy)) {
+        if (dx && !posBlocked(cx + dx, cy)) dy = 0;
+        else if (dy && !posBlocked(cx, cy + dy)) dx = 0;
+        else return;
+      }
       if (!dx && !dy) return;
       pending.current = { dx: pending.current.dx + dx, dy: pending.current.dy + dy };
       player.moveIx(dx, dy).then((ix) => player.send(ix)).catch(() => {});
@@ -342,6 +348,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     if (!hit) return;
     const range = rangeTiles(pubRef.current?.raid?.classes?.[player.slot]);
     if (dist(hit.x, hit.y, me.x, me.y) > range * UNIT) { say(`Out of range (${range} tiles)`); return; }
+    if (!lineClear(me.x, me.y, hit.x, hit.y)) { say("No line of sight: they are behind cover"); sfx.deny(); return; }
     sceneRef.current()?.flash(me, hit);
     sfx.shot();
     player.shootIx(hit.slot).then((ix) => player.send(ix)).catch((e) => say(programError(e)));

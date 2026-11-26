@@ -4,7 +4,7 @@
 // 3D scene can be inspected without a live raid. Labelled as such on screen.
 import { useEffect, useRef, useState } from "react";
 import { navigate } from "../App";
-import { EXITS, MAP_H, MAP_W, UNIT, type PublicState } from "../lib/chain";
+import { EXITS, MAP_H, MAP_W, UNIT, posBlocked, type PublicState } from "../lib/chain";
 import { startGame, type RaidScene } from "../game/RaidScene3D";
 import { getTheme, getWeather, type Theme, type Weather } from "../game/three/themes";
 import Customize, { WorldPicker } from "./Customize";
@@ -72,10 +72,12 @@ export default function Training() {
     const mv = setInterval(() => {
       const dir = s.moveDir();
       if (dir) {
-        me.current = {
-          x: Math.max(0, Math.min(MAP_W * UNIT - 1, me.current.x + Math.round(dir.x * STEP))),
-          y: Math.max(0, Math.min(MAP_H * UNIT - 1, me.current.y + Math.round(dir.y * STEP))),
-        };
+        const nx = Math.max(0, Math.min(MAP_W * UNIT - 1, me.current.x + Math.round(dir.x * STEP)));
+        const ny = Math.max(0, Math.min(MAP_H * UNIT - 1, me.current.y + Math.round(dir.y * STEP)));
+        // Same cover rule as the program: slide along a block instead of entering it.
+        if (!posBlocked(nx, ny)) me.current = { x: nx, y: ny };
+        else if (!posBlocked(nx, me.current.y)) me.current = { x: nx, y: me.current.y };
+        else if (!posBlocked(me.current.x, ny)) me.current = { x: me.current.x, y: ny };
       }
       feed();
     }, MOVE_MS);

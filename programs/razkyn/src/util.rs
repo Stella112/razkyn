@@ -138,3 +138,28 @@ pub fn store<T: AccountSerialize>(info: &AccountInfo, value: &T) -> Result<()> {
     let mut w: &mut [u8] = &mut data;
     value.try_serialize(&mut w)
 }
+
+// ---------------- cover (DECISIONS #42) ----------------
+
+pub fn tile_blocked(tx: u16, ty: u16) -> bool {
+    COVER_RECTS.iter().any(|&(x0, y0, x1, y1)| tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1)
+}
+
+/// Is this position (units) on a cover tile?
+pub fn pos_blocked(x: u16, y: u16) -> bool {
+    tile_blocked(x / UNITS_PER_TILE, y / UNITS_PER_TILE)
+}
+
+/// No cover tile on the segment a → b (sampled every LOS_STEP_UNITS, both ends included).
+pub fn line_clear(ax: u16, ay: u16, bx: u16, by: u16) -> bool {
+    let dx = bx as i64 - ax as i64;
+    let dy = by as i64 - ay as i64;
+    // Integer only: samples every LOS_STEP_UNITS along the longer axis (spacing <= 20·√2 ≈ 28 units < 1 tile).
+    let span = dx.unsigned_abs().max(dy.unsigned_abs());
+    let n = (span / LOS_STEP_UNITS).max(1) as i64;
+    (0..=n).all(|i| {
+        let x = ax as i64 + dx * i / n;
+        let y = ay as i64 + dy * i / n;
+        !pos_blocked(x as u16, y as u16)
+    })
+}

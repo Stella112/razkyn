@@ -181,3 +181,26 @@ pub const EVENT_MIN_AT: u64 = 60;
 pub const EVENT_AT_SPAN: u64 = 150; // fires between 60 s and 209 s
 pub const SHOCK_HAZARD1_BPS: i64 = -100;
 pub const SHOCK_HAZARD2_BPS: i64 = -300;
+
+// ---------- cover (DECISIONS #42) ----------
+/// Fixed cover blocks, inclusive tile rectangles (x0, y0, x1, y1). A raider cannot move onto a cover
+/// tile and cannot shoot through one. The layout keeps clear: the map edges (spawns), 3 tiles around
+/// exits, 2 tiles around terminals, rows 8-11 and 28-31 and columns 20-23 / 42-45 (BOT safe rows and
+/// corridors). Mirrored in app/src/lib/chain.ts and keeper/src/bots.ts (COVER_RECTS).
+pub const COVER_RECTS: [(u16, u16, u16, u16); 13] = [
+    (8, 4, 11, 5),    // Tower, top
+    (9, 16, 10, 20),  // Tower, wall
+    (14, 18, 17, 19), // Tower, barrier
+    (4, 34, 7, 35),   // Tower, bottom
+    (25, 4, 27, 5),   // Factory, top
+    (31, 15, 33, 16), // Factory, centre north
+    (31, 23, 33, 24), // Factory, centre south
+    (37, 18, 38, 21), // Factory, wall
+    (38, 34, 40, 35), // Factory, bottom
+    (52, 4, 54, 6),   // Harbor, top
+    (48, 17, 51, 18), // Harbor, barrier
+    (55, 20, 56, 24), // Harbor, wall
+    (57, 33, 60, 34), // Harbor, bottom
+];
+/// Line-of-sight sample step (units): smaller than a tile, so a 1-tile block is never skipped.
+pub const LOS_STEP_UNITS: u64 = 20;

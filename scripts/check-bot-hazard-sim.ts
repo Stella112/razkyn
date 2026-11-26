@@ -117,7 +117,8 @@ const results: string[] = [];
 // 7. Drift: every 4th move rejected while crossing a dangerous district through the corridor.
 {
   const f = new FakeSession([2, 0, 0], [-600, 0, 0]); f.pos = { x: 1050, y: 3500 }; f.rejectEvery = 4;
-  const ok = await crew(f).safeWalk(0, 1050, 500, 60, 1);
+  // Target (13, 5): tile (10, 5) is cover since DECISIONS #42, and no crate can sit on cover.
+  const ok = await crew(f).safeWalk(0, 1350, 500, 60, 1);
   assert.ok(ok, "did not arrive with drift");
   assert.equal(f.hazardSamples, 0, `drift put the BOT on hazard tiles (${f.hazardSamples} samples)`);
   results.push(`drift (25% moves rejected): arrived through the corridor, 0 hazard samples`);

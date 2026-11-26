@@ -5731,6 +5731,16 @@
       "code": 6060,
       "name": "NoBadge",
       "msg": "no badge to claim"
+    },
+    {
+      "code": 6061,
+      "name": "Blocked",
+      "msg": "blocked by cover"
+    },
+    {
+      "code": 6062,
+      "name": "NoLineOfSight",
+      "msg": "no line of sight (cover in the way)"
     }
   ],
   "types": [

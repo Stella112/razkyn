@@ -277,6 +277,21 @@ export const rangeTiles = (cls: number | undefined) => (cls === 3 ? 7 : 6);
 export const MARKET_EVENTS = ["", "TRADING HALT", "RATE SHOCK", "EARNINGS SURPRISE"];
 export const EXITS: [number, number][] = [[1, 20], [32, 1], [32, 38], [62, 20]];
 export const TERMINALS: [number, number][] = [[5, 12], [15, 28], [27, 12], [37, 28], [49, 12], [59, 28]];
+/** Cover blocks, inclusive tile rects [x0, y0, x1, y1]: must match COVER_RECTS in constants.rs (DECISIONS #42). */
+export const COVER_RECTS: [number, number, number, number][] = [
+  [8, 4, 11, 5], [9, 16, 10, 20], [14, 18, 17, 19], [4, 34, 7, 35],
+  [25, 4, 27, 5], [31, 15, 33, 16], [31, 23, 33, 24], [37, 18, 38, 21], [38, 34, 40, 35],
+  [52, 4, 54, 6], [48, 17, 51, 18], [55, 20, 56, 24], [57, 33, 60, 34],
+];
+export const tileBlocked = (tx: number, ty: number) => COVER_RECTS.some(([x0, y0, x1, y1]) => tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1);
+export const posBlocked = (x: number, y: number) => tileBlocked(Math.floor(x / UNIT), Math.floor(y / UNIT));
+/** Same sampling as util.rs line_clear (integer steps of 20 units along the longer axis). */
+export function lineClear(ax: number, ay: number, bx: number, by: number) {
+  const dx = bx - ax, dy = by - ay;
+  const n = Math.max(1, Math.floor(Math.max(Math.abs(dx), Math.abs(dy)) / 20));
+  for (let i = 0; i <= n; i++) if (posBlocked(ax + Math.trunc((dx * i) / n), ay + Math.trunc((dy * i) / n))) return false;
+  return true;
+}
 export const HAZARD_ROWS: Record<number, [number, number]> = { 1: [16, 23], 2: [12, 27] };
 export const VISION_TILES = 8;
 export const SHOOT_RANGE_TILES = 6;

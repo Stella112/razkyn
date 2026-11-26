@@ -8,7 +8,7 @@
 //   west   — more towers;  south — low barriers and street lamps only (no camera occlusion).
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { DISTRICT_TILES, EXITS, HAZARD_ROWS, MAP_H, MAP_W, TERMINALS } from "../../lib/chain";
+import { COVER_RECTS, DISTRICT_TILES, EXITS, HAZARD_ROWS, MAP_H, MAP_W, TERMINALS } from "../../lib/chain";
 import { dressCity } from "./dressing";
 import { DAY_SKY, LOOK, buildFarm, buildMall, paintThemedFloor, type Theme, type Weather } from "./themes";
 
@@ -393,6 +393,21 @@ export function buildWorld(renderer: THREE.WebGLRenderer, theme: Theme = "street
     scene.add(s.mesh);
     return s;
   });
+
+  // Cover blocks (program rule, DECISIONS #42): concrete barriers with a striped amber cap. They stop
+  // movement and shots, so they are drawn solid and tall enough to read as cover from the camera.
+  {
+    const coverMat = patchFow(new THREE.MeshStandardMaterial({ color: theme === "farm" ? 0x6b5a44 : theme === "mall" ? 0x5d6670 : 0x3a4148, roughness: 0.85, metalness: 0.1 }));
+    const capMat = new THREE.MeshStandardMaterial({ color: PAL.amber, emissive: PAL.amber, emissiveIntensity: 0.35, roughness: 0.5 });
+    for (const [x0, y0, x1, y1] of COVER_RECTS) {
+      const w = x1 - x0 + 1, d = y1 - y0 + 1, hgt = 1.5;
+      const body = new THREE.Mesh(new THREE.BoxGeometry(w - 0.08, hgt, d - 0.08), coverMat);
+      body.position.set(x0 + w / 2, hgt / 2, y0 + d / 2); body.castShadow = true; body.receiveShadow = true;
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(w - 0.02, 0.1, d - 0.02), capMat);
+      cap.position.set(x0 + w / 2, hgt + 0.05, y0 + d / 2);
+      scene.add(body, cap);
+    }
+  }
 
   // Hazard overlays: cracked, glowing floor on the rows the program damages (HAZARD_ROWS).
   const crackTex = canvasTex(512, 256, (c) => {

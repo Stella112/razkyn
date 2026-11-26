@@ -9,7 +9,7 @@ const STEPS: [string, string][] = [
   ["1 · LOOT", "Walk onto a crate (amber strip) and press E. Cracking the seal takes 2 s. What is inside was fixed by the raid's VRF seed and stays hidden in the TEE until you open it."],
   ["2 · READ THE MARKET", "Each district tracks one asset, so your backpack's dollar value moves with the market. A district up 2% wakes its dormant crates. A district down 2% cracks its floor: the red rows drain 10 HP a second (down 5%: twice the area)."],
   ["3 · TRADE", "On a terminal (teal ring) press E and swap a whole asset at the current price. It takes 3 s and everyone can see where you are while it runs. A hit cancels the trade."],
-  ["4 · FIGHT", "Click a raider to shoot (6 tiles, 34 damage, 3 hits to knock out). A knocked-out raider's backpack drops as a crate anyone can open."],
+  ["4 · FIGHT", "Click a raider to shoot (6 tiles, 34 damage, 3 hits to knock out). A knocked-out raider's backpack drops as a crate anyone can open. Grey blocks with an amber top are cover: nobody walks or shoots through them."],
   ["5 · EXTRACT", "Exits open 2:00, 3:30 and 4:30 into the raid, two of the four for 30 s each (the clock shows the next window). Stand on an open exit (teal beam) and hold Space for 5 s. Your backpack settles to your wallet when the raid ends."],
 ];
 const COLOURS: [string, string, string][] = [

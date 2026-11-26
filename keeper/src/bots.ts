@@ -38,6 +38,19 @@ const EXTRACT_SECS = 6; // 5 s channel + send slack
 const RAID_END = 300;
 const RISKY_EXIT_MIN_HP = 95; // a band exit costs 2-4 s walking + 5 s standing at 10 HP/s (one BOT died at 85+)
 type Bands = ([number, number] | null)[];
+/** Cover blocks (inclusive tile rects): must match COVER_RECTS in constants.rs (DECISIONS #42). The
+ *  program refuses a move onto a cover tile, so BOT routes keep COVER_CLEAR units away from them. */
+export const COVER_RECTS: [number, number, number, number][] = [
+  [8, 4, 11, 5], [9, 16, 10, 20], [14, 18, 17, 19], [4, 34, 7, 35],
+  [25, 4, 27, 5], [31, 15, 33, 16], [31, 23, 33, 24], [37, 18, 38, 21], [38, 34, 40, 35],
+  [52, 4, 54, 6], [48, 17, 51, 18], [55, 20, 56, 24], [57, 33, 60, 34],
+];
+const COVER_CLEAR = 35;
+export const tileBlocked = (tx: number, ty: number) => COVER_RECTS.some(([x0, y0, x1, y1]) => tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1);
+/** On cover, or within COVER_CLEAR units of it. */
+export function nearCover(x: number, y: number) {
+  return COVER_RECTS.some(([x0, y0, x1, y1]) => x >= x0 * 100 - COVER_CLEAR && x < (x1 + 1) * 100 + COVER_CLEAR && y >= y0 * 100 - COVER_CLEAR && y < (y1 + 1) * 100 + COVER_CLEAR);
+}
 const districtOfX = (x: number) => DISTRICT_TILES.findIndex(([lo, hi]) => Math.floor(x / 100) >= lo && Math.floor(x / 100) <= hi);
 export function inBand(x: number, y: number, bands: Bands) {
   const d = districtOfX(x);
@@ -66,11 +79,50 @@ export function planRoute(ax: number, ay: number, x: number, y: number, bands: B
     }
     if (ok && (!best || len < best.len)) best = { wps, len };
   }
-  return best;
+  return best ?? gridRoute(ax, ay, x, y, bands, allowTargetInBand);
+}
+/** Fallback: tile BFS around cover (and danger bands), then string-pulled into few waypoints. */
+export function gridRoute(ax: number, ay: number, x: number, y: number, bands: Bands, allowTargetInBand = false): { wps: [number, number][]; len: number } | null {
+  const W = 64, H = 40, id = (tx: number, ty: number) => ty * W + tx;
+  const s = [Math.floor(ax / 100), Math.floor(ay / 100)], g = [Math.floor(x / 100), Math.floor(y / 100)];
+  const prev = new Int32Array(W * H).fill(-1);
+  prev[id(s[0], s[1])] = id(s[0], s[1]);
+  const q: number[] = [id(s[0], s[1])];
+  for (let h = 0; h < q.length; h++) {
+    const c = q[h], cx = c % W, cy = Math.floor(c / W);
+    if (cx === g[0] && cy === g[1]) break;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = cx + dx, ny = cy + dy;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H || prev[id(nx, ny)] >= 0 || tileBlocked(nx, ny)) continue;
+      const isGoal = nx === g[0] && ny === g[1];
+      if (!(isGoal && allowTargetInBand) && inBand(nx * 100 + 50, ny * 100 + 50, bands)) continue;
+      prev[id(nx, ny)] = c;
+      q.push(id(nx, ny));
+    }
+  }
+  if (prev[id(g[0], g[1])] < 0) return null;
+  const tiles: number[] = [];
+  for (let c = id(g[0], g[1]); c !== id(s[0], s[1]); c = prev[c]) tiles.push(c);
+  tiles.reverse();
+  const centre = (c: number): [number, number] => [(c % W) * 100 + 50, Math.floor(c / W) * 100 + 50];
+  const wps: [number, number][] = [];
+  let p: [number, number] = [ax, ay], k = 0, len = 0;
+  while (k < tiles.length && !segmentSafe(p[0], p[1], x, y, bands)) {
+    let far = k;
+    for (let j = k; j < tiles.length; j++) { const c = centre(tiles[j]); if (segmentSafe(p[0], p[1], c[0], c[1], bands)) far = j; }
+    const c = centre(tiles[far]);
+    len += Math.hypot(c[0] - p[0], c[1] - p[1]);
+    wps.push(c); p = c; k = far + 1;
+  }
+  return { wps, len: len + Math.hypot(x - p[0], y - p[1]) };
 }
 function segmentSafe(ax: number, ay: number, bx: number, by: number, bands: Bands) {
   const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 25));
-  for (let i = 0; i <= n; i++) if (inBand(ax + ((bx - ax) * i) / n, ay + ((by - ay) * i) / n, bands)) return false;
+  for (let i = 0; i <= n; i++) {
+    const px = ax + ((bx - ax) * i) / n, py = ay + ((by - ay) * i) / n;
+    // Cover clearance is skipped for the first 40 units, so a BOT that stopped close to cover can leave it.
+    if (inBand(px, py, bands) || (nearCover(px, py) && Math.hypot(px - ax, py - ay) > 40)) return false;
+  }
   return true;
 }
 

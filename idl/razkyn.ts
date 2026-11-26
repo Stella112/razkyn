@@ -5737,6 +5737,16 @@ export type Razkyn = {
       "code": 6060,
       "name": "noBadge",
       "msg": "no badge to claim"
+    },
+    {
+      "code": 6061,
+      "name": "blocked",
+      "msg": "blocked by cover"
+    },
+    {
+      "code": 6062,
+      "name": "noLineOfSight",
+      "msg": "no line of sight (cover in the way)"
     }
   ],
   "types": [

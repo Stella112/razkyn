@@ -125,4 +125,8 @@ pub enum RazkynError {
     PicksOpen,
     #[msg("no badge to claim")]
     NoBadge,
+    #[msg("blocked by cover")]
+    Blocked,
+    #[msg("no line of sight (cover in the way)")]
+    NoLineOfSight,
 }
