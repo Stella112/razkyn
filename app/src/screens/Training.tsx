@@ -71,7 +71,7 @@ export default function Training() {
       }
       feed();
     }, MOVE_MS);
-    const st = setInterval(() => { const x = s.stats(); setStats(`${x.fps} fps · p95 ${x.p95Ms} ms · ${x.calls} draw calls${x.lowPower ? " · low power" : ""}`); }, 1000);
+    const st = setInterval(() => { const x = s.stats(); setStats(x.frames < 60 ? "measuring frame rate…" : `${x.fps} fps · p95 ${x.p95Ms} ms · ${x.calls} draw calls${x.lowPower ? " · low power" : ""}`); }, 1000);
     feed();
     return () => { clearInterval(mv); clearInterval(st); game.destroy(); };
   }, []);
