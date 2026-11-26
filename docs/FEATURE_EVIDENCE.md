@@ -41,3 +41,11 @@ Screenshots are in `docs/screens/`. Devnet raids: 1795697137007 (Mystery, 3D cli
 | How to play + colour legend (title menu, HELP button, H key, auto-opens on the first raid / training visit) | Built | `app/src/screens/HowToPlay.tsx` |
 | Closer camera (~38°, about 40% nearer) and larger operators | Built | `RaidScene3D.ts`, `actors.ts` |
 | Overhead lantern cables over the Street market (above head height) | Built | `dressing.ts` |
+
+## Live raid with the reference pass (raid 1795704493373, Mystery, Trader, diagonal camera)
+- Controls: holding S moved the raider on-chain in direction (0.479, 0.878) = exactly the camera-relative back vector; prediction offset settled to 0.
+- Crate #9 opened → +0.69 Tower units (`pass2-crate-opened.jpg`).
+- Terminal readout with real indices and price source "historical replay (Mystery day)", Trader "2 s" (`pass2-terminal-readout.jpg`).
+- **TRADING HALT on Tower fired while I traded**: banner + red HALTED terminal, trade refused by the program, backpack unchanged (`pass2-trading-halt.jpg`). First devnet observation of a halt.
+- After the halt: Tower 0.69 → Harbor 0.68, exposed while channelling, "Trade filled".
+- Extracted at exit 0 in window 2 → 7.36 dUSD + 0.68 dHRB, claim `5LkaKWwg…`, settlement `5W5Tz4Ge…`; reveal "UKRAINE TENSIONS HIT CRYPTO · 22 Feb 2022", price data verified (`pass2-extracted.jpg`).
