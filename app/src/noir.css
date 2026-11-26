@@ -183,3 +183,47 @@ body { background: #0b0f12; letter-spacing: 0.005em; }
 .training-theme .cz-row { grid-template-columns: 52px 1fr; margin: 6px 0 0; }
 
 @media (max-height: 820px) { .menu-item:not(.primary) .mi-sub { display: none; } .menu-item { padding: 5px 14px; } .title-world { margin-top: 8px; } }
+
+/* ---------- title screen v3: intro, keyboard focus, status panel ---------- */
+@keyframes slashIn { from { transform: rotate(-4deg) scaleX(0); } to { transform: rotate(-4deg) scaleX(1); } }
+@keyframes riseIn { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.logo.intro::after { transform-origin: left center; animation: slashIn 0.55s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.logo.intro .logo-text { animation: fadeIn 0.5s both; }
+.intro-sub { animation: fadeIn 0.6s 0.3s both; }
+.menu-item { animation: riseIn 0.4s both; }
+.menu-item.kb:not(.primary) { background: linear-gradient(90deg, rgba(217, 172, 101, 0.14), transparent); border-left-color: var(--amber); padding-left: 22px; }
+.menu-item.primary.kb { outline: 2px solid #f3efe6; outline-offset: 2px; }
+.logo-pitch { font-size: 13px; color: #b8c2c4; max-width: 420px; margin: -18px 0 18px 26px; line-height: 1.5; }
+@media (max-height: 820px) { .logo-pitch { display: none; } }
+.status-panel { position: absolute; right: clamp(16px, 4vw, 56px); top: 64px; width: min(320px, calc(100vw - 32px)); background: rgba(11, 15, 18, 0.82); border: 1px solid rgba(200, 210, 209, 0.16); border-top: 3px solid #D9AC65; padding: 12px 14px; animation: fadeIn 0.6s 0.5s both; }
+.sp-head { display: flex; align-items: center; gap: 8px; }
+.sp-dot { width: 9px; height: 9px; border-radius: 50%; background: #8a979d; }
+.sp-dot.up { background: #45C9B2; box-shadow: 0 0 0 0 rgba(69, 201, 178, 0.7); animation: pulseDot 1.6s infinite; }
+.sp-dot.down { background: #E4514E; animation: pulseDot 1.2s infinite; }
+.sp-dot.amber { background: #D9AC65; }
+@keyframes pulseDot { 0% { box-shadow: 0 0 0 0 rgba(228, 81, 78, 0.55); } 100% { box-shadow: 0 0 0 10px rgba(228, 81, 78, 0); } }
+.sp-tag { font-family: var(--display); font-weight: 800; letter-spacing: 0.2em; font-size: 15px; }
+.sp-line { font-size: 12.5px; color: #b8c2c4; margin: 6px 0 10px; line-height: 1.45; }
+.sp-cta { font-family: var(--display); font-weight: 800; letter-spacing: 0.16em; font-size: 14px; padding: 7px 14px; background: #D9AC65; color: #10151a; border: none; cursor: pointer; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%); }
+.sp-cta:hover { background: #e8c27e; }
+.sp-last { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(200, 210, 209, 0.12); cursor: pointer; }
+.sp-last:hover .sp-link, .sp-last:focus .sp-link { color: #f3efe6; }
+.sp-k { font-family: var(--display); font-weight: 600; letter-spacing: 0.18em; font-size: 11px; color: var(--dim); }
+.sp-title { font-family: var(--display); font-weight: 800; font-size: 19px; letter-spacing: 0.04em; margin: 3px 0; color: #f3efe6; }
+.sp-v { font-size: 12px; color: #b8c2c4; }
+.sp-link { font-family: var(--display); font-weight: 700; letter-spacing: 0.14em; font-size: 12px; color: #45C9B2; margin-top: 4px; }
+.sp-count { margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--faint); }
+.title-foot .proof a { color: #45C9B2; text-decoration: none; }
+.title-foot .proof a:hover { text-decoration: underline; }
+@media (max-width: 1000px) { .status-panel { top: auto; bottom: 46px; right: 12px; width: 280px; } }
+@media (max-width: 720px) { .status-panel { position: static; width: auto; margin: 0 12px; } .title-screen { overflow-y: auto; } }
+@media (max-width: 720px) {
+  .title-screen { overflow-y: auto; }
+  .title-canvas { position: fixed; }
+  .title-shade { position: fixed; }
+  .title-menu { position: relative; top: auto; left: auto; transform: none; width: auto; margin: 34vh 16px 0; }
+  .logo-sub { letter-spacing: 0.3em; margin-left: 20px; font-size: 13px; }
+  .status-panel { position: relative; margin: 16px; top: auto; right: auto; bottom: auto; width: auto; }
+  .title-foot { position: relative; }
+}
