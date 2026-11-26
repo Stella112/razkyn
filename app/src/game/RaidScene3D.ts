@@ -11,8 +11,8 @@ import {
   DISTRICT_TILES, EXITS, MAP_H, MAP_W, NUM_CRATES, TERMINALS, UNIT, VISION_TILES, changeBps, districtOfX, type PublicState,
 } from "../lib/chain";
 import { CSS, PAL, buildWorld, fow, type World } from "./three/world";
-import { CrateModel, ExitModel, LOOKS, Operator, TerminalModel } from "./three/actors";
-import { getTheme } from "./three/themes";
+import { CrateModel, ExitModel, LOOKS, Operator, TerminalModel, avatarFromSeed, loadAvatar, loadBotModel, type AvatarSpec } from "./three/actors";
+import { getTheme, getWeather } from "./three/themes";
 
 export type Visible = { slot: number; x: number; y: number };
 export type SceneInput = {
@@ -118,7 +118,7 @@ export class RaidScene {
     this.renderer.domElement.style.display = "block";
     this.renderer.domElement.style.touchAction = "none";
 
-    this.world = buildWorld(this.renderer, getTheme());
+    this.world = buildWorld(this.renderer, getTheme(), getWeather());
     this.scene = this.world.scene;
     this.camera = new THREE.PerspectiveCamera(36, 1, 0.5, 400);
     this.camera.position.set(MAP_W / 2, 30, MAP_H + 28);
@@ -285,7 +285,10 @@ export class RaidScene {
   private raider(slot: number, look: keyof typeof LOOKS): RaiderView {
     let v = this.raiders.get(slot);
     if (!v) {
-      const op = new Operator(LOOKS[look]);
+      // You: your saved avatar. Other humans: a look derived from their wallet (the chain stores no avatar). BOTs: the chosen BOT style.
+      const wallet = this.input_?.pub?.raid?.raiders[slot]?.wallet;
+      const spec: AvatarSpec = look === "me" ? loadAvatar() : look === "bot" ? { kind: "bot", model: loadBotModel() } : avatarFromSeed(wallet ? wallet.toBytes() : [slot * 41 + 7, slot * 13, slot * 7, slot * 3, slot, slot * 29]);
+      const op = new Operator(LOOKS[look], spec);
       const label = textSprite("", CSS.silver);
       label.sp.position.y = 2.35;
       op.root.add(label.sp);

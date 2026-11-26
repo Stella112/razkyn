@@ -10,7 +10,7 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { DISTRICT_TILES, EXITS, HAZARD_ROWS, MAP_H, MAP_W, TERMINALS } from "../../lib/chain";
 import { dressCity } from "./dressing";
-import { LOOK, buildFarm, buildMall, paintThemedFloor, type Theme } from "./themes";
+import { DAY_SKY, LOOK, buildFarm, buildMall, paintThemedFloor, type Theme, type Weather } from "./themes";
 
 /** Market Noir palette. */
 export const PAL = {
@@ -227,16 +227,22 @@ export type World = {
   tick: (t: number, dt: number, focus: THREE.Vector3) => void;
 };
 
-export function buildWorld(renderer: THREE.WebGLRenderer, theme: Theme = "street"): World {
+export function buildWorld(renderer: THREE.WebGLRenderer, theme: Theme = "street", weather: Weather = "night"): World {
   const L = LOOK[theme];
+  const day = weather === "day", storm = weather === "storm";
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(L.bg);
-  scene.fog = new THREE.FogExp2(L.fog, L.fogD);
+  const bgCol = day ? DAY_SKY[theme] : storm ? 0x0b1014 : L.bg;
+  scene.background = new THREE.Color(bgCol);
+  scene.fog = new THREE.FogExp2(day ? bgCol : storm ? 0x121a20 : L.fog, day ? L.fogD * 0.45 : storm ? 0.016 : L.fogD);
+  /** City windows and neon matter at night, much less in daylight. */
+  const lit = day ? 0.12 : 1;
 
   // Lighting: cool moonlight (shadows on the playfield), dim sky fill, district market lights.
-  scene.add(new THREE.HemisphereLight(L.sky, L.ground, L.hemi));
-  const moon = new THREE.DirectionalLight(L.moon, L.moonI);
-  moon.position.set(MAP_W / 2 - 18, 40, MAP_H / 2 + 22);
+  const hemi = new THREE.HemisphereLight(day ? 0xdbe8f3 : L.sky, day ? 0x6a5f50 : L.ground, day ? 2.9 : storm ? L.hemi * 0.55 : L.hemi);
+  scene.add(hemi);
+  const hemiBase = hemi.intensity;
+  const moon = new THREE.DirectionalLight(day ? 0xffe8c4 : storm ? 0x9fb0c0 : L.moon, day ? 4.6 : storm ? 0.9 : L.moonI);
+  moon.position.set(MAP_W / 2 + (day ? 14 : -18), day ? 55 : 40, MAP_H / 2 + 22);
   moon.target.position.set(MAP_W / 2, 0, MAP_H / 2);
   moon.castShadow = true;
   moon.shadow.mapSize.set(2048, 2048);
@@ -281,8 +287,8 @@ export function buildWorld(renderer: THREE.WebGLRenderer, theme: Theme = "street
   if (theme === "street") {
   // City blocks (one merged mesh, one material).
   const fac = facadeTextures();
-  const facadeMat = new THREE.MeshStandardMaterial({ map: fac.map, emissiveMap: fac.emissive, emissive: 0xffffff, emissiveIntensity: 0.8, roughness: 0.55, metalness: 0.45 });
-  const glassMat = new THREE.MeshStandardMaterial({ map: fac.map, emissiveMap: fac.emissive, emissive: 0xbfeee6, emissiveIntensity: 0.7, roughness: 0.18, metalness: 0.85 });
+  const facadeMat = new THREE.MeshStandardMaterial({ map: fac.map, emissiveMap: fac.emissive, emissive: 0xffffff, emissiveIntensity: 0.8 * lit, roughness: 0.55, metalness: 0.45 });
+  const glassMat = new THREE.MeshStandardMaterial({ map: fac.map, emissiveMap: fac.emissive, emissive: 0xbfeee6, emissiveIntensity: 0.7 * lit, roughness: 0.18, metalness: 0.85 });
   const towers: THREE.BufferGeometry[] = [], blocks: THREE.BufferGeometry[] = [];
   // North of Tower district + west edge: glass towers.
   for (let x = -14; x < 22; x += 5 + r() * 2) {
@@ -437,9 +443,11 @@ export function buildWorld(renderer: THREE.WebGLRenderer, theme: Theme = "street
     rainPos.set([x, y, z, x + 0.05, y - 0.45, z + 0.03], i * 6);
   }
   const rainGeo = new THREE.BufferGeometry(); rainGeo.setAttribute("position", new THREE.BufferAttribute(rainPos, 3));
-  const rain = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: 0x9fb2bd, transparent: true, opacity: 0.13, depthWrite: false }));
+  const rain = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: 0x9fb2bd, transparent: true, opacity: storm ? 0.26 : 0.13, depthWrite: false }));
   rain.frustumCulled = false;
-  rain.visible = L.rain;
+  const rainOn = storm ? theme !== "mall" : !day && L.rain;
+  rain.visible = rainOn;
+  if (storm) rain.rotation.z = 0.12; // wind
   scene.add(rain);
 
   // Environment reflections for wet metal.
@@ -452,13 +460,21 @@ export function buildWorld(renderer: THREE.WebGLRenderer, theme: Theme = "street
   pmrem.dispose();
 
   const dressing = theme === "street" ? dressCity(scene) : null;
+  let flash = 0;
   const tick = (t: number, dt: number, focus: THREE.Vector3) => {
     dressing?.tick(dt, focus);
     themed?.tick(t, dt);
+    // Lightning (storm): rare bright flashes that light the whole city for a moment.
+    if (storm) {
+      if (Math.random() < dt * 0.12) flash = 1;
+      flash *= Math.exp(-dt * 7);
+      hemi.intensity = hemiBase + flash * 7;
+      (scene.background as THREE.Color).setHex(bgCol).lerp(new THREE.Color(0x9fb0c8), flash * 0.6);
+    }
     // Rain falls and wraps around the focus.
     const a = rainGeo.attributes.position as THREE.BufferAttribute;
     const arr = a.array as Float32Array;
-    const fall = dt * 22;
+    const fall = dt * (storm ? 34 : 22);
     for (let i = 0; i < rainN; i++) {
       const o = i * 6;
       arr[o + 1] -= fall; arr[o + 4] -= fall;
@@ -493,7 +509,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer, theme: Theme = "street
     cc.position.set(MAP_W / 2, 3.5, MAP_H / 2);
     rain.visible = false;
     cc.update(renderer, scene);
-    rain.visible = L.rain;
+    rain.visible = rainOn;
     const pm = new THREE.PMREMGenerator(renderer);
     scene.environment = pm.fromCubemap(rt.texture).texture;
     pm.dispose(); rt.dispose();

@@ -9,6 +9,15 @@ import { DISTRICT_TILES, MAP_H, MAP_W } from "../../lib/chain";
 import { PAL, Sign } from "./world";
 
 export type Theme = "street" | "mall" | "farm";
+export type Weather = "day" | "night" | "storm";
+export const WEATHERS: { id: Weather; name: string }[] = [{ id: "day", name: "SUNNY DAY" }, { id: "night", name: "NIGHT" }, { id: "storm", name: "STORM" }];
+export const getWeather = (): Weather => {
+  try { const w = window.localStorage.getItem("razkyn-weather"); if (w === "day" || w === "night" || w === "storm") return w; } catch { /* storage blocked */ }
+  return "night";
+};
+export const setWeather = (w: Weather) => { try { window.localStorage.setItem("razkyn-weather", w); } catch { /* storage blocked */ } };
+/** Daylight sky per theme (indoors the mall gets warm skylight). */
+export const DAY_SKY: Record<Theme, number> = { street: 0x8fbbe0, mall: 0x8a7d6a, farm: 0x8cc4f0 };
 export const THEMES: { id: Theme; name: string; blurb: string }[] = [
   { id: "street", name: "STREET", blurb: "Rain-soaked financial district at night: towers, factory, harbor cranes." },
   { id: "mall", name: "MALL", blurb: "A closed shopping mall after hours: storefronts, escalators, food court." },

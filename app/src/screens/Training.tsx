@@ -6,9 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { navigate } from "../App";
 import { EXITS, MAP_H, MAP_W, UNIT, type PublicState } from "../lib/chain";
 import { startGame, type RaidScene } from "../game/RaidScene3D";
-import { getTheme, type Theme } from "../game/three/themes";
+import { getTheme, getWeather, type Theme, type Weather } from "../game/three/themes";
+import Customize, { WorldPicker } from "./Customize";
 import HowToPlay, { howToSeen } from "./HowToPlay";
-import { ThemePicker } from "./Landing";
 
 const STEP = 50, MOVE_MS = 110;
 const crateLayout = Array.from({ length: 36 }, (_, i) => {
@@ -25,6 +25,9 @@ export default function Training() {
   const [msg, setMsg] = useState("WASD to move · aim with the mouse · click to fire · E at a crate");
   const [stats, setStats] = useState("");
   const [theme, setTheme] = useState<Theme>(getTheme());
+  const [weather, setWeather] = useState<Weather>(getWeather());
+  const [custom, setCustom] = useState(false);
+  const [rev, setRev] = useState(0);
   const [help, setHelp] = useState(() => !howToSeen());
 
   useEffect(() => {
@@ -79,18 +82,19 @@ export default function Training() {
     const st = setInterval(() => { const x = s.stats(); setStats(x.frames < 60 ? "measuring frame rate…" : `${x.fps} fps · p95 ${x.p95Ms} ms · ${x.calls} draw calls${x.lowPower ? " · low power" : ""}`); }, 1000);
     feed();
     return () => { clearInterval(mv); clearInterval(st); game.destroy(); };
-  }, [theme]);
+  }, [theme, weather, rev]);
 
   return (
     <div className="raid">
-      <div className="raid-canvas" ref={host} key={theme} />
+      <div className="raid-canvas" ref={host} key={`${theme}-${weather}-${rev}`} />
       <div className="training-bar">
         <a className="brand" href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>RAZKYN</a>
         <span className="tag warn">TRAINING GROUND · OFFLINE · NOTHING HERE TOUCHES THE CHAIN</span>
         <span className="mono dim">{stats}</span>
         <button className="act mute help-btn" onClick={() => setHelp(true)}>HELP</button>
       </div>
-      <div className="training-theme"><ThemePicker theme={theme} onPick={setTheme} /></div>
+      <div className="training-theme"><WorldPicker theme={theme} weather={weather} onTheme={setTheme} onWeather={setWeather} /><button className="btn" style={{ marginTop: 8 }} onClick={() => setCustom(true)}>EDIT CHARACTER</button></div>
+      {custom && <Customize onClose={() => { setCustom(false); setRev((r) => r + 1); }} onWorld={(t, w) => { setTheme(t); setWeather(w); }} />}
       {help && <HowToPlay onClose={() => setHelp(false)} />}
       <div className="prompt">{msg}</div>
     </div>

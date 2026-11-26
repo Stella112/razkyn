@@ -6,10 +6,10 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { CSS, PAL, buildWorld } from "./three/world";
-import { CrateModel, ExitModel, LOOKS, Operator, TerminalModel } from "./three/actors";
-import type { Theme } from "./three/themes";
+import { CrateModel, ExitModel, LOOKS, Operator, TerminalModel, loadAvatar } from "./three/actors";
+import type { Theme, Weather } from "./three/themes";
 
-export function startMenuScene(parent: HTMLElement, theme: Theme = "street") {
+export function startMenuScene(parent: HTMLElement, theme: Theme = "street", weather: Weather = "night") {
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -20,7 +20,7 @@ export function startMenuScene(parent: HTMLElement, theme: Theme = "street") {
   parent.appendChild(renderer.domElement);
   renderer.domElement.style.display = "block";
 
-  const world = buildWorld(renderer, theme);
+  const world = buildWorld(renderer, theme, weather);
   const scene = world.scene;
   world.signs.forEach((s, i) => s.draw(["TOWER", "FACTORY", "HARBOR"][i], "MARKET OPEN 24/7", [CSS.teal, CSS.amber, CSS.silver][i]));
   world.districtLights.forEach((l, i) => { l.color.setHex([PAL.teal, PAL.amber, PAL.red][i]); l.intensity = 34; });
@@ -31,7 +31,7 @@ export function startMenuScene(parent: HTMLElement, theme: Theme = "street") {
   pad.position.copy(focus).setY(0.08); pad.receiveShadow = true; scene.add(pad);
   const padRing = new THREE.Mesh(new THREE.TorusGeometry(1.62, 0.03, 6, 6), new THREE.MeshBasicMaterial({ color: PAL.amber, toneMapped: false }));
   padRing.rotation.x = -Math.PI / 2; padRing.position.copy(focus).setY(0.17); scene.add(padRing);
-  const op = new Operator(LOOKS.me);
+  const op = new Operator(LOOKS.me, loadAvatar());
   op.root.position.copy(focus).setY(0.16);
   op.facing = 0.5; op.aim = 0.2;
   scene.add(op.root);

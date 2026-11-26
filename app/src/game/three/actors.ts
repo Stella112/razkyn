@@ -1,4 +1,4 @@
-// RAZKYN actors: the operator (procedural, jointed, code-animated), crates, terminals and exits.
+// RAZKYN actors: raiders (procedural, jointed, code-animated humans and robots), crates, terminals and exits.
 // All geometry is original and built from primitives (no third-party models).
 import * as THREE from "three";
 import { PAL } from "./world";
@@ -6,7 +6,8 @@ import { PAL } from "./world";
 const mat = (color: number, rough = 0.55, metal = 0.5) => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal });
 const glow = (color: number) => new THREE.MeshBasicMaterial({ color, toneMapped: false });
 
-// ---------------------------------------------------------------- operator
+// ---------------------------------------------------------------- avatars
+/** Identity colour per role: the backpack strip, armband and sight glow in it (you teal, humans amber, BOTs red). */
 export type OperatorLook = { visor: number; accent: number; armor: number };
 export const LOOKS = {
   me: { visor: PAL.teal, accent: PAL.teal, armor: 0x3a464e },
@@ -14,12 +15,42 @@ export const LOOKS = {
   bot: { visor: PAL.red, accent: 0x8c96a0, armor: 0x2c3237 },
 } satisfies Record<string, OperatorLook>;
 
+export type HumanSpec = { kind: "human"; body: "m" | "f"; skin: number; hair: number; hairColor: number; top: number; pants: number };
+export type BotSpec = { kind: "bot"; model: number };
+export type AvatarSpec = HumanSpec | BotSpec;
+export const SKINS = [0xf2cfb0, 0xe0ac86, 0xc08a62, 0x9a6640, 0x6e4529, 0x45291a];
+export const HAIR_STYLES = ["Short", "Buzz", "Long", "Ponytail", "Bun", "Curly"];
+export const HAIR_COLORS = [0x15110e, 0x4a2e1c, 0x8a5a2b, 0xd1aa62, 0xa63a28, 0xc8cfd0];
+export const TOPS = [0x2c3a44, 0x6b2f2a, 0x2e4a3a, 0x4d3f2c, 0x1e1f24, 0x8a6a3c];
+export const PANTS = [0x1d2226, 0x2a3140, 0x3a3328, 0x4a4f55];
+export const BOT_MODELS = ["SENTINEL", "DRONE", "HEAVY"];
+export const DEFAULT_HUMAN: HumanSpec = { kind: "human", body: "m", skin: 2, hair: 0, hairColor: 0, top: 0, pants: 0 };
+
+const pick = (n: number, b: number) => b % n;
+/** Deterministic look for another human, from bytes of their wallet (the chain stores no avatar). */
+export function avatarFromSeed(seed: ArrayLike<number>): HumanSpec {
+  const b = (i: number) => seed[i % seed.length] ?? i * 37;
+  return { kind: "human", body: b(0) % 2 ? "f" : "m", skin: pick(SKINS.length, b(1)), hair: pick(HAIR_STYLES.length, b(2)), hairColor: pick(HAIR_COLORS.length, b(3)), top: pick(TOPS.length, b(4)), pants: pick(PANTS.length, b(5)) };
+}
+export function randomHuman(): HumanSpec {
+  const r = (n: number) => Math.floor(Math.random() * n);
+  return { kind: "human", body: Math.random() < 0.5 ? "m" : "f", skin: r(SKINS.length), hair: r(HAIR_STYLES.length), hairColor: r(HAIR_COLORS.length), top: r(TOPS.length), pants: r(PANTS.length) };
+}
+/** Per-browser cosmetic settings (never sent anywhere). */
+export function loadAvatar(): HumanSpec {
+  try { const v = JSON.parse(window.localStorage.getItem("razkyn-avatar") ?? "null"); if (v && v.kind === "human") return { ...DEFAULT_HUMAN, ...v }; } catch { /* storage blocked */ }
+  return DEFAULT_HUMAN;
+}
+export const saveAvatar = (a: HumanSpec) => { try { window.localStorage.setItem("razkyn-avatar", JSON.stringify(a)); } catch { /* storage blocked */ } };
+export function loadBotModel(): number { try { const v = Number(window.localStorage.getItem("razkyn-bot-model")); return v >= 0 && v < BOT_MODELS.length ? v : 0; } catch { return 0; } }
+export const saveBotModel = (m: number) => { try { window.localStorage.setItem("razkyn-bot-model", String(m)); } catch { /* storage blocked */ } };
+
 type Limb = { pivot: THREE.Group; lower: THREE.Group };
 
 /**
- * A jointed operator ~1.75 units tall. Pivots: hips (root), torso (yaws toward the aim), shoulders,
- * elbows, hips/knees. Animation is procedural: run cycle from ground speed, aim pose, recoil, flinch,
- * downed (falls), extracted (lifts away in the beam).
+ * A jointed raider ~1.75 units tall: a human (male or female build, skin, hair, clothes) or a robot.
+ * Same skeleton for all: hips (root), torso (yaws toward the aim), head, shoulders, elbows, hips, knees,
+ * so the procedural animation (run cycle, aim, recoil, flinch, downed, extract lift) works for every look.
  */
 export class Operator {
   readonly root = new THREE.Group();
@@ -41,68 +72,131 @@ export class Operator {
   speed = 0;
   state: "alive" | "down" | "extracted" = "alive";
 
-  constructor(look: OperatorLook) {
-    const armor = mat(look.armor, 0.45, 0.65), cloth = mat(0x1b2024, 0.85, 0.1), dark = mat(0x111417, 0.6, 0.4);
+  constructor(look: OperatorLook, spec: AvatarSpec = { kind: "bot", model: 0 }) {
+    const human = spec.kind === "human" ? spec : null;
+    const botModel = spec.kind === "bot" ? spec.model : -1;
+    const fem = human?.body === "f";
+    const armor = mat(look.armor, 0.45, 0.65), dark = mat(0x111417, 0.6, 0.4), gunMetal = mat(0x22282c, 0.4, 0.8);
     const accent = mat(look.accent, 0.4, 0.5);
     this.visorMat = glow(look.visor);
+    const skin = human ? mat(SKINS[human.skin], 0.75, 0.05) : armor;
+    const top = human ? mat(TOPS[human.top], 0.8, 0.08) : armor;
+    const pants = human ? mat(PANTS[human.pants], 0.85, 0.05) : mat(0x1b2024, 0.85, 0.1);
+    const hairM = human ? mat(HAIR_COLORS[human.hairColor], 0.9, 0.05) : dark;
     const cap = (r: number, l: number, m: THREE.Material) => { const x = new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 4, 8), m); x.castShadow = true; return x; };
     const box = (w: number, h: number, d: number, m: THREE.Material) => { const x = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); x.castShadow = true; return x; };
+    const sph = (r: number, m: THREE.Material, phi = Math.PI) => { const x = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10, 0, Math.PI * 2, 0, phi), m); x.castShadow = true; return x; };
 
     this.root.add(this.body);
     this.body.position.y = 0.92; // hips
-    const pelvis = box(0.36, 0.18, 0.22, cloth); this.body.add(pelvis);
-    // Long coat flaps (front / back) that swing with the stride: a clearer silhouette at a distance.
-    const coat = mat(0x20272c, 0.8, 0.1);
-    for (const [g, z] of [[this.coatF, 0.12], [this.coatB, -0.13]] as const) { g.position.set(0, 0.02, z); const p = box(0.4, 0.5, 0.03, coat); p.position.y = -0.25; g.add(p); this.body.add(g); }
+    const hipW = fem ? 0.36 : 0.33;
+    const pelvis = box(hipW, 0.18, 0.22, pants); this.body.add(pelvis);
+    // Jacket / coat hem flaps (front, back) that swing with the stride.
+    const hemM = human ? top : mat(0x20272c, 0.8, 0.1);
+    const hemL = human ? 0.26 : botModel === 1 ? 0.0 : 0.5;
+    if (hemL > 0) for (const [g, z] of [[this.coatF, 0.12], [this.coatB, -0.13]] as const) { g.position.set(0, 0.02, z); const p = box(fem ? 0.36 : 0.4, hemL, 0.03, hemM); p.position.y = -hemL / 2; g.add(p); this.body.add(g); }
     // Torso (yaws toward aim).
     this.torso.position.y = 0.08;
     this.body.add(this.torso);
-    const chest = box(0.44, 0.46, 0.26, armor); chest.position.y = 0.3; this.torso.add(chest);
-    const plate = box(0.34, 0.24, 0.06, accent); plate.position.set(0, 0.34, 0.15); this.torso.add(plate);
-    const pack = box(0.36, 0.42, 0.2, dark); pack.position.set(0, 0.3, -0.22); this.torso.add(pack);
-    const packStrip = box(0.3, 0.04, 0.01, this.visorMat); packStrip.position.set(0, 0.42, -0.325); this.torso.add(packStrip);
-    // Head + helmet + visor.
-    this.head.position.y = 0.66;
+    let shoulderX = 0.27, headY = 0.66;
+    if (human) {
+      const t = new THREE.Mesh(new THREE.CylinderGeometry(fem ? 0.19 : 0.235, fem ? 0.16 : 0.18, 0.52, 12), top);
+      t.scale.z = 0.62; t.position.y = 0.3; t.castShadow = true; this.torso.add(t);
+      const collar = box(fem ? 0.2 : 0.24, 0.06, 0.16, top); collar.position.set(0, 0.57, 0); this.torso.add(collar);
+      const belt = box(hipW + 0.02, 0.05, 0.24, dark); belt.position.y = 0.04; this.torso.add(belt);
+      const neck = cap(0.05, 0.06, skin); neck.position.y = 0.62; this.torso.add(neck);
+      shoulderX = fem ? 0.22 : 0.26; headY = 0.76;
+    } else if (botModel === 2) { // Heavy
+      const chest = box(0.56, 0.52, 0.34, armor); chest.position.y = 0.3; this.torso.add(chest);
+      for (const sx of [-1, 1]) { const pad = box(0.2, 0.14, 0.3, accent); pad.position.set(sx * 0.36, 0.52, 0); this.torso.add(pad); }
+      shoulderX = 0.34;
+    } else if (botModel === 1) { // Drone: slim spine + core
+      const spine = box(0.14, 0.5, 0.14, armor); spine.position.y = 0.3; this.torso.add(spine);
+      const core = sph(0.13, this.visorMat); core.position.set(0, 0.34, 0.06); this.torso.add(core);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.025, 6, 20), armor); ring.position.y = 0.34; this.torso.add(ring);
+      shoulderX = 0.2; headY = 0.74;
+    } else { // Sentinel (armoured operator)
+      const chest = box(0.44, 0.46, 0.26, armor); chest.position.y = 0.3; this.torso.add(chest);
+      const plate = box(0.34, 0.24, 0.06, accent); plate.position.set(0, 0.34, 0.15); this.torso.add(plate);
+    }
+    // Loot pack with the identity strip.
+    const pack = box(0.34, 0.4, 0.18, dark); pack.position.set(0, 0.3, human ? -0.2 : -0.22); this.torso.add(pack);
+    const packStrip = box(0.28, 0.04, 0.01, this.visorMat); packStrip.position.set(0, 0.42, human ? -0.296 : -0.316); this.torso.add(packStrip);
+    // Head.
+    this.head.position.y = headY;
     this.torso.add(this.head);
-    const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), armor); helmet.scale.set(1, 1.1, 1.08); helmet.castShadow = true; this.head.add(helmet);
-    const visor = box(0.24, 0.07, 0.06, this.visorMat); visor.position.set(0, 0.02, 0.14); this.head.add(visor);
-    const fin = box(0.04, 0.08, 0.2, accent); fin.position.set(0, 0.17, -0.02); this.head.add(fin);
+    let glassesZ = 0.15;
+    if (human) {
+      const skull = sph(0.125, skin); skull.scale.set(0.95, 1.12, 1.0); this.head.add(skull);
+      for (const sx of [-1, 1]) {
+        const eye = box(0.03, 0.022, 0.01, mat(0x101214, 0.3, 0)); eye.position.set(sx * 0.045, 0.015, 0.12); this.head.add(eye);
+        const brow = box(0.045, 0.012, 0.01, hairM); brow.position.set(sx * 0.047, 0.05, 0.118); this.head.add(brow);
+        const ear = sph(0.025, skin); ear.position.set(sx * 0.12, 0, 0); this.head.add(ear);
+      }
+      const nose = box(0.022, 0.04, 0.03, skin); nose.position.set(0, -0.01, 0.125); this.head.add(nose);
+      const mouth = box(0.045, 0.008, 0.01, mat(0x5a2a24, 0.6, 0)); mouth.position.set(0, -0.06, 0.112); this.head.add(mouth);
+      const style = human.hair;
+      const crown = sph(style === 5 ? 0.165 : style === 1 ? 0.13 : 0.138, hairM, style === 5 ? Math.PI * 0.62 : Math.PI * 0.55);
+      crown.position.set(0, style === 5 ? 0.02 : 0.025, -0.012); crown.rotation.x = -0.25; this.head.add(crown);
+      if (style === 2) { const back = box(0.25, 0.32, 0.07, hairM); back.position.set(0, -0.1, -0.1); this.head.add(back); }
+      if (style === 3) { const tail = cap(0.04, 0.2, hairM); tail.position.set(0, -0.05, -0.17); tail.rotation.x = 0.5; this.head.add(tail); }
+      if (style === 4) { const bun = sph(0.065, hairM); bun.position.set(0, 0.12, -0.1); this.head.add(bun); }
+      if (style === 0 && fem) { const fringe = box(0.2, 0.04, 0.05, hairM); fringe.position.set(0, 0.085, 0.09); this.head.add(fringe); }
+      glassesZ = 0.13;
+    } else if (botModel === 1) {
+      const dome = sph(0.17, armor); this.head.add(dome);
+      const eye = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.04, 16), this.visorMat); eye.rotation.x = Math.PI / 2; eye.position.set(0, 0, 0.16); this.head.add(eye);
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.012, 6, 24), accent); halo.rotation.x = Math.PI / 2; halo.position.y = 0.12; this.head.add(halo);
+      glassesZ = 0.18;
+    } else if (botModel === 2) {
+      const helm = box(0.28, 0.24, 0.28, armor); this.head.add(helm);
+      const slit = box(0.22, 0.035, 0.02, this.visorMat); slit.position.set(0, 0.02, 0.145); this.head.add(slit);
+      glassesZ = 0.16;
+    } else {
+      const helmet = sph(0.16, armor); helmet.scale.set(1, 1.1, 1.08); this.head.add(helmet);
+      const visor = box(0.24, 0.07, 0.06, this.visorMat); visor.position.set(0, 0.02, 0.14); this.head.add(visor);
+      const fin = box(0.04, 0.08, 0.2, accent); fin.position.set(0, 0.17, -0.02); this.head.add(fin);
+    }
     // Legs.
+    const shinM = human ? pants : armor;
     for (const side of [-1, 1]) {
-      const pivot = new THREE.Group(); pivot.position.set(side * 0.11, -0.06, 0); this.body.add(pivot);
-      const thigh = cap(0.075, 0.28, cloth); thigh.position.y = -0.2; pivot.add(thigh);
+      const pivot = new THREE.Group(); pivot.position.set(side * (fem ? 0.1 : 0.1), -0.06, 0); this.body.add(pivot);
+      const thigh = cap(human ? (fem ? 0.075 : 0.072) : botModel === 2 ? 0.09 : 0.075, 0.28, pants); thigh.position.y = -0.2; pivot.add(thigh);
       const lower = new THREE.Group(); lower.position.y = -0.42; pivot.add(lower);
-      const shin = cap(0.065, 0.28, armor); shin.position.y = -0.2; lower.add(shin);
+      const shin = cap(botModel === 2 ? 0.08 : 0.062, 0.28, shinM); shin.position.y = -0.2; lower.add(shin);
       const boot = box(0.12, 0.08, 0.22, dark); boot.position.set(0, -0.42, 0.04); lower.add(boot);
       this.legs.push({ pivot, lower });
     }
-    // Arms (hold the rifle).
+    // Arms (hold the rifle). Humans: sleeves + hands; robots: plated limbs.
     for (const side of [-1, 1]) {
-      const pivot = new THREE.Group(); pivot.position.set(side * 0.27, 0.48, 0); this.torso.add(pivot);
-      const upper = cap(0.06, 0.2, armor); upper.position.y = -0.14; pivot.add(upper);
+      const pivot = new THREE.Group(); pivot.position.set(side * shoulderX, 0.48, 0); this.torso.add(pivot);
+      const upper = cap(fem ? 0.052 : 0.06, 0.2, human ? top : armor); upper.position.y = -0.14; pivot.add(upper);
       const lower = new THREE.Group(); lower.position.y = -0.3; pivot.add(lower);
-      const fore = cap(0.055, 0.2, cloth); fore.position.y = -0.13; lower.add(fore);
+      const fore = cap(fem ? 0.047 : 0.054, 0.2, human ? top : mat(0x1b2024, 0.85, 0.1)); fore.position.y = -0.13; lower.add(fore);
+      if (human) { const hand = sph(0.05, skin); hand.position.y = -0.27; lower.add(hand); }
       this.arms.push({ pivot, lower });
     }
+    // Identity armband (you teal, humans amber) so people read at a glance.
+    if (human) { const band = new THREE.Mesh(new THREE.CylinderGeometry(0.066, 0.066, 0.05, 12), this.visorMat); band.position.y = -0.18; this.arms[0].pivot.add(band); }
     // Rifle.
     this.gun.position.set(0.08, 0.3, 0.3);
     this.torso.add(this.gun);
     const recv = box(0.08, 0.12, 0.42, dark); this.gun.add(recv);
-    const barrel = box(0.04, 0.04, 0.32, mat(0x22282c, 0.4, 0.8)); barrel.position.z = 0.36; this.gun.add(barrel);
+    const barrel = box(0.04, 0.04, 0.32, gunMetal); barrel.position.z = 0.36; this.gun.add(barrel);
     const sight = box(0.02, 0.02, 0.1, this.visorMat); sight.position.set(0, 0.08, 0.05); this.gun.add(sight);
     this.muzzle.position.z = 0.54; this.gun.add(this.muzzle);
     this.root.scale.setScalar(1.3);
-    // Class gear (hidden until setClass): Scout antenna + wide visor, Trader wrist terminal, Gunner long barrel + plates.
+    // Class gear (hidden until setClass): Scout headset antenna + AR glasses, Trader wrist terminal, Gunner long barrel + plates.
     const gearMat = mat(0x1a1f23, 0.5, 0.6);
-    const antenna = box(0.015, 0.34, 0.015, gearMat); antenna.position.set(0.1, 0.3, -0.06); this.head.add(antenna);
-    const tip = box(0.04, 0.04, 0.04, this.visorMat); tip.position.set(0.1, 0.48, -0.06); this.head.add(tip);
-    const wideVisor = box(0.3, 0.05, 0.05, this.visorMat); wideVisor.position.set(0, 0.07, 0.15); this.head.add(wideVisor);
+    const antenna = box(0.015, 0.3, 0.015, gearMat); antenna.position.set(0.11, 0.26, -0.04); this.head.add(antenna);
+    const tip = box(0.035, 0.035, 0.035, this.visorMat); tip.position.set(0.11, 0.42, -0.04); this.head.add(tip);
+    const wideVisor = box(human ? 0.22 : 0.3, 0.035, 0.03, this.visorMat); wideVisor.position.set(0, human ? 0.018 : 0.07, glassesZ); this.head.add(wideVisor);
     const wrist = box(0.12, 0.03, 0.16, mat(0x2a3339, 0.4, 0.7)); wrist.position.set(0, -0.2, 0.05); this.arms[0].lower.add(wrist);
     const wristScreen = box(0.1, 0.005, 0.12, glow(PAL.amber)); wristScreen.position.set(0, -0.184, 0.05); this.arms[0].lower.add(wristScreen);
-    const longBarrel = box(0.05, 0.05, 0.3, mat(0x22282c, 0.4, 0.8)); longBarrel.position.z = 0.66; this.gun.add(longBarrel);
+    const longBarrel = box(0.05, 0.05, 0.3, gunMetal); longBarrel.position.z = 0.66; this.gun.add(longBarrel);
     const brake = box(0.08, 0.08, 0.06, dark); brake.position.z = 0.82; this.gun.add(brake);
-    const shoulder = box(0.14, 0.08, 0.2, accent); shoulder.position.set(0.3, 0.52, 0); this.torso.add(shoulder);
-    const shoulderL = shoulder.clone(); shoulderL.position.x = -0.3; this.torso.add(shoulderL);
+    const shoulder = box(0.14, 0.08, 0.2, accent); shoulder.position.set(shoulderX + 0.03, 0.52, 0); this.torso.add(shoulder);
+    const shoulderL = shoulder.clone(); shoulderL.position.x = -(shoulderX + 0.03); this.torso.add(shoulderL);
     this.gear = { scout: [antenna, tip, wideVisor], trader: [wrist, wristScreen], gunner: [longBarrel, brake, shoulder, shoulderL] };
     this.setClass(0);
   }

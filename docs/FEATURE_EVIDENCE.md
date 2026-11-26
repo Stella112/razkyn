@@ -49,3 +49,12 @@ Screenshots are in `docs/screens/`. Devnet raids: 1795697137007 (Mystery, 3D cli
 - **TRADING HALT on Tower fired while I traded**: banner + red HALTED terminal, trade refused by the program, backpack unchanged (`pass2-trading-halt.jpg`). First devnet observation of a halt.
 - After the halt: Tower 0.69 → Harbor 0.68, exposed while channelling, "Trade filled".
 - Extracted at exit 0 in window 2 → 7.36 dUSD + 0.68 dHRB, claim `5LkaKWwg…`, settlement `5W5Tz4Ge…`; reveal "UKRAINE TENSIONS HIT CRYPTO · 22 Feb 2022", price data verified (`pass2-extracted.jpg`).
+
+## Characters, BOT styles, time of day (2026-11-26, evening)
+| Item | Status | Notes |
+|---|---|---|
+| Human raiders: male / female build, 6 skin tones, 6 hair styles, 6 hair colours, 6 jackets, 4 trousers, randomise | Built | `actors.ts` (same skeleton and animation as before), editor in `screens/Customize.tsx` (title CHARACTER, lobby EDIT CHARACTER, Training) |
+| Other humans | Built | Look derived from their wallet address: the chain stores no avatar, so your own choice is visible to you only |
+| BOT styles: Sentinel, Drone, Heavy | Built | Chosen per browser; BOTs stay red-accented and labelled BOT |
+| Time of day: Sunny Day, Night, Storm (all three maps) | Built | Sky, sun / moon, fog, window lighting; Storm adds heavy slanted rain (outdoors) and lightning flashes |
+All cosmetic and saved in the browser (localStorage); nothing here touches rules, positions or payouts.

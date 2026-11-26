@@ -7,6 +7,8 @@ import { explorerTx } from "../lib/config";
 import { getLobby, openRaid, type Lobby as LobbyT } from "../lib/keeper";
 import { useGameWallet } from "../lib/wallet";
 import OperatorPreview from "../game/OperatorPreview";
+import Customize from "./Customize";
+import { loadAvatar } from "../game/three/actors";
 import { programError } from "../lib/errors";
 
 const PHASE: Record<LobbyT["phase"], string> = {
@@ -44,6 +46,8 @@ export default function Lobby() {
   const [joinSig, setJoinSig] = useState("");
   const [now, setNow] = useState(Date.now());
   const [cls, setCls] = useState(0);
+  const [avatar, setAvatar] = useState(loadAvatar());
+  const [custom, setCustom] = useState(false);
 
   useEffect(() => {
     let stop = false;
@@ -237,7 +241,9 @@ export default function Lobby() {
                   </>
                 ) : lobby.phase === "lobby" ? (
                   <>
-                  <OperatorPreview cls={cls} />
+                  <OperatorPreview cls={cls} avatar={avatar} />
+                  <button className="btn" style={{ width: "100%", marginBottom: 10 }} onClick={() => setCustom(true)}>EDIT CHARACTER · MAP · TIME</button>
+                  {custom && <Customize onClose={() => { setCustom(false); setAvatar(loadAvatar()); }} onWorld={() => {}} />}
                   <div className="label" style={{ marginBottom: 6 }}>Pick your class · loadout</div>
                   <div className="classes">
                     {CLASSES.map((c, i) => (
