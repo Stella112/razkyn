@@ -132,8 +132,8 @@ export async function runRaid(o: RaidOptions) {
           await live.resolve().catch(() => null);
           const b = await live.read();
           const t = Math.max(0, Math.floor(elapsed()));
-          // Opens: NEXT CRACK every 60 s (5 s to pick), KNOCKOUT every 30 s (3 s to pick).
-          for (const [kind, every, lock] of [[0, 60, 5], [1, 30, 3]] as const) {
+          // Opens: NEXT CRACK every 60 s (10 s to pick), KNOCKOUT every 30 s (8 s to pick).
+          for (const [kind, every, lock] of [[0, 60, 10], [1, 30, 8]] as const) {
             const w = Math.floor(t / every), key = `${kind}:${w}`;
             if (t - w * every < lock && !opened.has(key) && w < (kind === 0 ? 5 : 10)) { opened.add(key); wire.push({ kind: "pick_open", t, pick: kind, window: w, lockIn: w * every + lock - t }); }
           }
@@ -284,7 +284,7 @@ export async function runRaid(o: RaidOptions) {
   };
   const livePicks = finalBook ? {
     book: live.book.toBase58(), status: finalBook.status, sigs: live.sigs,
-    rules: "On-chain (TEE) play credits: 100 per registered spectator, non-redeemable. One choice per spectator per pick; locks by the program clock. EXTRACTS(raider) until start + 270 s; NEXT CRACK every 60 s (5 s to pick, watches the next 60 s); KNOCKOUT IN 30 S every 30 s (3 s to pick, watches the next 30 s). resolve_picks reads only public accounts (Raid, District, RaiderPublic), run by a 1 s crank. Pools pay parimutuel the moment they resolve; nobody on the winning side = refund. 3 correct in a row = a devnet badge token, variant from the raid's VRF seed.",
+    rules: "On-chain (TEE) play credits: 100 per registered spectator, non-redeemable. One choice per spectator per pick; locks by the program clock. EXTRACTS(raider) until start + 270 s; NEXT CRACK every 60 s (10 s to pick, watches the next 60 s); KNOCKOUT IN 30 S every 30 s (8 s to pick, watches the next 30 s). resolve_picks reads only public accounts (Raid, District, RaiderPublic), run by a 1 s crank. Pools pay parimutuel the moment they resolve; nobody on the winning side = refund. 3 correct in a row = a devnet badge token, variant from the raid's VRF seed.",
     pools: Array.from({ length: NUM_POOLS }, (_, p) => ({ pool: p, name: POOL_NAMES(p), choices: POOL_CHOICES(p), totals: finalBook!.totals[p].slice(0, POOL_CHOICES(p).length), outcome: finalBook!.outcome[p], ...poolStats(finalBook!, p) })).filter((x) => x.bets > 0),
     leaderboard: boardOf(finalBook).map((s) => ({ wallet: s.wallet, picks: s.picks, correct: s.correct, bestStreak: s.bestStreak, credits: s.credits, badge: s.badge, badgeClaimed: s.badgeClaimed })),
   } : null;

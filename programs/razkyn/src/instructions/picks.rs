@@ -40,11 +40,11 @@ pub const REFUNDED: u8 = 254;
 /// Pick timing (seconds after raid start).
 pub const EXTRACTS_LOCK_SECS: i64 = 270;
 pub const CRACK_EVERY: i64 = 60;
-pub const CRACK_LOCK: i64 = 5;
+pub const CRACK_LOCK: i64 = 10;
 pub const CRACK_WATCH: i64 = 60;
 pub const CRACK_WINDOWS: usize = 5;
 pub const KO_EVERY: i64 = 30;
-pub const KO_LOCK: i64 = 3;
+pub const KO_LOCK: i64 = 8;
 pub const KO_WATCH: i64 = 30;
 pub const KO_WINDOWS: usize = 10;
 pub const RAID_SECS_I: i64 = 300;

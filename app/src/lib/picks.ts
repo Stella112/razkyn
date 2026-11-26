@@ -13,7 +13,7 @@ export const poolChoices = (p: number) => (p >= 8 && p < 13 ? ["TOWER", "FACTORY
 /** Pool timing from the raid start (seconds): [open, lock, end]. */
 export function poolTimes(start: number, p: number): [number, number, number] {
   if (p < 8) return [-Infinity, start + 270, start + 300];
-  const crack = p < 13, w = crack ? p - 8 : p - 13, every = crack ? 60 : 30, lock = crack ? 5 : 3, watch = crack ? 60 : 30;
+  const crack = p < 13, w = crack ? p - 8 : p - 13, every = crack ? 60 : 30, lock = crack ? 10 : 8, watch = crack ? 60 : 30;
   const open = start + w * every;
   return [open, open + lock, Math.min(open + lock + watch, start + 300)];
 }

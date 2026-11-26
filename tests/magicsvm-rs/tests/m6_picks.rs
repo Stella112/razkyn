@@ -41,10 +41,10 @@ fn picks_lock_by_program_clock_one_choice_session_key() {
     assert_eq!(book(&w).spectators[0].credits, 100, "100 play credits on register");
     place(&mut w, &sa, 0, 0, 10).expect("EXTRACTS(raider 1) YES");
     expect_err(place(&mut w, &sa, 0, 1, 5), E_ALREADY_PICKED, "second choice on the same pool");
-    place(&mut w, &sa, C0, 3, 5).expect("NEXT CRACK window 0 within its 5 s");
+    place(&mut w, &sa, C0, 3, 5).expect("NEXT CRACK window 0 within its 10 s");
     expect_err(place(&mut w, &sa, D0 + 1, 0, 5), E_PICKS_CLOSED, "KNOCKOUT window 1 before it opens");
-    w.advance_secs(4);
-    expect_err(place(&mut w, &sa, D0, 0, 5), E_PICKS_CLOSED, "KNOCKOUT window 0 after its 3 s lock (program clock)");
+    w.advance_secs(9);
+    expect_err(place(&mut w, &sa, D0, 0, 5), E_PICKS_CLOSED, "KNOCKOUT window 0 after its 8 s lock (program clock)");
     expect_err(place(&mut w, &Keypair::new(), C0, 0, 5), E_NOT_SPECTATOR, "unregistered session key");
     expect_err(place(&mut w, &sa, 1, 0, 1000), E_NO_CREDITS, "more credits than held");
     let b = book(&w);
@@ -61,10 +61,10 @@ fn picks_resolve_from_public_state_and_conserve_credits() {
     place(&mut w, &sa, C0, 0, 30).unwrap(); // A: Tower cracks first
     place(&mut w, &sb, C0, 3, 10).unwrap(); // B: no crack
     resolve(&mut w); // first resolve: snapshot of public state
-    w.advance_secs(31); // KNOCKOUT window 1: open 30, lock 33, watches 33..63
+    w.advance_secs(31); // KNOCKOUT window 1: open 30, lock 38, watches 38..68
     place(&mut w, &sa, D0 + 1, 0, 20).unwrap(); // A: YES
     place(&mut w, &sb, D0 + 1, 1, 20).unwrap(); // B: NO
-    w.advance_secs(3);
+    w.advance_secs(8);
     resolve(&mut w);
     assert_eq!(book(&w).outcome[(D0 + 1) as usize], 255, "undecided before anything happens");
     // A real knockout inside the watched window: raider 2 shoots raider 1 three times.
@@ -76,7 +76,7 @@ fn picks_resolve_from_public_state_and_conserve_credits() {
     let b = book(&w);
     assert_eq!(b.outcome[(D0 + 1) as usize], 0, "KNOCKOUT window 1 resolved YES from RaiderPublic.alive");
     assert_eq!(b.spectators[0].credits, 100 - 30 - 20 + 40, "A won the whole 40-credit pool");
-    w.advance_secs(40); // past NEXT CRACK window 0's watched minute (5..65) with no crack (no oracle → flat prices)
+    w.advance_secs(40); // past NEXT CRACK window 0's watched minute (10..70) with no crack (no oracle → flat prices)
     resolve(&mut w);
     assert_eq!(book(&w).outcome[C0 as usize], 3, "NONE");
     w.advance_secs(240); // raid over: every remaining pool resolves

@@ -41,7 +41,7 @@ while (Date.now() / 1000 < start + 300) {
   const now = Date.now() / 1000;
   for (let p = 8; p < 23; p++) {
     if (done.has(p)) continue;
-    const crack = p < 13, w = crack ? p - 8 : p - 13, open = start + w * (crack ? 60 : 30), lock = open + (crack ? 5 : 3);
+    const crack = p < 13, w = crack ? p - 8 : p - 13, open = start + w * (crack ? 60 : 30), lock = open + (crack ? 10 : 8);
     if (now < open) continue;
     done.add(p);
     if (now >= lock) {
