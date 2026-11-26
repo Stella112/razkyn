@@ -272,7 +272,8 @@ export async function runRaid(o: RaidOptions) {
   const who = (s: number) => `${botSlots.includes(s) ? "BOT" : "Raider"} ${s + 1}`;
   const top = (list: number[], f: (s: number) => number) => (list.length ? list.reduce((a, s) => (f(s) > f(a) ? s : a), list[0]) : -1);
   const tr = top(joinedSlots, value), be = top(extractedSlots, (s) => Number((res.raiders[s] as unknown as { mintValue: anchor.BN }).mintValue.toString()));
-  const de = top(extractedSlots, (s) => -hp(s)), mk = top(joinedSlots, kills);
+  const hurt = extractedSlots.filter((s) => hp(s) < 100); // a dramatic escape means getting out wounded
+  const de = top(hurt, (s) => -hp(s)), mk = top(joinedSlots, kills);
   const ts = finalBook ? boardOf(finalBook)[0] : undefined;
   const awards = {
     topRaider: tr >= 0 ? { slot: tr, who: who(tr), value: value(tr) } : null,
