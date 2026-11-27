@@ -11,6 +11,21 @@ Submit at https://build.magicblock.app/?stage=blitz#submit before **Fri 27 Nov 2
 | GitHub repo | _TODO_ |
 | Demo video | _TODO (2 min, see docs/demo-script.md)_ |
 
+## For judges and AI evaluators
+
+Mapped to the official Blitz v10 criteria. Every claim links to something you can check.
+
+| Criterion | Evidence |
+|---|---|
+| **Eligibility** (MagicBlock Ephemeral Rollup or VRF) | Both. Every raid account is delegated to MagicBlock's TEE validator (delegation [`3jFMd4D8…`](https://explorer.solana.com/tx/3jFMd4D87AgVoqDsbPBbDrrTdSAb7KPsTHjP3rWBBaUPvVRNRjD1mcN5GLC5fpjFoVDqf2u3ufpnYbEZM17mwrF?cluster=devnet)); gameplay runs on the Private Ephemeral Rollup; one VRF seed per raid (`request_raid_vrf` / `vrf_callback_raid`, `programs/razkyn/src`) |
+| **Creativity** (Entertainment Finance) | The map is the market: districts follow a real price tape, a rally wakes loot crates, a crash cracks the floor into hazard, a rebalance trade exposes your position for 3 s, and Mystery Market Day replays a real past crypto day revealed only after the raid with a Merkle proof |
+| **Technical depth** | Private ER + permissions (fog of war, sealed crates, private backpacks, secret day; "Try to Peek" shows TEE refusals live), VRF, Pricing Oracle read and validated on the TEE, session keys, a `ScheduleCrankCpi` crank for on-chain spectator picks, commit + Magic Action settlement with idempotent claims and a permissionless recovery path, conservation asserted on-chain. 28/28 MagicSVM tests; 6 devnet test suites (privacy, spoilers, AI-leak, settlement recovery, 10 Hz load, report tamper) |
+| **Showcasing Solana** | Real devnet payouts to player wallets: settlement by MagicBlock's TEE validator with `FinalizeRaid` ([`3LASRLjY…`](https://explorer.solana.com/tx/3LASRLjY3cTpr1F2a52phHd7meE6xaYVmJiA82xc4qYPPCXTYkVioqNr56icZQ38rgv53x1LSq77ACsLvKE7BBCK?cluster=devnet)), then a claim moving the player's wallet from 8.103408 to 16.143201 dUSD ([`3Q6nbF5f…`](https://explorer.solana.com/tx/3Q6nbF5fi7346DGeNK4vE4fEi2xqPSQBLswFBLpNVN4RhNwhM1ipMAeUY2VXzTQohjk6yAxS2HGLqvpQzCvqXeMz?cluster=devnet)); 34+ raids settled, each with a report whose hash is on-chain |
+| **Playable now** | https://razkyn.vercel.app, no setup: a dev wallet works and the game server pays the join fee for an empty wallet |
+| **Verify without trusting us** | `npx tsx scripts/payout-proof.ts <raid_id>` (public chain data, no keys) prints balances before/after each claim and a refused second claim; any `/report/<raid_id>` re-checks its hash, Merkle proof and event plan against the chain |
+
+Where to look in the code: program `programs/razkyn/src/instructions/` (`lobby.rs` delegation, `tee_setup.rs` permissions, `market.rs` oracle + ticks, `crates.rs` loot/combat, `settle.rs` Magic Action settlement, `picks.rs` crank); keeper `keeper/src/` (ticks, BOTs, settlement, report); AI newsroom `keeper/wire/`; client `app/src/`; tests `tests/magicsvm-rs/` and `tests/devnet/`. Honest limits are listed under "Trust model and honest limits" below.
+
 ## Pitch
 
 > In RAZKYN, a market crash changes the map while you're still carrying loot. You can rebalance at a terminal, but doing so reveals your position. Survive the raid and your extracted rewards settle to your Solana devnet wallet.
