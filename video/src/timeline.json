@@ -1,0 +1,304 @@
+{
+ "fps": 30,
+ "total": 5073,
+ "scenes": [
+  {
+   "id": "hook",
+   "start": 0,
+   "dur": 365,
+   "audioFrames": 335,
+   "captions": [
+    {
+     "from": 8,
+     "to": 129,
+     "text": "Extraction games make you grind for loot you will never own."
+    },
+    {
+     "from": 129,
+     "to": 229,
+     "text": "Trading apps turn the market into a casino."
+    },
+    {
+     "from": 229,
+     "to": 338,
+     "text": "So what if the market was the map, and the loot was real?"
+    }
+   ]
+  },
+  {
+   "id": "intro",
+   "start": 365,
+   "dur": 579,
+   "audioFrames": 553,
+   "captions": [
+    {
+     "from": 8,
+     "to": 47,
+     "text": "This is Razkin."
+    },
+    {
+     "from": 47,
+     "to": 149,
+     "text": "Eight raiders drop into a city for five minutes."
+    },
+    {
+     "from": 149,
+     "to": 258,
+     "text": "Three districts, each tied to a real price."
+    },
+    {
+     "from": 258,
+     "to": 356,
+     "text": "When one rallies, its dormant crates wake up."
+    },
+    {
+     "from": 356,
+     "to": 456,
+     "text": "When it crashes, the floor cracks into hazard."
+    },
+    {
+     "from": 456,
+     "to": 557,
+     "text": "Your backpack is worth exactly what the market says."
+    }
+   ]
+  },
+  {
+   "id": "join",
+   "start": 944,
+   "dur": 247,
+   "audioFrames": 227,
+   "captions": [
+    {
+     "from": 8,
+     "to": 58,
+     "text": "Join with one signature."
+    },
+    {
+     "from": 58,
+     "to": 251,
+     "text": "After that, a session key signs every move on MagicBlock's private ephemeral rollup."
+    }
+   ]
+  },
+  {
+   "id": "loot",
+   "start": 1191,
+   "dur": 452,
+   "audioFrames": 422,
+   "captions": [
+    {
+     "from": 8,
+     "to": 251,
+     "text": "Every crate is sealed by verifiable randomness, and hidden inside a secure enclave until someone opens it."
+    },
+    {
+     "from": 251,
+     "to": 426,
+     "text": "Try to peek at a sealed crate, or another raider, and the enclave refuses, live."
+    }
+   ]
+  },
+  {
+   "id": "fight",
+   "start": 1643,
+   "dur": 596,
+   "audioFrames": 568,
+   "captions": [
+    {
+     "from": 8,
+     "to": 161,
+     "text": "Rebalance at a terminal, but for three seconds your position is public."
+    },
+    {
+     "from": 161,
+     "to": 217,
+     "text": "And the bots are hunting."
+    },
+    {
+     "from": 217,
+     "to": 447,
+     "text": "They see only their own fog of war, and every shot is checked on chain: range, cooldown, line of sight."
+    },
+    {
+     "from": 447,
+     "to": 484,
+     "text": "Cover is real."
+    },
+    {
+     "from": 484,
+     "to": 572,
+     "text": "Classes and market events change the fight."
+    }
+   ]
+  },
+  {
+   "id": "extract",
+   "start": 2239,
+   "dur": 453,
+   "audioFrames": 417,
+   "captions": [
+    {
+     "from": 8,
+     "to": 148,
+     "text": "Reach an open exit, hold five seconds, and the bag is yours."
+    },
+    {
+     "from": 148,
+     "to": 421,
+     "text": "Then the twist: the tape you just raided was a real day in crypto history, proven against a Merkle root committed before the raid began."
+    }
+   ]
+  },
+  {
+   "id": "settle",
+   "start": 2692,
+   "dur": 714,
+   "audioFrames": 682,
+   "captions": [
+    {
+     "from": 8,
+     "to": 249,
+     "text": "At zero, the raid commits to Solana in one Magic Action, and every raider is paid automatically."
+    },
+    {
+     "from": 249,
+     "to": 438,
+     "text": "Here is the real claim on the Solana explorer: devnet dollars, straight into the player's wallet."
+    },
+    {
+     "from": 438,
+     "to": 526,
+     "text": "Claim twice, and the program refuses."
+    },
+    {
+     "from": 526,
+     "to": 685,
+     "text": "And payouts, reserve and fees always add up to exactly what was staked."
+    }
+   ]
+  },
+  {
+   "id": "stack",
+   "start": 3406,
+   "dur": 526,
+   "audioFrames": 498,
+   "captions": [
+    {
+     "from": 8,
+     "to": 85,
+     "text": "That is MagicBlock, end to end."
+    },
+    {
+     "from": 85,
+     "to": 191,
+     "text": "A private rollup for fog of war and sealed loot."
+    },
+    {
+     "from": 191,
+     "to": 285,
+     "text": "V R F for every roll of the dice."
+    },
+    {
+     "from": 285,
+     "to": 362,
+     "text": "The pricing oracle for live markets."
+    },
+    {
+     "from": 362,
+     "to": 443,
+     "text": "Session keys for zero popups."
+    },
+    {
+     "from": 443,
+     "to": 501,
+     "text": "Magic Actions to settle."
+    }
+   ]
+  },
+  {
+   "id": "world",
+   "start": 3932,
+   "dur": 494,
+   "audioFrames": 468,
+   "captions": [
+    {
+     "from": 8,
+     "to": 191,
+     "text": "Three market modes, from a mystery day to live Nvidia, Tesla and Solana."
+    },
+    {
+     "from": 191,
+     "to": 269,
+     "text": "Spectators make on chain picks."
+    },
+    {
+     "from": 269,
+     "to": 472,
+     "text": "And THE WIRE, an A I newsroom, calls every public move, but never sees a private one."
+    }
+   ]
+  },
+  {
+   "id": "proof",
+   "start": 4426,
+   "dur": 322,
+   "audioFrames": 296,
+   "captions": [
+    {
+     "from": 8,
+     "to": 92,
+     "text": "Thirty four raids settled on devnet."
+    },
+    {
+     "from": 92,
+     "to": 180,
+     "text": "Twenty eight of twenty eight tests passing."
+    },
+    {
+     "from": 180,
+     "to": 300,
+     "text": "And nothing to set up: the game even pays your join fee."
+    }
+   ]
+  },
+  {
+   "id": "cta",
+   "start": 4748,
+   "dur": 325,
+   "audioFrames": 245,
+   "captions": [
+    {
+     "from": 8,
+     "to": 35,
+     "text": "Razkin."
+    },
+    {
+     "from": 35,
+     "to": 59,
+     "text": "Raid."
+    },
+    {
+     "from": 59,
+     "to": 83,
+     "text": "Trade."
+    },
+    {
+     "from": 83,
+     "to": 114,
+     "text": "Extract."
+    },
+    {
+     "from": 114,
+     "to": 161,
+     "text": "Built on MagicBlock."
+    },
+    {
+     "from": 161,
+     "to": 249,
+     "text": "Play it now at razkyn dot vercel dot app."
+    }
+   ]
+  }
+ ]
+}

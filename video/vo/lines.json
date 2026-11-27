@@ -1,0 +1,13 @@
+[
+ ["hook", "Extraction games make you grind for loot you will never own. Trading apps turn the market into a casino. So what if the market was the map, and the loot was real?"],
+ ["intro", "This is Razkin. Eight raiders drop into a city for five minutes. Three districts, each tied to a real price. When one rallies, its dormant crates wake up. When it crashes, the floor cracks into hazard. Your backpack is worth exactly what the market says."],
+ ["join", "Join with one signature. After that, a session key signs every move on MagicBlock's private ephemeral rollup. No popups, no gas."],
+ ["loot", "Every crate is sealed by verifiable randomness, and hidden inside a secure enclave until someone opens it. Try to peek at a sealed crate, or another raider, and the enclave refuses, live."],
+ ["fight", "Rebalance at a terminal, but for three seconds your position is public. And the bots are hunting. They see only their own fog of war, and every shot is checked on chain: range, cooldown, line of sight. Cover is real. Classes and market events change the fight."],
+ ["extract", "Reach an open exit, hold five seconds, and the bag is yours. Then the twist: the tape you just raided was a real day in crypto history, proven against a Merkle root committed before the raid began."],
+ ["settle", "At zero, the raid commits to Solana in one Magic Action, and every raider is paid automatically. Here is the real claim on the Solana explorer: devnet dollars, straight into the player's wallet. Claim twice, and the program refuses. And payouts, reserve and fees always add up to exactly what was staked."],
+ ["stack", "That is MagicBlock, end to end. A private rollup for fog of war and sealed loot. V R F for every roll of the dice. The pricing oracle for live markets. Session keys for zero popups. Magic Actions to settle."],
+ ["world", "Three market modes, from a mystery day to live Nvidia, Tesla and Solana. Spectators make on chain picks. And THE WIRE, an A I newsroom, calls every public move, but never sees a private one."],
+ ["proof", "Thirty four raids settled on devnet. Twenty eight of twenty eight tests passing. And nothing to set up: the game even pays your join fee."],
+ ["cta", "Razkin. Raid. Trade. Extract. Built on MagicBlock. Play it now at razkyn dot vercel dot app."]
+]

@@ -32,3 +32,12 @@ Thumbs.db
 # local tool config
 .claude/
 .vercel/
+
+# demo video build (only the final mp4 in docs/video is kept)
+video/node_modules/
+video/out/
+video/public/
+video/vo/
+video/capture/.profile*/
+video/capture/*.out
+video/package-lock.json
