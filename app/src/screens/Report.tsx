@@ -72,6 +72,7 @@ export default function Report({ raidId }: { raidId: string }) {
         <a className="brand" href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>RAZKYN</a>
         <span className="pill">Market Raid Report</span>
         <div className="spacer" />
+        <button className="btn primary" onClick={() => navigate(`/replay/${raidId}`)}>▶ Replay</button>
         <span className="mono dim" style={{ fontSize: 12 }}>raid {raidId}</span>
       </div>
       <div className="wrap" style={{ display: "flex", flexDirection: "column", gap: 16 }}>

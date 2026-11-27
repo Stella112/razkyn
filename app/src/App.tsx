@@ -19,6 +19,7 @@ import Lobby from "./screens/Lobby";
 import Raid from "./screens/Raid";
 import Report from "./screens/Report";
 import History from "./screens/History";
+import Replay from "./screens/Replay";
 import Training from "./screens/Training";
 import Overlay from "./screens/Overlay";
 import Settings from "./screens/Settings";
@@ -43,6 +44,7 @@ export default function App() {
     parts[0] === "watch" ? <Raid key={`w${parts[1] ?? ""}`} raidId={parts[1] ?? ""} watch /> :
     parts[0] === "report" && parts[1] ? <Report raidId={parts[1]} /> :
     parts[0] === "history" ? <History /> :
+    parts[0] === "replay" && parts[1] ? <Replay raidId={parts[1]} /> :
     parts[0] === "training" ? <Training /> :
     parts[0] === "settings" ? <Settings /> :
     parts[0] === "overlay" ? <Overlay raidId={parts[1] ?? ""} /> :

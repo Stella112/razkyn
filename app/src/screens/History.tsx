@@ -46,6 +46,7 @@ export default function History() {
                         <div className="mono">{(Number(you.dusd) / 1e6).toFixed(2)} dUSD</div>
                       </>
                     ) : <div className="go dim">REPORT ▸</div>}
+                    <div className="go neon-a" role="link" style={{ marginTop: 6 }} onClick={(e) => { e.stopPropagation(); navigate(`/replay/${it.raidId}`); }}>▶ REPLAY</div>
                   </div>
                 </div>
               </button>
