@@ -191,7 +191,7 @@ The program asserts `payouts + reserve + ops == stakes` in integer base units at
 
 | Piece | How RAZKYN uses it | Where |
 |---|---|---|
-| Private Ephemeral Rollup (TEE, `devnet-tee`) | Every account a raid mutates is delegated to the TEE validator `MTEWGuqx…`; gameplay runs there at 10 ticks/s | `delegate_raid`, `programs/razkyn/src/instructions/lobby.rs` |
+| Private Ephemeral Rollup (TEE, `devnet-tee`) | Every account a raid mutates is delegated to the TEE validator `MTEWGuqx…`; gameplay runs there at 10 ticks/s | `delegate_pda` (`#[delegate]`), `programs/razkyn/src/instructions/lobby.rs` |
 | Permissions (`EphemeralPermission`) | A raider's private state → their raid key + keeper; fog View → that raid key only; sealed crates and the raid secret → keeper only; public accounts have none | `tee_setup.rs`, `crates.rs` |
 | `getAuthToken` | Client and keeper authenticate to the TEE; the client signs with the raid key and refreshes before expiry | `app/src/lib/chain.ts` |
 | VRF (`#[vrf]` / `#[vrf_callback]`, ephemeral queue) | One seed per raid → spawns, crate placement and contents, exits, market events, Mystery day, spectator badge | `request_raid_vrf`, `vrf_callback_raid` |
