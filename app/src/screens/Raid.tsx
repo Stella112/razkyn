@@ -127,21 +127,24 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
   const prevVal = useRef<number | null>(null);
   const [voice, setVoice] = useState(() => { try { return window.localStorage.getItem("razkyn-voice") === "1"; } catch { return false; } });
   const voiceRef = useRef(voice); voiceRef.current = voice;
-  // Watch mode: explain the fog, and turn sound + THE WIRE voice on with the first click (browsers
-  // start audio only after a gesture). A saved voice preference is respected.
+  // The first click or key (player or spectator) turns on sound, the soundtrack and THE WIRE voice:
+  // browsers start audio only after a gesture. Saved preferences are respected. Watch mode also
+  // explains the fog until then.
   const [watchHint, setWatchHint] = useState(true);
+  const [musicOn, setMusicOn] = useState(sfx.music.on);
   useEffect(() => {
-    if (!watch) return;
     const first = () => {
       sfx.unlock();
+      sfx.music.start();
       let pref: string | null = null;
       try { pref = window.localStorage.getItem("razkyn-voice"); } catch { /* storage blocked */ }
       if (pref === null) setVoice(true);
       setWatchHint(false);
+      window.removeEventListener("pointerdown", first); window.removeEventListener("keydown", first);
     };
-    window.addEventListener("pointerdown", first, { once: true });
-    return () => window.removeEventListener("pointerdown", first);
-  }, [watch]);
+    window.addEventListener("pointerdown", first); window.addEventListener("keydown", first);
+    return () => { window.removeEventListener("pointerdown", first); window.removeEventListener("keydown", first); sfx.music.stop(); };
+  }, []);
   const toggleVoice = () => setVoice((v) => { const n = !v; try { window.localStorage.setItem("razkyn-voice", n ? "1" : "0"); } catch { /* ignore */ } if (!n) window.speechSynthesis?.cancel(); return n; });
   const alerted = useRef<Set<number>>(new Set());
   const pop = (text: string) => { const id = Date.now() + Math.random(); setPops((p) => [...p, { id, text }]); setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1500); };
@@ -187,6 +190,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     if (!raidId) return;
     return subscribeWire(raidId, (l) => {
       setWire((w) => [...w.slice(-80), l]);
+      if (l.tag === "BREAKING") sfx.sting();
       // Voice narration (optional): breaking news and in-game events, read by the browser voice.
       if (voiceRef.current && (l.tag === "BREAKING" || l.tag === "IN-GAME EVENT") && "speechSynthesis" in window) {
         try {
@@ -267,6 +271,32 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
     if (prevHp.current != null && hp < prevHp.current) { sceneRef.current()?.hurt(); setHurtAt(Date.now()); sfx.hit(); }
     prevHp.current = hp;
   }, [rpub?.hp]);
+  // Soundtrack intensity and world sounds, all from public state.
+  const prevWorld = useRef<{ haz: number[]; win: number; hp: (number | null)[] } | null>(null);
+  const lastGun = useRef(0);
+  useEffect(() => {
+    const r = pub?.raid;
+    if (!pub || !r) return;
+    const left = r.startTs ? Number(r.startTs.toString()) + 300 - Date.now() / 1000 : 999;
+    sfx.music.setIntensity(r.status !== 2 ? 0 : r.exitWindow || left < 60 ? 2 : 1);
+    const haz = pub.districts.map((d) => d?.hazardLevel ?? 0);
+    const hp = pub.rpubs.map((x) => (x ? x.hp : null));
+    const p = prevWorld.current;
+    prevWorld.current = { haz, win: r.exitWindow, hp };
+    if (!p || r.status !== 2) return;
+    if (haz.some((h, i) => h > (p.haz[i] ?? 0))) sfx.rumble();
+    if (r.exitWindow > p.win) sfx.horn();
+    // Gunfire: a raider other than me lost HP (spectators hear every fight; players hear those in view).
+    const seen = new Set((mine?.view ? mine.view.entries.slice(0, mine.view.count) : []).map((v) => v.slot));
+    const shot = hp.some((h, s) => s !== mySlot && h != null && p.hp[s] != null && h < (p.hp[s] as number) && (watch || seen.has(s)));
+    if (shot && Date.now() - lastGun.current > 120) { lastGun.current = Date.now(); sfx.gunfire(); }
+  }, [pub]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Low-health heartbeat.
+  useEffect(() => {
+    if (!rpub || !rpub.alive || rpub.hp > 34 || rpub.hp <= 0) return;
+    const i = setInterval(() => sfx.heartbeat(), 1100);
+    return () => clearInterval(i);
+  }, [rpub?.hp, rpub?.alive]); // eslint-disable-line react-hooks/exhaustive-deps
   const curVal = mine?.rprv && pub ? backpackValue(mine.rprv.backpack, pub.districts) : null;
   useEffect(() => {
     if (curVal == null) return;
@@ -555,6 +585,7 @@ export default function Raid({ raidId: initialId, watch }: { raidId: string; wat
           <span className="pill">{raid?.mode === 0 ? "MYSTERY" : "LIVE"}</span>
           {watch ? <span className="pill">WATCH · public only</span> : mySlot >= 0 ? <span className="pill live">RAIDER {mySlot + 1}</span> : null}
           <button className="act mute" title={muted ? "Sound off" : "Sound on"} onClick={() => setMuted(sfx.toggle())}>{muted ? "SND OFF" : "SND"}</button>
+          <button className="act mute" title={musicOn ? "Soundtrack on" : "Soundtrack off"} onClick={() => setMusicOn(sfx.music.toggle())} style={{ opacity: musicOn && !muted ? 1 : 0.5 }}>MUSIC</button>
           <button className="act mute" title={voice ? "THE WIRE voice on" : "THE WIRE voice off"} onClick={toggleVoice} style={{ opacity: voice ? 1 : 0.5 }}>VOICE</button>
           <button className="act mute help-btn" title="How to play (H)" onClick={() => setHelp(true)}>HELP</button>
         </div>
